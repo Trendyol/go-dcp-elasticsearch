@@ -18,12 +18,13 @@ import (
 type Bulk struct {
 	errorLogger            logger.Logger
 	logger                 logger.Logger
-	esClient               *elasticsearch.Client
+	dcpCheckpointCommit    func()
 	batchTicker            *time.Ticker
 	isClosed               chan bool
 	actionCh               chan document.ESActionDocument
-	dcpCheckpointCommit    func()
+	esClient               *elasticsearch.Client
 	collectionIndexMapping map[string]string
+	typeName               string
 	batch                  []byte
 	batchSize              int
 	batchLimit             int
@@ -53,6 +54,7 @@ func NewBulk(
 		dcpCheckpointCommit:    dcpCheckpointCommit,
 		esClient:               esClient,
 		collectionIndexMapping: esConfig.CollectionIndexMapping,
+		typeName:               esConfig.TypeName,
 	}
 	go bulk.StartBulk()
 	return bulk, nil
