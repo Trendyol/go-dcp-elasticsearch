@@ -1,7 +1,7 @@
 package config
 
 import (
-	"go-elasticsearch-connect-couchbase/logger"
+	"github.com/Trendyol/go-elasticsearch-connect-couchbase/logger"
 	"time"
 
 	"github.com/gookit/config/v2"
@@ -10,6 +10,7 @@ import (
 
 type Elasticsearch struct {
 	CollectionIndexMapping map[string]string `yaml:"collectionIndexMapping"`
+	TypeName               string            `yaml:"typeName"`
 	Urls                   []string          `yaml:"urls"`
 	BulkSize               int               `yaml:"bulkSize"`
 	BulkTickerDuration     time.Duration     `yaml:"bulkTickerDuration"`
