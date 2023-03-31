@@ -24,7 +24,7 @@ type Bulk struct {
 	actionCh               chan document.ESActionDocument
 	esClient               *elasticsearch.Client
 	collectionIndexMapping map[string]string
-	typeName               string
+	typeName               []byte
 	batch                  []byte
 	batchSize              int
 	batchLimit             int
@@ -54,7 +54,7 @@ func NewBulk(
 		dcpCheckpointCommit:    dcpCheckpointCommit,
 		esClient:               esClient,
 		collectionIndexMapping: esConfig.CollectionIndexMapping,
-		typeName:               esConfig.TypeName,
+		typeName:               helper.Byte(esConfig.TypeName),
 	}
 	go bulk.StartBulk()
 	return bulk, nil
@@ -82,6 +82,7 @@ func (b *Bulk) AddAction(ctx *models.ListenerContext, action document.ESActionDo
 			b.collectionIndexMapping[collectionName],
 			action.Routing,
 			action.Source,
+			b.typeName,
 		)...,
 	)
 	b.batchSize++
@@ -104,7 +105,7 @@ var (
 	postFix       = helper.Byte(`"}}`)
 )
 
-func getEsActionJSON(docID []byte, action document.EsAction, indexName string, routing *string, source []byte) []byte {
+func getEsActionJSON(docID []byte, action document.EsAction, indexName string, routing *string, source []byte, typeName []byte) []byte {
 	var meta []byte
 	if action == document.Index {
 		meta = indexPrefix
@@ -119,8 +120,7 @@ func getEsActionJSON(docID []byte, action document.EsAction, indexName string, r
 		meta = append(meta, helper.Byte(*routing)...)
 	}
 	meta = append(meta, typePrefix...)
-	// TODO: support type from config
-	meta = append(meta, helper.Byte("_doc")...)
+	meta = append(meta, typeName...)
 	meta = append(meta, postFix...)
 	if action == document.Index {
 		meta = append(meta, '\n')
