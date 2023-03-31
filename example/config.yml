@@ -16,6 +16,7 @@ dcp:
       memberNumber: 1
       totalMembers: 1
 elasticsearch:
+  typeName: _doc
   collectionIndexMapping:
     _default: indexname
   urls:
