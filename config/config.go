@@ -11,6 +11,7 @@ import (
 
 type Elasticsearch struct {
 	CollectionIndexMapping map[string]string `yaml:"collectionIndexMapping"`
+	TypeName               string            `yaml:"typeName"`
 	Urls                   []string          `yaml:"urls"`
 	BulkSize               int               `yaml:"bulkSize"`
 	BulkTickerDuration     time.Duration     `yaml:"bulkTickerDuration"`
