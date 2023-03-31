@@ -56,6 +56,7 @@ func NewBulk(
 		collectionIndexMapping: esConfig.CollectionIndexMapping,
 		typeName:               helper.Byte(esConfig.TypeName),
 	}
+
 	go bulk.StartBulk()
 	return bulk, nil
 }
