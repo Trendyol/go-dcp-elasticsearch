@@ -2,13 +2,14 @@ package bulk
 
 import (
 	"bytes"
-	"go-elasticsearch-connect-couchbase/config"
-	"go-elasticsearch-connect-couchbase/elasticsearch/client"
-	"go-elasticsearch-connect-couchbase/elasticsearch/document"
-	"go-elasticsearch-connect-couchbase/helper"
-	"go-elasticsearch-connect-couchbase/logger"
 	"sync"
 	"time"
+
+	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
+	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/client"
+	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/document"
+	"github.com/Trendyol/go-elasticsearch-connect-couchbase/helper"
+	"github.com/Trendyol/go-elasticsearch-connect-couchbase/logger"
 
 	"github.com/Trendyol/go-dcp-client/models"
 	"github.com/elastic/go-elasticsearch/v7"

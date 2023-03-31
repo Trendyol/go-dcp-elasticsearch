@@ -1,8 +1,9 @@
 package config
 
 import (
-	"go-elasticsearch-connect-couchbase/logger"
 	"time"
+
+	"github.com/Trendyol/go-elasticsearch-connect-couchbase/logger"
 
 	"github.com/gookit/config/v2"
 	"github.com/gookit/config/v2/yamlv3"

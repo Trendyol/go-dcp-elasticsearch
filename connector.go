@@ -1,10 +1,10 @@
 package goelasticsearchconnectcouchbase
 
 import (
-	"go-elasticsearch-connect-couchbase/config"
-	"go-elasticsearch-connect-couchbase/couchbase"
-	"go-elasticsearch-connect-couchbase/elasticsearch/bulk"
-	"go-elasticsearch-connect-couchbase/logger"
+	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
+	"github.com/Trendyol/go-elasticsearch-connect-couchbase/couchbase"
+	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/bulk"
+	"github.com/Trendyol/go-elasticsearch-connect-couchbase/logger"
 
 	godcpclient "github.com/Trendyol/go-dcp-client"
 	"github.com/Trendyol/go-dcp-client/models"
@@ -30,7 +30,6 @@ func (c *connector) Start() {
 
 func (c *connector) Close() {
 	c.dcp.Close()
-	c.bulk.Close()
 }
 
 func (c *connector) listener(ctx *models.ListenerContext) {

@@ -1,15 +1,13 @@
-module github.com/Trendyol/go-elasticsearch-connect-couchbase
+module example
 
 go 1.19
 
-require (
-	github.com/Trendyol/go-dcp-client v0.0.42
-	github.com/elastic/go-elasticsearch/v7 v7.17.7
-	github.com/gookit/config/v2 v2.1.8
-	github.com/valyala/fasthttp v1.40.0
-)
+replace github.com/Trendyol/go-elasticsearch-connect-couchbase => ../.
+
+require github.com/Trendyol/go-elasticsearch-connect-couchbase v0.0.0-00010101000000-000000000000
 
 require (
+	github.com/Trendyol/go-dcp-client v0.0.42 // indirect
 	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/ansrivas/fiberprometheus/v2 v2.4.1 // indirect
@@ -18,6 +16,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/couchbase/gocbcore/v10 v10.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/elastic/go-elasticsearch/v7 v7.17.7 // indirect
 	github.com/go-logr/logr v1.2.2 // indirect
 	github.com/gofiber/adaptor/v2 v2.1.25 // indirect
 	github.com/gofiber/fiber/v2 v2.39.0 // indirect
@@ -28,6 +27,7 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
+	github.com/gookit/config/v2 v2.1.8 // indirect
 	github.com/gookit/goutil v0.5.15 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -45,6 +45,7 @@ require (
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
+	github.com/valyala/fasthttp v1.40.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
 	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b // indirect

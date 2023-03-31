@@ -1,9 +1,9 @@
 package main
 
 import (
-	esCbConnector "go-elasticsearch-connect-couchbase"
-	"go-elasticsearch-connect-couchbase/couchbase"
-	"go-elasticsearch-connect-couchbase/elasticsearch/document"
+	"github.com/Trendyol/go-elasticsearch-connect-couchbase"
+	"github.com/Trendyol/go-elasticsearch-connect-couchbase/couchbase"
+	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/document"
 )
 
 func mapper(event couchbase.Event) []document.ESActionDocument {
@@ -16,12 +16,13 @@ func mapper(event couchbase.Event) []document.ESActionDocument {
 }
 
 func main() {
-	connector, err := esCbConnector.NewConnectorBuilder("./example/config.yml").
+	connector, err := goelasticsearchconnectcouchbase.NewConnectorBuilder("config.yml").
 		SetMapper(mapper).
 		Build()
 	if err != nil {
 		return
 	}
+
 	defer connector.Close()
 	connector.Start()
 }

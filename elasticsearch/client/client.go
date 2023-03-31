@@ -1,8 +1,9 @@
 package client
 
 import (
-	"go-elasticsearch-connect-couchbase/config"
 	"math"
+
+	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
 
 	"github.com/elastic/go-elasticsearch/v7"
 )
