@@ -1,7 +1,10 @@
 package couchbase
 
+import "time"
+
 type Event struct {
 	CollectionName string
+	EventTime      time.Time
 	Key            []byte
 	Value          []byte
 	IsDeleted      bool

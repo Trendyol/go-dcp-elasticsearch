@@ -6,6 +6,7 @@ require (
 	github.com/Trendyol/go-dcp-client v0.0.42
 	github.com/elastic/go-elasticsearch/v7 v7.17.7
 	github.com/gookit/config/v2 v2.2.1
+	github.com/prometheus/client_golang v1.14.0
 	github.com/valyala/fasthttp v1.45.0
 )
 
@@ -50,7 +51,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/philhofer/fwd v1.1.2 // indirect
-	github.com/prometheus/client_golang v1.14.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect

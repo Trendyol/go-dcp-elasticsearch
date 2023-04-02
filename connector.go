@@ -5,6 +5,7 @@ import (
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/couchbase"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/bulk"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/logger"
+	"github.com/Trendyol/go-elasticsearch-connect-couchbase/metric"
 
 	godcpclient "github.com/Trendyol/go-dcp-client"
 	"github.com/Trendyol/go-dcp-client/models"
@@ -48,7 +49,7 @@ func (c *connector) listener(ctx *models.ListenerContext) {
 	actions := c.mapper(e)
 
 	for i := range actions {
-		c.bulk.AddAction(ctx, actions[i], e.CollectionName)
+		c.bulk.AddAction(ctx, e.EventTime, actions[i], e.CollectionName)
 	}
 }
 
@@ -70,6 +71,7 @@ func newConnector(configPath string, mapper Mapper, logger logger.Logger, errorL
 	connector.dcp = dcp
 	connector.bulk, err = bulk.NewBulk(
 		c.Elasticsearch,
+		c.Metric.AverageWindowSec,
 		logger,
 		errorLogger,
 		dcp.Commit,
@@ -77,6 +79,9 @@ func newConnector(configPath string, mapper Mapper, logger logger.Logger, errorL
 	if err != nil {
 		return nil, err
 	}
+
+	metricCollector := metric.NewMetricCollector(connector.bulk)
+	dcp.SetMetricCollectors(metricCollector)
 
 	return connector, nil
 }
