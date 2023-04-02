@@ -10,6 +10,7 @@ import (
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/document"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/helper"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/logger"
+	"github.com/VividCortex/ewma"
 
 	"github.com/Trendyol/go-dcp-client/models"
 	"github.com/elastic/go-elasticsearch/v7"
@@ -23,6 +24,7 @@ type Bulk struct {
 	isClosed               chan bool
 	actionCh               chan document.ESActionDocument
 	esClient               *elasticsearch.Client
+	metric                 *Metric
 	collectionIndexMapping map[string]string
 	typeName               []byte
 	batch                  []byte
@@ -32,8 +34,13 @@ type Bulk struct {
 	flushLock              sync.Mutex
 }
 
+type Metric struct {
+	ESConnectorLatency ewma.MovingAverage
+}
+
 func NewBulk(
 	esConfig *config.Elasticsearch,
+	averageWindowSec float64,
 	logger logger.Logger,
 	errorLogger logger.Logger,
 	dcpCheckpointCommit func(),
@@ -44,15 +51,18 @@ func NewBulk(
 	}
 
 	bulk := &Bulk{
-		batchTickerDuration:    esConfig.BulkTickerDuration,
-		batchTicker:            time.NewTicker(esConfig.BulkTickerDuration),
-		actionCh:               make(chan document.ESActionDocument, esConfig.BulkSize),
-		batchLimit:             esConfig.BulkSize,
-		isClosed:               make(chan bool, 1),
-		logger:                 logger,
-		errorLogger:            errorLogger,
-		dcpCheckpointCommit:    dcpCheckpointCommit,
-		esClient:               esClient,
+		batchTickerDuration: esConfig.BulkTickerDuration,
+		batchTicker:         time.NewTicker(esConfig.BulkTickerDuration),
+		actionCh:            make(chan document.ESActionDocument, esConfig.BulkSize),
+		batchLimit:          esConfig.BulkSize,
+		isClosed:            make(chan bool, 1),
+		logger:              logger,
+		errorLogger:         errorLogger,
+		dcpCheckpointCommit: dcpCheckpointCommit,
+		esClient:            esClient,
+		metric: &Metric{
+			ESConnectorLatency: ewma.NewMovingAverage(averageWindowSec),
+		},
 		collectionIndexMapping: esConfig.CollectionIndexMapping,
 		typeName:               helper.Byte(esConfig.TypeName),
 	}
@@ -73,7 +83,12 @@ func (b *Bulk) StartBulk() {
 	}
 }
 
-func (b *Bulk) AddAction(ctx *models.ListenerContext, action document.ESActionDocument, collectionName string) {
+func (b *Bulk) AddAction(
+	ctx *models.ListenerContext,
+	eventTime time.Time,
+	action document.ESActionDocument,
+	collectionName string,
+) {
 	b.flushLock.Lock()
 	b.batch = append(
 		b.batch,
@@ -89,6 +104,9 @@ func (b *Bulk) AddAction(ctx *models.ListenerContext, action document.ESActionDo
 	b.batchSize++
 	ctx.Ack()
 	b.flushLock.Unlock()
+
+	b.metric.ESConnectorLatency.Add(float64(time.Since(eventTime).Milliseconds()))
+
 	if b.batchSize == b.batchLimit {
 		err := b.flushMessages()
 		if err != nil {
@@ -163,4 +181,8 @@ func (b *Bulk) bulkRequest() error {
 		return err
 	}
 	return nil
+}
+
+func (b *Bulk) GetMetric() *Metric {
+	return b.metric
 }

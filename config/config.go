@@ -3,6 +3,7 @@ package config
 import (
 	"time"
 
+	"github.com/Trendyol/go-dcp-client/helpers"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/logger"
 
 	"github.com/gookit/config/v2"
@@ -18,7 +19,8 @@ type Elasticsearch struct {
 }
 
 type Config struct {
-	Elasticsearch *Elasticsearch `yaml:"elasticsearch"`
+	Elasticsearch *Elasticsearch       `yaml:"elasticsearch"`
+	Metric        helpers.ConfigMetric `yaml:"metric"`
 }
 
 func Options(opts *config.Options) {
