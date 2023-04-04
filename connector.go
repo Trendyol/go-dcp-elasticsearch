@@ -31,6 +31,7 @@ func (c *connector) Start() {
 
 func (c *connector) Close() {
 	c.dcp.Close()
+	c.bulk.Close()
 }
 
 func (c *connector) listener(ctx *models.ListenerContext) {
