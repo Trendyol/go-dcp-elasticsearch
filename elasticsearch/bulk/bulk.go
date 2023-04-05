@@ -29,9 +29,10 @@ type Bulk struct {
 	typeName               []byte
 	batch                  []byte
 	batchSize              int
-	batchLimit             int
+	batchSizeLimit         int
 	batchTickerDuration    time.Duration
 	flushLock              sync.Mutex
+	batchByteSizeLimit     int
 }
 
 type Metric struct {
@@ -51,10 +52,10 @@ func NewBulk(
 	}
 
 	bulk := &Bulk{
-		batchTickerDuration: esConfig.BulkTickerDuration,
-		batchTicker:         time.NewTicker(esConfig.BulkTickerDuration),
-		actionCh:            make(chan document.ESActionDocument, esConfig.BulkSize),
-		batchLimit:          esConfig.BulkSize,
+		batchTickerDuration: esConfig.BatchTickerDuration,
+		batchTicker:         time.NewTicker(esConfig.BatchTickerDuration),
+		actionCh:            make(chan document.ESActionDocument, esConfig.BatchSizeLimit),
+		batchSizeLimit:      esConfig.BatchSizeLimit,
 		isClosed:            make(chan bool, 1),
 		logger:              logger,
 		errorLogger:         errorLogger,
@@ -107,7 +108,7 @@ func (b *Bulk) AddAction(
 
 	b.metric.ESConnectorLatency.Add(float64(time.Since(eventTime).Milliseconds()))
 
-	if b.batchSize == b.batchLimit {
+	if b.batchSize == b.batchSizeLimit || len(b.batch) >= b.batchByteSizeLimit {
 		err := b.flushMessages()
 		if err != nil {
 			b.errorLogger.Printf("Bulk writer error %v", err)
