@@ -21,7 +21,8 @@ elasticsearch:
     _default: indexname
   urls:
     - "http://localhost:9200"
-  bulkSize: 1000
-  bulkTickerDuration: 15s
+  batchSizeLimit: 1000
+  batchTickerDuration: 15s
+  batchByteSizeLimit: 1000
 checkpoint:
   type: manual

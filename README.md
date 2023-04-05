@@ -124,8 +124,9 @@ Check out on [go-dcp-client](https://github.com/Trendyol/go-dcp-client#configura
 | `elasticsearch.collectionIndexMapping` | map[string]string | yes      |         |
 | `elasticsearch.typeName`               | string            | yes      |         |
 | `elasticsearch.urls`                   | []string          | yes      |         |
-| `elasticsearch.bulkSize`               | int               | yes      |         |
-| `elasticsearch.bulkTickerDuration`     | time.Duration     | yes      |         |
+| `elasticsearch.batchSizeLimit`         | int               | yes      |         |
+| `elasticsearch.batchTickerDuration`    | time.Duration     | yes      |         |
+| `elasticsearch.batchByteSizeLimit`     | int               | yes      |         |
 
 ---
 
