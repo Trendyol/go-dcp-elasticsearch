@@ -14,8 +14,8 @@ type Elasticsearch struct {
 	CollectionIndexMapping map[string]string `yaml:"collectionIndexMapping"`
 	TypeName               string            `yaml:"typeName"`
 	Urls                   []string          `yaml:"urls"`
-	BulkSize               int               `yaml:"bulkSize"`
-	BulkTickerDuration     time.Duration     `yaml:"bulkTickerDuration"`
+	BatchSizeLimit         int               `yaml:"batchSizeLimit"`
+	BatchTickerDuration    time.Duration     `yaml:"batchTickerDuration"`
 }
 
 type Config struct {
