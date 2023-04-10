@@ -5,14 +5,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Trendyol/go-dcp-client/models"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/client"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/document"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/helper"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/logger"
-	"github.com/VividCortex/ewma"
-
-	"github.com/Trendyol/go-dcp-client/models"
 	"github.com/elastic/go-elasticsearch/v7"
 )
 
@@ -36,36 +34,34 @@ type Bulk struct {
 }
 
 type Metric struct {
-	ESConnectorLatency ewma.MovingAverage
+	ESConnectorLatency int64
 }
 
 func NewBulk(
-	esConfig *config.Elasticsearch,
-	averageWindowSec float64,
+	config *config.Config,
 	logger logger.Logger,
 	errorLogger logger.Logger,
 	dcpCheckpointCommit func(),
 ) (*Bulk, error) {
-	esClient, err := client.NewElasticClient(esConfig)
+	esClient, err := client.NewElasticClient(config)
 	if err != nil {
 		return nil, err
 	}
 
 	bulk := &Bulk{
-		batchTickerDuration: esConfig.BatchTickerDuration,
-		batchTicker:         time.NewTicker(esConfig.BatchTickerDuration),
-		actionCh:            make(chan document.ESActionDocument, esConfig.BatchSizeLimit),
-		batchSizeLimit:      esConfig.BatchSizeLimit,
-		isClosed:            make(chan bool, 1),
-		logger:              logger,
-		errorLogger:         errorLogger,
-		dcpCheckpointCommit: dcpCheckpointCommit,
-		esClient:            esClient,
-		metric: &Metric{
-			ESConnectorLatency: ewma.NewMovingAverage(averageWindowSec),
-		},
-		collectionIndexMapping: esConfig.CollectionIndexMapping,
-		typeName:               helper.Byte(esConfig.TypeName),
+		batchTickerDuration:    config.Elasticsearch.BatchTickerDuration,
+		batchTicker:            time.NewTicker(config.Elasticsearch.BatchTickerDuration),
+		actionCh:               make(chan document.ESActionDocument, config.Elasticsearch.BatchSizeLimit),
+		batchSizeLimit:         config.Elasticsearch.BatchSizeLimit,
+		batchByteSizeLimit:     config.Elasticsearch.BatchByteSizeLimit,
+		isClosed:               make(chan bool, 1),
+		logger:                 logger,
+		errorLogger:            errorLogger,
+		dcpCheckpointCommit:    dcpCheckpointCommit,
+		esClient:               esClient,
+		metric:                 &Metric{},
+		collectionIndexMapping: config.Elasticsearch.CollectionIndexMapping,
+		typeName:               helper.Byte(config.Elasticsearch.TypeName),
 	}
 
 	go bulk.StartBulk()
@@ -106,7 +102,7 @@ func (b *Bulk) AddAction(
 	ctx.Ack()
 	b.flushLock.Unlock()
 
-	b.metric.ESConnectorLatency.Add(float64(time.Since(eventTime).Milliseconds()))
+	b.metric.ESConnectorLatency = time.Since(eventTime).Milliseconds()
 
 	if b.batchSize == b.batchSizeLimit || len(b.batch) >= b.batchByteSizeLimit {
 		err := b.flushMessages()

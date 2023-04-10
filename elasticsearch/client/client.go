@@ -8,14 +8,13 @@ import (
 	"github.com/elastic/go-elasticsearch/v7"
 )
 
-func NewElasticClient(elasticConfig *config.Elasticsearch) (*elasticsearch.Client, error) {
-	config := elasticsearch.Config{
+func NewElasticClient(config *config.Config) (*elasticsearch.Client, error) {
+	es, err := elasticsearch.NewClient(elasticsearch.Config{
 		MaxRetries:           math.MaxInt,
-		Addresses:            elasticConfig.Urls,
+		Addresses:            config.Elasticsearch.Urls,
 		DiscoverNodesOnStart: true,
 		Transport:            &Transport{},
-	}
-	es, err := elasticsearch.NewClient(config)
+	})
 	if err != nil {
 		return nil, err
 	}

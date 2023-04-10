@@ -21,8 +21,8 @@ func (s *Collector) Collect(ch chan<- prometheus.Metric) {
 
 	ch <- prometheus.MustNewConstMetric(
 		s.elasticsearchConnectorLatency,
-		prometheus.GaugeValue,
-		bulkMetric.ESConnectorLatency.Value(),
+		prometheus.CounterValue,
+		float64(bulkMetric.ESConnectorLatency),
 		[]string{}...,
 	)
 }
