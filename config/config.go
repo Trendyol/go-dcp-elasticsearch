@@ -3,7 +3,6 @@ package config
 import (
 	"time"
 
-	"github.com/Trendyol/go-dcp-client/helpers"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/logger"
 
 	"github.com/gookit/config/v2"
@@ -12,21 +11,28 @@ import (
 
 type Elasticsearch struct {
 	CollectionIndexMapping map[string]string `yaml:"collectionIndexMapping"`
-	TypeName               string            `yaml:"typeName"`
+	TypeName               string            `yaml:"typeName" default:"_doc"`
 	Urls                   []string          `yaml:"urls"`
-	BatchSizeLimit         int               `yaml:"batchSizeLimit"`
+	BatchSizeLimit         int               `yaml:"batchSizeLimit" default:"1000"`
+	BatchByteSizeLimit     int               `yaml:"batchByteSizeLimit" default:"10240"`
 	BatchTickerDuration    time.Duration     `yaml:"batchTickerDuration"`
 }
 
 type Config struct {
-	Elasticsearch *Elasticsearch       `yaml:"elasticsearch"`
-	Metric        helpers.ConfigMetric `yaml:"metric"`
+	Elasticsearch Elasticsearch `yaml:"elasticsearch"`
 }
 
 func Options(opts *config.Options) {
 	opts.ParseTime = true
 	opts.Readonly = true
 	opts.EnableCache = true
+	opts.ParseDefault = true
+}
+
+func applyUnhandledDefaults(_config *Config) {
+	if _config.Elasticsearch.BatchTickerDuration == 0 {
+		_config.Elasticsearch.BatchTickerDuration = 10 * time.Second
+	}
 }
 
 func NewConfig(name string, filePath string, errorLogger logger.Logger) *Config {
@@ -43,6 +49,8 @@ func NewConfig(name string, filePath string, errorLogger logger.Logger) *Config 
 	if err != nil {
 		errorLogger.Printf("Error while reading config %v", err)
 	}
+
+	applyUnhandledDefaults(_config)
 
 	return _config
 }

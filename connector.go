@@ -71,8 +71,7 @@ func newConnector(configPath string, mapper Mapper, logger logger.Logger, errorL
 	}
 	connector.dcp = dcp
 	connector.bulk, err = bulk.NewBulk(
-		c.Elasticsearch,
-		c.Metric.AverageWindowSec,
+		c,
 		logger,
 		errorLogger,
 		dcp.Commit,
