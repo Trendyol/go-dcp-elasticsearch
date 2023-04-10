@@ -7,14 +7,14 @@ replace github.com/Trendyol/go-elasticsearch-connect-couchbase => ../.
 require github.com/Trendyol/go-elasticsearch-connect-couchbase v0.0.0
 
 require (
-	github.com/Trendyol/go-dcp-client v0.0.42 // indirect
+	github.com/Trendyol/go-dcp-client v0.0.45 // indirect
 	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/ansrivas/fiberprometheus/v2 v2.6.0 // indirect
 	github.com/avast/retry-go/v4 v4.3.3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/couchbase/gocbcore/v10 v10.2.2 // indirect
+	github.com/couchbase/gocbcore/v10 v10.2.3-0.20230404070112-cab6da1895ae // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/elastic/go-elasticsearch/v7 v7.17.7 // indirect
 	github.com/emicklei/go-restful/v3 v3.10.2 // indirect
