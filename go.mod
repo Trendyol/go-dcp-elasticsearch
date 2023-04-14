@@ -3,7 +3,7 @@ module github.com/Trendyol/go-elasticsearch-connect-couchbase
 go 1.20
 
 require (
-	github.com/Trendyol/go-dcp-client v0.0.46
+	github.com/Trendyol/go-dcp-client v0.0.47
 	github.com/elastic/go-elasticsearch/v7 v7.17.7
 	github.com/gookit/config/v2 v2.2.1
 	github.com/prometheus/client_golang v1.14.0
