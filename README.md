@@ -119,14 +119,14 @@ Check out on [go-dcp-client](https://github.com/Trendyol/go-dcp-client#configura
 
 ### Elasticsearch Specific Configuration
 
-| Variable                               | Type              | Required | Default |                                                             
-|----------------------------------------|-------------------|----------|---------|
-| `elasticsearch.collectionIndexMapping` | map[string]string | yes      |         |
-| `elasticsearch.urls`                   | []string          | yes      |         |
-| `elasticsearch.typeName`               | string            | no       | _doc    |
-| `elasticsearch.batchSizeLimit`         | int               | no       | 1000    |
-| `elasticsearch.batchTickerDuration`    | time.Duration     | no       | 10s     |
-| `elasticsearch.batchByteSizeLimit`     | int               | no       | 10240   |
+| Variable                               | Type              | Required | Default  |                                                             
+|----------------------------------------|-------------------|----------|----------|
+| `elasticsearch.collectionIndexMapping` | map[string]string | yes      |          |
+| `elasticsearch.urls`                   | []string          | yes      |          |
+| `elasticsearch.typeName`               | string            | no       | _doc     |
+| `elasticsearch.batchSizeLimit`         | int               | no       | 1000     |
+| `elasticsearch.batchTickerDuration`    | time.Duration     | no       | 10s      |
+| `elasticsearch.batchByteSizeLimit`     | int               | no       | 10485760 |
 
 ---
 
