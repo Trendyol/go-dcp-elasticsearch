@@ -14,7 +14,7 @@ type Elasticsearch struct {
 	TypeName               string            `yaml:"typeName" default:"_doc"`
 	Urls                   []string          `yaml:"urls"`
 	BatchSizeLimit         int               `yaml:"batchSizeLimit" default:"1000"`
-	BatchByteSizeLimit     int               `yaml:"batchByteSizeLimit" default:"10240"`
+	BatchByteSizeLimit     int               `yaml:"batchByteSizeLimit" default:"10485760"`
 	BatchTickerDuration    time.Duration     `yaml:"batchTickerDuration"`
 }
 
