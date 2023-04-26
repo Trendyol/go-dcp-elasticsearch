@@ -16,6 +16,8 @@ type Elasticsearch struct {
 	BatchSizeLimit         int               `yaml:"batchSizeLimit" default:"1000"`
 	BatchByteSizeLimit     int               `yaml:"batchByteSizeLimit" default:"10485760"`
 	BatchTickerDuration    time.Duration     `yaml:"batchTickerDuration"`
+	MaxConnsPerHost        *int              `yaml:"maxConnsPerHost"`
+	MaxIdleConnDuration    *time.Duration    `yaml:"maxIdleConnDuration"`
 }
 
 type Config struct {

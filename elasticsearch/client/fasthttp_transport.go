@@ -1,6 +1,7 @@
 package client
 
 import (
+	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
 	"io"
 	"net/http"
 	"strings"
@@ -8,12 +9,31 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-// Transport implements the elastictransport interface with
+// transport implements the elastictransport interface with
 // the github.com/valyala/fasthttp HTTP client.
-type Transport struct{}
+type transport struct {
+	client *fasthttp.Client
+}
+
+func newTransport(cfg config.Elasticsearch) *transport {
+	client := &fasthttp.Client{
+		MaxConnsPerHost:     fasthttp.DefaultMaxConnsPerHost,
+		MaxIdleConnDuration: fasthttp.DefaultMaxIdleConnDuration,
+	}
+
+	if cfg.MaxConnsPerHost != nil {
+		client.MaxConnsPerHost = *cfg.MaxConnsPerHost
+	}
+
+	if cfg.MaxIdleConnDuration != nil {
+		client.MaxIdleConnDuration = *cfg.MaxIdleConnDuration
+	}
+
+	return &transport{client: client}
+}
 
 // RoundTrip performs the request and returns a response or error
-func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
+func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	freq := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(freq)
 
@@ -22,7 +42,7 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	t.copyRequest(freq, req)
 
-	err := fasthttp.Do(freq, fres)
+	err := t.client.Do(freq, fres)
 	if err != nil {
 		return nil, err
 	}
@@ -34,9 +54,9 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 // copyRequest converts a http.Request to fasthttp.Request
-func (t *Transport) copyRequest(dst *fasthttp.Request, src *http.Request) *fasthttp.Request {
-	if src.Method == "GET" && src.Body != nil {
-		src.Method = "POST"
+func (t *transport) copyRequest(dst *fasthttp.Request, src *http.Request) *fasthttp.Request {
+	if src.Method == http.MethodGet && src.Body != nil {
+		src.Method = http.MethodPost
 	}
 	dst.SetHost(src.Host)
 	dst.SetRequestURI(src.URL.String())
@@ -57,7 +77,7 @@ func (t *Transport) copyRequest(dst *fasthttp.Request, src *http.Request) *fasth
 }
 
 // copyResponse converts a http.Response to fasthttp.Response
-func (t *Transport) copyResponse(dst *http.Response, src *fasthttp.Response) *http.Response {
+func (t *transport) copyResponse(dst *http.Response, src *fasthttp.Response) *http.Response {
 	dst.StatusCode = src.StatusCode()
 
 	src.Header.VisitAll(func(k, v []byte) {

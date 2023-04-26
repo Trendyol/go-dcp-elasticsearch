@@ -13,7 +13,7 @@ func NewElasticClient(config *config.Config) (*elasticsearch.Client, error) {
 		MaxRetries:           math.MaxInt,
 		Addresses:            config.Elasticsearch.Urls,
 		DiscoverNodesOnStart: true,
-		Transport:            &Transport{},
+		Transport:            newTransport(config.Elasticsearch),
 	})
 	if err != nil {
 		return nil, err
