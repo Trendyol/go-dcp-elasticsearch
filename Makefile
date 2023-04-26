@@ -4,7 +4,7 @@ default: run
 
 init:
 	go mod download
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
 	go install golang.org/x/tools/go/analysis/passes/fieldalignment/cmd/fieldalignment@latest
 
 clean:
