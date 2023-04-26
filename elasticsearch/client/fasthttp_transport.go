@@ -1,10 +1,11 @@
 package client
 
 import (
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
 
 	"github.com/valyala/fasthttp"
 )

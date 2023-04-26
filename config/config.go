@@ -11,13 +11,13 @@ import (
 
 type Elasticsearch struct {
 	CollectionIndexMapping map[string]string `yaml:"collectionIndexMapping"`
+	MaxConnsPerHost        *int              `yaml:"maxConnsPerHost"`
+	MaxIdleConnDuration    *time.Duration    `yaml:"maxIdleConnDuration"`
 	TypeName               string            `yaml:"typeName" default:"_doc"`
 	Urls                   []string          `yaml:"urls"`
 	BatchSizeLimit         int               `yaml:"batchSizeLimit" default:"1000"`
 	BatchByteSizeLimit     int               `yaml:"batchByteSizeLimit" default:"10485760"`
 	BatchTickerDuration    time.Duration     `yaml:"batchTickerDuration"`
-	MaxConnsPerHost        *int              `yaml:"maxConnsPerHost"`
-	MaxIdleConnDuration    *time.Duration    `yaml:"maxIdleConnDuration"`
 }
 
 type Config struct {
