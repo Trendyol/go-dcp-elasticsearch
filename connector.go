@@ -1,11 +1,14 @@
 package goelasticsearchconnectcouchbase
 
 import (
+	"os"
+
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/couchbase"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/bulk"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/logger"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/metric"
+	"gopkg.in/yaml.v3"
 
 	godcpclient "github.com/Trendyol/go-dcp-client"
 	"github.com/Trendyol/go-dcp-client/models"
@@ -54,8 +57,25 @@ func (c *connector) listener(ctx *models.ListenerContext) {
 	}
 }
 
+func newConnectorConfig(path string) (*config.Config, error) {
+	file, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var c config.Config
+	err = yaml.Unmarshal(file, &c)
+	if err != nil {
+		return nil, err
+	}
+	c.ApplyDefaults()
+	return &c, nil
+}
+
 func newConnector(configPath string, mapper Mapper, logger logger.Logger, errorLogger logger.Logger) (Connector, error) {
-	c := config.NewConfig("cbgoelasticsearch", configPath, errorLogger)
+	c, err := newConnectorConfig(configPath)
+	if err != nil {
+		return nil, err
+	}
 
 	connector := &connector{
 		mapper:      mapper,
