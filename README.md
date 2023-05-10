@@ -130,6 +130,7 @@ Check out on [go-dcp-client](https://github.com/Trendyol/go-dcp-client#configura
 | `elasticsearch.batchByteSizeLimit`     | int               | no       | 10485760 |
 | `elasticsearch.maxConnsPerHost`        | int               | no       | 512      |
 | `elasticsearch.maxIdleConnDuration`    | time.Duration     | no       | 10s      |
+| `elasticsearch.compressionEnabled`     | boolean           | no       | false    |
 
 ---
 
