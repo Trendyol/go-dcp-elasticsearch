@@ -13,6 +13,7 @@ type Elasticsearch struct {
 	BatchSizeLimit         int               `yaml:"batchSizeLimit"`
 	BatchByteSizeLimit     int               `yaml:"batchByteSizeLimit"`
 	BatchTickerDuration    time.Duration     `yaml:"batchTickerDuration"`
+	CompressionEnabled     bool              `yaml:"compressionEnabled"`
 }
 
 type Config struct {

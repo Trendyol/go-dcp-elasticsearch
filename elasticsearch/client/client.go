@@ -14,6 +14,7 @@ func NewElasticClient(config *config.Config) (*elasticsearch.Client, error) {
 		Addresses:            config.Elasticsearch.Urls,
 		DiscoverNodesOnStart: true,
 		Transport:            newTransport(config.Elasticsearch),
+		CompressRequestBody:  config.Elasticsearch.CompressionEnabled,
 	})
 	if err != nil {
 		return nil, err
