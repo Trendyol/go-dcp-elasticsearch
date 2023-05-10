@@ -3,7 +3,7 @@ module github.com/Trendyol/go-elasticsearch-connect-couchbase
 go 1.20
 
 require (
-	github.com/Trendyol/go-dcp-client v0.0.53
+	github.com/Trendyol/go-dcp-client v0.0.55
 	github.com/elastic/go-elasticsearch/v7 v7.17.7
 	github.com/prometheus/client_golang v1.15.0
 	github.com/valyala/fasthttp v1.45.0
@@ -55,6 +55,7 @@ require (
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/oauth2 v0.6.0 // indirect
+	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/term v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
