@@ -89,6 +89,10 @@ func newConnector(configPath string, mapper Mapper, logger logger.Logger, errorL
 		connector.errorLogger.Printf("Dcp error: %v", err)
 		return nil, err
 	}
+
+	dcpConfig := dcp.GetConfig()
+	dcpConfig.Checkpoint.Type = "manual"
+
 	connector.dcp = dcp
 	connector.bulk, err = bulk.NewBulk(
 		c,
