@@ -135,7 +135,7 @@ Check out on [go-dcp-client](https://github.com/Trendyol/go-dcp-client#configura
 ### Exposed metrics
 | Metric Name                                             | Description                                             | Labels | Value Type |
 |---------------------------------------------------------|---------------------------------------------------------|--------|------------|
-| elasticsearch_connector_latency_ms                      | Elasticsearch connector latency ms                      | N/A    | Counter    |
+| elasticsearch_connector_latency_ms                      | Elasticsearch connector latency ms                      | N/A    | Gauge      |
 | elasticsearch_connector_bulk_request_process_latency_ms | Elasticsearch connector bulk request process latency ms | N/A    | Gauge      |
 
 ---
