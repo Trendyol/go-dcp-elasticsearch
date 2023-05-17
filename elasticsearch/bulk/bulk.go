@@ -34,7 +34,8 @@ type Bulk struct {
 }
 
 type Metric struct {
-	ESConnectorLatency int64
+	ProcessLatencyMs            int64
+	BulkRequestProcessLatencyMs int64
 }
 
 func NewBulk(
@@ -102,7 +103,7 @@ func (b *Bulk) AddAction(
 	ctx.Ack()
 	b.flushLock.Unlock()
 
-	b.metric.ESConnectorLatency = time.Since(eventTime).Milliseconds()
+	b.metric.ProcessLatencyMs = time.Since(eventTime).Milliseconds()
 
 	if b.batchSize == b.batchSizeLimit || len(b.batch) >= b.batchByteSizeLimit {
 		err := b.flushMessages()
@@ -156,6 +157,8 @@ func (b *Bulk) Close() {
 }
 
 func (b *Bulk) flushMessages() error {
+	startedTime := time.Now()
+
 	b.flushLock.Lock()
 	defer b.flushLock.Unlock()
 
@@ -168,6 +171,9 @@ func (b *Bulk) flushMessages() error {
 	b.batch = b.batch[:0]
 	b.batchSize = 0
 	b.dcpCheckpointCommit()
+
+	b.metric.BulkRequestProcessLatencyMs = time.Since(startedTime).Milliseconds()
+
 	return nil
 }
 
