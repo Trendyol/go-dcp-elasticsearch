@@ -9,7 +9,8 @@ import (
 type Collector struct {
 	bulk *bulk.Bulk
 
-	elasticsearchConnectorLatency *prometheus.Desc
+	elasticsearchConnectorLatency            *prometheus.Desc
+	elasticsearchConnectorBulkRequestLatency *prometheus.Desc
 }
 
 func (s *Collector) Describe(ch chan<- *prometheus.Desc) {
@@ -22,7 +23,14 @@ func (s *Collector) Collect(ch chan<- prometheus.Metric) {
 	ch <- prometheus.MustNewConstMetric(
 		s.elasticsearchConnectorLatency,
 		prometheus.CounterValue,
-		float64(bulkMetric.ESConnectorLatency),
+		float64(bulkMetric.ProcessLatencyMs),
+		[]string{}...,
+	)
+
+	ch <- prometheus.MustNewConstMetric(
+		s.elasticsearchConnectorBulkRequestLatency,
+		prometheus.GaugeValue,
+		float64(bulkMetric.BulkRequestProcessLatencyMs),
 		[]string{}...,
 	)
 }
@@ -33,7 +41,14 @@ func NewMetricCollector(bulk *bulk.Bulk) *Collector {
 
 		elasticsearchConnectorLatency: prometheus.NewDesc(
 			prometheus.BuildFQName(helpers.Name, "elasticsearch_connector_latency_ms", "current"),
-			"Elasticsearch connector latency ms at 10sec windows",
+			"Elasticsearch connector latency ms",
+			[]string{},
+			nil,
+		),
+
+		elasticsearchConnectorBulkRequestLatency: prometheus.NewDesc(
+			prometheus.BuildFQName(helpers.Name, "elasticsearch_connector_bulk_request_process_latency_ms", "current"),
+			"Elasticsearch connector bulk request process latency ms",
 			[]string{},
 			nil,
 		),
