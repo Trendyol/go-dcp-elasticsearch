@@ -132,6 +132,12 @@ Check out on [go-dcp-client](https://github.com/Trendyol/go-dcp-client#configura
 | `elasticsearch.maxIdleConnDuration`    | time.Duration     | no       | 10s      |
 | `elasticsearch.compressionEnabled`     | boolean           | no       | false    |
 
+### Exposed metrics
+| Metric Name                                             | Description                                             | Labels | Value Type |
+|---------------------------------------------------------|---------------------------------------------------------|--------|------------|
+| elasticsearch_connector_latency_ms                      | Elasticsearch connector latency ms                      | N/A    | Gauge      |
+| elasticsearch_connector_bulk_request_process_latency_ms | Elasticsearch connector bulk request process latency ms | N/A    | Gauge      |
+
 ---
 
 ### Examples
