@@ -2,6 +2,7 @@ package bulk
 
 import (
 	"bytes"
+	"github.com/Trendyol/go-dcp-client/logger"
 	"sync"
 	"time"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/client"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/document"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/helper"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/logger"
 	"github.com/elastic/go-elasticsearch/v7"
 )
 

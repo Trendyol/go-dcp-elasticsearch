@@ -1,12 +1,12 @@
 package goelasticsearchconnectcouchbase
 
 import (
+	"github.com/Trendyol/go-dcp-client/logger"
 	"os"
 
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/couchbase"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/bulk"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/logger"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/metric"
 	"gopkg.in/yaml.v3"
 
@@ -121,8 +121,8 @@ func NewConnectorBuilder(configPath string) ConnectorBuilder {
 	return ConnectorBuilder{
 		configPath:  configPath,
 		mapper:      DefaultMapper,
-		logger:      &logger.Log,
-		errorLogger: &logger.Log,
+		logger:      logger.Log,
+		errorLogger: logger.Log,
 	}
 }
 
