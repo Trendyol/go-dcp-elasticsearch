@@ -2,9 +2,10 @@ package bulk
 
 import (
 	"bytes"
-	"github.com/Trendyol/go-dcp-client/logger"
 	"sync"
 	"time"
+
+	"github.com/Trendyol/go-dcp-client/logger"
 
 	"github.com/Trendyol/go-dcp-client/models"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
