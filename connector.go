@@ -1,8 +1,9 @@
 package goelasticsearchconnectcouchbase
 
 import (
-	"github.com/Trendyol/go-dcp-client/logger"
 	"os"
+
+	"github.com/Trendyol/go-dcp-client/logger"
 
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/couchbase"
