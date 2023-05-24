@@ -72,9 +72,6 @@ func NewBulk(
 
 func (b *Bulk) StartBulk() {
 	for range b.batchTicker.C {
-		if len(b.batch) == 0 {
-			continue
-		}
 		err := b.flushMessages()
 		if err != nil {
 			b.errorLogger.Printf("Batch producer flush error %v", err)
@@ -82,31 +79,35 @@ func (b *Bulk) StartBulk() {
 	}
 }
 
-func (b *Bulk) AddAction(
+func (b *Bulk) AddActions(
 	ctx *models.ListenerContext,
 	eventTime time.Time,
-	action document.ESActionDocument,
+	actions []document.ESActionDocument,
 	collectionName string,
 ) {
 	b.flushLock.Lock()
-	b.batch = append(
-		b.batch,
-		getEsActionJSON(
-			action.ID,
-			action.Type,
-			b.collectionIndexMapping[collectionName],
-			action.Routing,
-			action.Source,
-			b.typeName,
-		)...,
-	)
-	b.batchSize++
+
+	for _, action := range actions {
+		b.batch = append(
+			b.batch,
+			getEsActionJSON(
+				action.ID,
+				action.Type,
+				b.collectionIndexMapping[collectionName],
+				action.Routing,
+				action.Source,
+				b.typeName,
+			)...,
+		)
+	}
 	ctx.Ack()
+
+	b.batchSize += len(actions)
+
 	b.flushLock.Unlock()
 
 	b.metric.ProcessLatencyMs = time.Since(eventTime).Milliseconds()
-
-	if b.batchSize == b.batchSizeLimit || len(b.batch) >= b.batchByteSizeLimit {
+	if b.batchSize >= b.batchSizeLimit || len(b.batch) >= b.batchByteSizeLimit {
 		err := b.flushMessages()
 		if err != nil {
 			b.errorLogger.Printf("Bulk writer error %v", err)
@@ -158,29 +159,29 @@ func (b *Bulk) Close() {
 }
 
 func (b *Bulk) flushMessages() error {
-	startedTime := time.Now()
-
 	b.flushLock.Lock()
 	defer b.flushLock.Unlock()
 
-	err := b.bulkRequest()
-	if err != nil {
-		return err
+	if len(b.batch) > 0 {
+		err := b.bulkRequest()
+		if err != nil {
+			return err
+		}
+		b.batchTicker.Reset(b.batchTickerDuration)
+		b.batch = b.batch[:0]
+		b.batchSize = 0
 	}
 
-	b.batchTicker.Reset(b.batchTickerDuration)
-	b.batch = b.batch[:0]
-	b.batchSize = 0
 	b.dcpCheckpointCommit()
-
-	b.metric.BulkRequestProcessLatencyMs = time.Since(startedTime).Milliseconds()
 
 	return nil
 }
 
 func (b *Bulk) bulkRequest() error {
+	startedTime := time.Now()
 	reader := bytes.NewReader(b.batch)
 	_, err := b.esClient.Bulk(reader)
+	b.metric.BulkRequestProcessLatencyMs = time.Since(startedTime).Milliseconds()
 	if err != nil {
 		return err
 	}
