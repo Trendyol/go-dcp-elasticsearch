@@ -30,8 +30,11 @@ type connector struct {
 }
 
 func (c *connector) Start() {
+	go func() {
+		<-c.dcp.WaitUntilReady()
+		c.bulk.StartBulk()
+	}()
 	c.dcp.Start()
-	go c.bulk.StartBulk()
 }
 
 func (c *connector) Close() {
