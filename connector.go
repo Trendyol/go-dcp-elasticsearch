@@ -31,6 +31,7 @@ type connector struct {
 
 func (c *connector) Start() {
 	c.dcp.Start()
+	go c.bulk.StartBulk()
 }
 
 func (c *connector) Close() {
@@ -93,7 +94,6 @@ func newConnector(configPath string, mapper Mapper, logger logger.Logger, errorL
 		connector.errorLogger.Printf("Dcp error: %v", err)
 		return nil, err
 	}
-	<-dcp.WaitUntilReady()
 
 	dcpConfig := dcp.GetConfig()
 	dcpConfig.Checkpoint.Type = "manual"

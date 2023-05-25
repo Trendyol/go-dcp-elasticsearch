@@ -65,8 +65,6 @@ func NewBulk(
 		collectionIndexMapping: config.Elasticsearch.CollectionIndexMapping,
 		typeName:               helper.Byte(config.Elasticsearch.TypeName),
 	}
-
-	go bulk.StartBulk()
 	return bulk, nil
 }
 
