@@ -128,3 +128,12 @@ Check out on [go-dcp-client](https://github.com/Trendyol/go-dcp-client#configura
 |---------------------------------------------------------|---------------------------------------------------------|--------|------------|
 | elasticsearch_connector_latency_ms                      | Elasticsearch connector latency ms                      | N/A    | Gauge      |
 | elasticsearch_connector_bulk_request_process_latency_ms | Elasticsearch connector bulk request process latency ms | N/A    | Gauge      |
+
+## Contributing
+
+Go Elasticsearch Connect Couchbase is always open for direct contributions. For more information please check
+our [Contribution Guideline document](./CONTRIBUTING.md).
+
+## License
+
+Released under the [MIT License](LICENSE).
