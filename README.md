@@ -23,10 +23,15 @@ Elasticsearch index in near real-time.
 ## Benchmarks
 
 TODO
-| Package | Time | Time % to | Objects Allocated |
-| :------ | :--: | :-----------: | :---------------: |
-| Java Elasticsearch Connect Couchbase | 1744 ns/op | +0% | 5 allocs/op
-| **Go Elasticsearch Connect Couchbase** | 2483 ns/op | +42% | 10 allocs/op
+
+The benchmark was made with the  **___** Couchbase document, ..... **Default configurations** for Java Elasticsearch
+Connect Couchbase
+used for both connectors.
+
+| Package                                | Time to Process Events | Elasticsearch Indexing Rate(/s) | Average CPU Usage(Core) | Average Memory Usage |
+|:---------------------------------------|:----------------------:|:-------------------------------:|:-----------------------:|:--------------------:|
+| **Go Elasticsearch Connect Couchbase** |        **12s**         |                1                |        **0.383**        |      **428MB**       
+| Java Elasticsearch Connect Couchbase   |          19s           |                2                |           1.5           |        932MB         
 
 ## Example
 
