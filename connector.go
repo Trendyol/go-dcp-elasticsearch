@@ -30,6 +30,10 @@ type connector struct {
 }
 
 func (c *connector) Start() {
+	go func() {
+		<-c.dcp.WaitUntilReady()
+		c.bulk.StartBulk()
+	}()
 	c.dcp.Start()
 }
 
@@ -53,9 +57,12 @@ func (c *connector) listener(ctx *models.ListenerContext) {
 
 	actions := c.mapper(e)
 
-	for i := range actions {
-		c.bulk.AddAction(ctx, e.EventTime, actions[i], e.CollectionName)
+	if len(actions) == 0 {
+		ctx.Ack()
+		return
 	}
+
+	c.bulk.AddActions(ctx, e.EventTime, actions, e.CollectionName)
 }
 
 func newConnectorConfig(path string) (*config.Config, error) {
