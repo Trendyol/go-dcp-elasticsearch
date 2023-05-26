@@ -127,12 +127,19 @@ Check out on [go-dcp-client](https://github.com/Trendyol/go-dcp-client#configura
 | `elasticsearch.maxIdleConnDuration`    | time.Duration     | no       | 10s      | Idle keep-alive connections are closed after this duration.                                         | 
 | `elasticsearch.compressionEnabled`     | boolean           | no       | false    | Compression can be used if message size is large, CPU usage may be affected.                        |
 
-## Exposed metrics
+### Exposed metrics
+| Metric Name                                             | Description                   | Labels | Value Type |
+|---------------------------------------------------------|-------------------------------|--------|------------|
+| elasticsearch_connector_latency_ms                      | Time to adding to the batch.  | N/A    | Gauge      |
+| elasticsearch_connector_bulk_request_process_latency_ms | Time to process bulk request. | N/A    | Gauge      |
 
-| Metric Name                                             | Description                                             | Labels | Value Type |
-|---------------------------------------------------------|---------------------------------------------------------|--------|------------|
-| elasticsearch_connector_latency_ms                      | Elasticsearch connector latency ms                      | N/A    | Gauge      |
-| elasticsearch_connector_bulk_request_process_latency_ms | Elasticsearch connector bulk request process latency ms | N/A    | Gauge      |
+For DCP related metrics see [also](https://github.com/Trendyol/go-dcp-client#exposed-metrics).
+
+## Maintainers
+
+* [Eray Arslan](https://github.com/erayarslan)
+* [Mehmet Sezer](https://github.com/mhmtszr)
+* [Oğuzhan Yıldırım](https://github.com/oguzyildirim)
 
 ## Contributing
 
