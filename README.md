@@ -13,12 +13,12 @@ Elasticsearch index in near real-time.
 * **Less resource usage** and **higher throughput**(see [Benchmarks](#benchmarks)).
 * **Custom routing** support(see [Example](#example)).
 * **Update multiple documents** for a DCP event(see [Example](#example)).
-* Easier to handle different DCP events such as **expiration, deletion and mutation**(see [Example](#example)).
+* Handling different DCP events such as **expiration, deletion and mutation**(see [Example](#example)).
 * **Elasticsearch compression request body** support.
-* **Easier to manage batch configurations** such as maximum batch size, batch bytes, batch ticker durations.
-* **Easier to scale up and down** by custom membership algorithms(Couchbase, KubernetesHa, Kubernetes StatefulSet or
+* **Managing batch configurations** such as maximum batch size, batch bytes, batch ticker durations.
+* **Scale up and down** by custom membership algorithms(Couchbase, KubernetesHa, Kubernetes StatefulSet or
   Static, see [examples](https://github.com/Trendyol/go-dcp-client#examples)).
-* **Easier to configure**.
+* **Easily manageable configurations**.
 
 ## Benchmarks
 
