@@ -22,16 +22,14 @@ Elasticsearch index in near real-time.
 
 ## Benchmarks
 
-TODO
-
-The benchmark was made with the  **___** Couchbase document, ..... **Default configurations** for Java Elasticsearch
-Connect Couchbase
+The benchmark was made with the  **1,001,006** Couchbase document, because it is possible to more clearly observe the
+difference in the batch structure between the two packages. **Default configurations** for Java Elasticsearch Connect Couchbase
 used for both connectors.
 
-| Package                                | Time to Process Events | Elasticsearch Indexing Rate(/s) | Average CPU Usage(Core) | Average Memory Usage |
-|:---------------------------------------|:----------------------:|:-------------------------------:|:-----------------------:|:--------------------:|
-| **Go Elasticsearch Connect Couchbase** |        **12s**         |                1                |        **0.383**        |      **428MB**       
-| Java Elasticsearch Connect Couchbase   |          19s           |                2                |           1.5           |        932MB         
+| Package                                         | Time to Process Events | Elasticsearch Indexing Rate(/s) | Average CPU Usage(Core) | Average Memory Usage |
+|:------------------------------------------------|:----------------------:|:-------------------------------:|:-----------------------:|:--------------------:|
+| **Go Elasticsearch Connect Couchbase**(Go 1.20) |        **50s**         |    ![go](./benchmark/go.png)    |        **0.486**        |      **408MB**       
+| Java Elasticsearch Connect Couchbase(JDK15)     |          80s           |   ![go](./benchmark/java.png)   |          0.31           |        1091MB         
 
 ## Example
 
@@ -134,12 +132,6 @@ Check out on [go-dcp-client](https://github.com/Trendyol/go-dcp-client#configura
 | elasticsearch_connector_bulk_request_process_latency_ms | Time to process bulk request. | N/A    | Gauge      |
 
 For DCP related metrics see [also](https://github.com/Trendyol/go-dcp-client#exposed-metrics).
-
-## Maintainers
-
-* [Eray Arslan](https://github.com/erayarslan)
-* [Mehmet Sezer](https://github.com/mhmtszr)
-* [Oğuzhan Yıldırım](https://github.com/oguzyildirim)
 
 ## Contributing
 
