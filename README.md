@@ -32,79 +32,54 @@ used for both connectors.
 | Java Elasticsearch Connect Couchbase(JDK15)     |          80s           |   ![go](./benchmark/java.png)   |          0.31           |        1091MB         
 
 ## Example
-
+[Struct Config](example/struct-config/main.go)
 ```go
-package main
-
-import (
-	goelasticsearchconnectcouchbase "github.com/Trendyol/go-elasticsearch-connect-couchbase"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/couchbase"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/document"
-)
-
 func mapper(event couchbase.Event) []document.ESActionDocument {
-	if event.IsMutated {
-		e := document.NewIndexAction(event.Key, event.Value, nil)
-		return []document.ESActionDocument{e}
-	}
-	e := document.NewDeleteAction(event.Key, nil)
-	return []document.ESActionDocument{e}
+  if event.IsMutated {
+    e := document.NewIndexAction(event.Key, event.Value, nil)
+    return []document.ESActionDocument{e}
+  }
+  e := document.NewDeleteAction(event.Key, nil)
+  return []document.ESActionDocument{e}
 }
 
 func main() {
-	connector, err := goelasticsearchconnectcouchbase.NewConnectorBuilder("config.yml").
-		SetMapper(mapper).
-		Build()
-	if err != nil {
-		return
-	}
+  connector, err := dcpes.NewConnectorBuilder(config.Config{
+    Elasticsearch: config.Elasticsearch{
+      CollectionIndexMapping: map[string]string{
+        "_default": "indexname",
+      },
+      Urls: []string{"http://localhost:9200"},
+    },
+    Dcp: dcpcf.Dcp{
+      Username:   "user",
+      Password:   "password",
+      BucketName: "dcp-test",
+      Hosts:      []string{"localhost:8091"},
+      Dcp: dcpcf.ExternalDcp{
+        Group: dcpcf.DCPGroup{
+          Name: "groupName",
+          Membership: dcpcf.DCPGroupMembership{
+            Type: "static",
+          },
+        },
+      },
+    },
+  }).
+    SetMapper(mapper).
+    Build()
+  if err != nil {
+    panic(err)
+  }
 
-	defer connector.Close()
-	connector.Start()
+  defer connector.Close()
+  connector.Start()
 }
+
 
 ```
 
-Custom log structures can be used with the connector
-
-```go
-package main
-
-import (
-	goelasticsearchconnectcouchbase "github.com/Trendyol/go-elasticsearch-connect-couchbase"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/couchbase"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/document"
-	"log"
-	"os"
-)
-
-func mapper(event couchbase.Event) []document.ESActionDocument {
-	if event.IsMutated {
-		e := document.NewIndexAction(event.Key, event.Value, nil)
-		return []document.ESActionDocument{e}
-	}
-	e := document.NewDeleteAction(event.Key, nil)
-	return []document.ESActionDocument{e}
-}
-
-func main() {
-	logger := log.New(os.Stdout, "cb2elastic: ", log.Ldate|log.Ltime|log.Llongfile)
-
-	connector, err := goelasticsearchconnectcouchbase.NewConnectorBuilder("config.yml").
-		SetMapper(mapper).
-		SetLogger(logger).
-		SetErrorLogger(logger).
-		Build()
-	if err != nil {
-		return
-	}
-
-	defer connector.Close()
-	connector.Start()
-}
-
-```
-
+[File Config](example/simple/main.go)
 ## Configuration
 
 ### Dcp Configuration
