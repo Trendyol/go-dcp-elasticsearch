@@ -8,6 +8,12 @@ dcp:
     name: groupName
     membership:
       type: static
+metadata:
+  type: couchbase
+  config:
+    bucket: checkpoint-bucket-name
+    scope: _default
+    collection: _default
 elasticsearch:
   collectionIndexMapping:
     _default: indexname

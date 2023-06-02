@@ -38,6 +38,14 @@ func main() {
 					},
 				},
 			},
+			Metadata: dcpcf.Metadata{
+				Config: map[string]string{
+					"bucket":     "checkpoint-bucket-name",
+					"scope":      "_default",
+					"collection": "_default",
+				},
+				Type: "couchbase",
+			},
 		},
 	}).
 		SetMapper(mapper).
