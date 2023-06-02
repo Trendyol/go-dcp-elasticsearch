@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase"
+	dcpes "github.com/Trendyol/go-elasticsearch-connect-couchbase"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/couchbase"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/document"
 )
@@ -16,11 +16,11 @@ func mapper(event couchbase.Event) []document.ESActionDocument {
 }
 
 func main() {
-	connector, err := goelasticsearchconnectcouchbase.NewConnectorBuilder("config.yml").
+	connector, err := dcpes.NewConnectorBuilder("config.yml").
 		SetMapper(mapper).
 		Build()
 	if err != nil {
-		return
+		panic(err)
 	}
 
 	defer connector.Close()

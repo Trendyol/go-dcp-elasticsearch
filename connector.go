@@ -1,6 +1,7 @@
 package goelasticsearchconnectcouchbase
 
 import (
+	"errors"
 	"os"
 
 	"github.com/Trendyol/go-dcp-client/logger"
@@ -65,7 +66,7 @@ func (c *connector) listener(ctx *models.ListenerContext) {
 	c.bulk.AddActions(ctx, e.EventTime, actions, e.CollectionName)
 }
 
-func newConnectorConfig(path string) (*config.Config, error) {
+func newConnectorConfigFromPath(path string) (*config.Config, error) {
 	file, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -75,24 +76,37 @@ func newConnectorConfig(path string) (*config.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	c.ApplyDefaults()
 	return &c, nil
 }
 
-func newConnector(configPath string, mapper Mapper, logger logger.Logger, errorLogger logger.Logger) (Connector, error) {
-	c, err := newConnectorConfig(configPath)
+func newConfig(cf any) (*config.Config, error) {
+	switch v := cf.(type) {
+	case *config.Config:
+		return v, nil
+	case config.Config:
+		return &v, nil
+	case string:
+		return newConnectorConfigFromPath(v)
+	default:
+		return nil, errors.New("invalid config")
+	}
+}
+
+func newConnector(cf any, mapper Mapper, logger logger.Logger, errorLogger logger.Logger) (Connector, error) {
+	cfg, err := newConfig(cf)
 	if err != nil {
 		return nil, err
 	}
+	cfg.ApplyDefaults()
 
 	connector := &connector{
 		mapper:      mapper,
-		config:      c,
+		config:      cfg,
 		logger:      logger,
 		errorLogger: errorLogger,
 	}
 
-	dcp, err := godcpclient.NewDcp(configPath, connector.listener)
+	dcp, err := godcpclient.NewDcp(&cfg.Dcp, connector.listener)
 	if err != nil {
 		connector.errorLogger.Printf("Dcp error: %v", err)
 		return nil, err
@@ -103,7 +117,7 @@ func newConnector(configPath string, mapper Mapper, logger logger.Logger, errorL
 
 	connector.dcp = dcp
 	connector.bulk, err = bulk.NewBulk(
-		c,
+		cfg,
 		logger,
 		errorLogger,
 		dcp.Commit,
@@ -122,12 +136,12 @@ type ConnectorBuilder struct {
 	logger      logger.Logger
 	errorLogger logger.Logger
 	mapper      Mapper
-	configPath  string
+	config      any
 }
 
-func NewConnectorBuilder(configPath string) ConnectorBuilder {
+func NewConnectorBuilder(config any) ConnectorBuilder {
 	return ConnectorBuilder{
-		configPath:  configPath,
+		config:      config,
 		mapper:      DefaultMapper,
 		logger:      logger.Log,
 		errorLogger: logger.Log,
@@ -150,5 +164,5 @@ func (c ConnectorBuilder) SetErrorLogger(errorLogger logger.Logger) ConnectorBui
 }
 
 func (c ConnectorBuilder) Build() (Connector, error) {
-	return newConnector(c.configPath, c.mapper, c.logger, c.errorLogger)
+	return newConnector(c.config, c.mapper, c.logger, c.errorLogger)
 }

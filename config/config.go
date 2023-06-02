@@ -2,6 +2,8 @@ package config
 
 import (
 	"time"
+
+	"github.com/Trendyol/go-dcp-client/config"
 )
 
 type Elasticsearch struct {
@@ -18,6 +20,7 @@ type Elasticsearch struct {
 
 type Config struct {
 	Elasticsearch Elasticsearch `yaml:"elasticsearch"`
+	Dcp           config.Dcp    `yaml:",inline"`
 }
 
 func (c *Config) ApplyDefaults() {
