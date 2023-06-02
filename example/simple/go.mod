@@ -2,7 +2,7 @@ module example
 
 go 1.20
 
-replace github.com/Trendyol/go-elasticsearch-connect-couchbase => ../.
+replace github.com/Trendyol/go-elasticsearch-connect-couchbase => ./../..
 
 require github.com/Trendyol/go-elasticsearch-connect-couchbase v0.0.0
 
