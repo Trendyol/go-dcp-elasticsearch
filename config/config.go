@@ -28,10 +28,6 @@ func (c *Config) ApplyDefaults() {
 		c.Elasticsearch.BatchTickerDuration = 10 * time.Second
 	}
 
-	if c.Elasticsearch.TypeName == "" {
-		c.Elasticsearch.TypeName = "_doc"
-	}
-
 	if c.Elasticsearch.BatchSizeLimit == 0 {
 		c.Elasticsearch.BatchSizeLimit = 1000
 	}
