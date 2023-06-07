@@ -2,8 +2,11 @@ package bulk
 
 import (
 	"bytes"
+	"fmt"
 	"sync"
 	"time"
+
+	"github.com/elastic/go-elasticsearch/v7/esapi"
 
 	"github.com/Trendyol/go-dcp-client/logger"
 
@@ -11,7 +14,6 @@ import (
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/client"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/document"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/helper"
 	"github.com/elastic/go-elasticsearch/v7"
 )
 
@@ -63,7 +65,7 @@ func NewBulk(
 		esClient:               esClient,
 		metric:                 &Metric{},
 		collectionIndexMapping: config.Elasticsearch.CollectionIndexMapping,
-		typeName:               helper.Byte(config.Elasticsearch.TypeName),
+		typeName:               StringToByte(config.Elasticsearch.TypeName),
 	}
 	return bulk, nil
 }
@@ -114,12 +116,12 @@ func (b *Bulk) AddActions(
 }
 
 var (
-	indexPrefix   = helper.Byte(`{"index":{"_index":"`)
-	deletePrefix  = helper.Byte(`{"delete":{"_index":"`)
-	idPrefix      = helper.Byte(`","_id":"`)
-	typePrefix    = helper.Byte(`","_type":"`)
-	routingPrefix = helper.Byte(`","_routing":"`)
-	postFix       = helper.Byte(`"}}`)
+	indexPrefix   = StringToByte(`{"index":{"_index":"`)
+	deletePrefix  = StringToByte(`{"delete":{"_index":"`)
+	idPrefix      = StringToByte(`","_id":"`)
+	typePrefix    = StringToByte(`","_type":"`)
+	routingPrefix = StringToByte(`","_routing":"`)
+	postFix       = StringToByte(`"}}`)
 )
 
 func getEsActionJSON(docID []byte, action document.EsAction, indexName string, routing *string, source []byte, typeName []byte) []byte {
@@ -129,12 +131,12 @@ func getEsActionJSON(docID []byte, action document.EsAction, indexName string, r
 	} else {
 		meta = deletePrefix
 	}
-	meta = append(meta, helper.Byte(indexName)...)
+	meta = append(meta, StringToByte(indexName)...)
 	meta = append(meta, idPrefix...)
 	meta = append(meta, docID...)
 	if routing != nil {
 		meta = append(meta, routingPrefix...)
-		meta = append(meta, helper.Byte(*routing)...)
+		meta = append(meta, StringToByte(*routing)...)
 	}
 	if typeName != nil {
 		meta = append(meta, typePrefix...)
@@ -180,11 +182,29 @@ func (b *Bulk) flushMessages() error {
 func (b *Bulk) bulkRequest() error {
 	startedTime := time.Now()
 	reader := bytes.NewReader(b.batch)
-	_, err := b.esClient.Bulk(reader)
-	b.metric.BulkRequestProcessLatencyMs = time.Since(startedTime).Milliseconds()
+	r, err := b.esClient.Bulk(reader)
 	if err != nil {
 		return err
 	}
+
+	if hasResponseError(r) != nil {
+		return err
+	}
+
+	b.metric.BulkRequestProcessLatencyMs = time.Since(startedTime).Milliseconds()
+
+	return nil
+}
+
+func hasResponseError(r *esapi.Response) error {
+	if r.IsError() {
+		var body []byte
+		_, _ = r.Body.Read(body)
+
+		return fmt.Errorf("elasticsearch bulk request has an error. Status code: %s, response body: %s",
+			r.Status(), ByteToString(body))
+	}
+
 	return nil
 }
 
