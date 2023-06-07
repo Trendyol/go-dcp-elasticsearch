@@ -2,6 +2,9 @@ package bulk
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
+	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"sync"
 	"time"
 
@@ -178,9 +181,15 @@ func (b *Bulk) flushMessages() error {
 func (b *Bulk) bulkRequest() error {
 	startedTime := time.Now()
 	reader := bytes.NewReader(b.batch)
-	_, err := b.esClient.Bulk(reader)
+	resp, err := b.esClient.Bulk(reader)
 	b.metric.BulkRequestProcessLatencyMs = time.Since(startedTime).Milliseconds()
 	if err != nil {
+		b.errorLogger.Printf(fmt.Sprintf("ERROR occurred from ES Client Bulk request. Error: %s", err.Error()))
+		return err
+	}
+	err = b.handleResp(resp)
+	if err != nil {
+		b.errorLogger.Printf(fmt.Sprintf("ERROR occurred while handling response from ES Client Bulk Request. Error: %s", err.Error()))
 		return err
 	}
 	return nil
@@ -188,4 +197,33 @@ func (b *Bulk) bulkRequest() error {
 
 func (b *Bulk) GetMetric() *Metric {
 	return b.metric
+}
+
+func (b *Bulk) handleResp(resp *esapi.Response) error {
+	if resp == nil {
+		b.errorLogger.Printf("ERROR occurred when bulk request. Error: Response is empty")
+	}
+	if resp.IsError() {
+		b.errorLogger.Printf(fmt.Sprintf("ERROR occurred when bulk request. Err:%s", resp.String()))
+	}
+	bodyBuffer := new(bytes.Buffer)
+	_, err := bodyBuffer.ReadFrom(resp.Body)
+	if err != nil {
+		return err
+	}
+	bodyInterface := make(map[string]interface{})
+	err = json.Unmarshal(bodyBuffer.Bytes(), &bodyInterface)
+	if err != nil {
+		return err
+	}
+	if bodyInterface["errors"] != nil && bodyInterface["errors"].(bool) {
+		b.errorLogger.Printf("ERROR occurred when bulk request. Items will be listed below:")
+	}
+	items := bodyInterface["items"]
+	if items != nil {
+		for _, v := range items.([]interface{}) {
+			b.errorLogger.Printf(fmt.Sprintf("Item: %v", v))
+		}
+	}
+	return nil
 }
