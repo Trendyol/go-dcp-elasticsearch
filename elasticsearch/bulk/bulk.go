@@ -2,8 +2,12 @@ package bulk
 
 import (
 	"bytes"
+	"fmt"
+	"strings"
 	"sync"
 	"time"
+
+	"github.com/elastic/go-elasticsearch/v7/esapi"
 
 	"github.com/Trendyol/go-dcp-client/logger"
 
@@ -13,6 +17,7 @@ import (
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/document"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/helper"
 	"github.com/elastic/go-elasticsearch/v7"
+	"github.com/json-iterator/go"
 )
 
 type Bulk struct {
@@ -180,8 +185,12 @@ func (b *Bulk) flushMessages() error {
 func (b *Bulk) bulkRequest() error {
 	startedTime := time.Now()
 	reader := bytes.NewReader(b.batch)
-	_, err := b.esClient.Bulk(reader)
+	r, err := b.esClient.Bulk(reader)
 	b.metric.BulkRequestProcessLatencyMs = time.Since(startedTime).Milliseconds()
+	if err != nil {
+		return err
+	}
+	err = hasResponseError(r)
 	if err != nil {
 		return err
 	}
@@ -190,4 +199,47 @@ func (b *Bulk) bulkRequest() error {
 
 func (b *Bulk) GetMetric() *Metric {
 	return b.metric
+}
+
+func hasResponseError(r *esapi.Response) error {
+	if r == nil {
+		return fmt.Errorf("esapi response is nil")
+	}
+	if r.IsError() {
+		return fmt.Errorf("bulk request has error %v", r.String())
+	}
+	rb := new(bytes.Buffer)
+	_, err := rb.ReadFrom(r.Body)
+	if err != nil {
+		return err
+	}
+	b := make(map[string]interface{})
+	err = jsoniter.Unmarshal(rb.Bytes(), &b)
+	if err != nil {
+		return err
+	}
+	return checkErrorsIsTrue(b)
+}
+
+func checkErrorsIsTrue(body map[string]interface{}) error {
+	if hasError, ok := body["errors"].(bool); ok && hasError {
+		var sb strings.Builder
+		sb.WriteString("bulk request has error. Errors will be listed below:\n")
+		if items, ok := body["items"].([]interface{}); ok {
+			for _, i := range items {
+				if item, ok := i.(map[string]interface{}); ok {
+					for _, v := range item {
+						if iv, ok := v.(map[string]interface{}); ok {
+							if iv["error"] != nil {
+								sb.WriteString(fmt.Sprintf("%v\n", i))
+							}
+						}
+						break
+					}
+				}
+			}
+		}
+		return fmt.Errorf(sb.String())
+	}
+	return nil
 }

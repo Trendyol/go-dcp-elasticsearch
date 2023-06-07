@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/Trendyol/go-dcp-client v0.0.59
 	github.com/elastic/go-elasticsearch/v7 v7.17.7
+	github.com/json-iterator/go v1.1.12
 	github.com/prometheus/client_golang v1.15.1
 	github.com/valyala/fasthttp v1.47.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -33,7 +34,6 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
-	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.16.3 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
