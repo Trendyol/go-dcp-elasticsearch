@@ -75,10 +75,7 @@ func NewBulk(
 
 func (b *Bulk) StartBulk() {
 	for range b.batchTicker.C {
-		err := b.flushMessages()
-		if err != nil {
-			b.errorLogger.Printf("Batch producer flush error %v", err)
-		}
+		b.flushMessages()
 	}
 }
 
@@ -111,10 +108,7 @@ func (b *Bulk) AddActions(
 
 	b.metric.ProcessLatencyMs = time.Since(eventTime).Milliseconds()
 	if b.batchSize >= b.batchSizeLimit || len(b.batch) >= b.batchByteSizeLimit {
-		err := b.flushMessages()
-		if err != nil {
-			b.errorLogger.Printf("Bulk writer error %v", err)
-		}
+		b.flushMessages()
 	}
 }
 
@@ -157,13 +151,10 @@ func getEsActionJSON(docID []byte, action document.EsAction, indexName string, r
 func (b *Bulk) Close() {
 	b.batchTicker.Stop()
 
-	err := b.flushMessages()
-	if err != nil {
-		b.errorLogger.Printf("Bulk error %v", err)
-	}
+	b.flushMessages()
 }
 
-func (b *Bulk) flushMessages() error {
+func (b *Bulk) flushMessages() {
 	b.flushLock.Lock()
 	defer b.flushLock.Unlock()
 
@@ -178,8 +169,6 @@ func (b *Bulk) flushMessages() error {
 	}
 
 	b.dcpCheckpointCommit()
-
-	return nil
 }
 
 func (b *Bulk) bulkRequest() error {
