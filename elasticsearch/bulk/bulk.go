@@ -204,33 +204,43 @@ func hasResponseError(r *esapi.Response) error {
 	if err != nil {
 		return err
 	}
-	b := make(map[string]interface{})
+	b := make(map[string]any)
 	err = jsoniter.Unmarshal(rb.Bytes(), &b)
 	if err != nil {
 		return err
 	}
-	return checkErrorsIsTrue(b)
+	hasError, ok := b["errors"].(bool)
+	if !ok || !hasError {
+		return nil
+	}
+	return joinErrors(b)
 }
 
-func checkErrorsIsTrue(body map[string]interface{}) error {
-	if hasError, ok := body["errors"].(bool); ok && hasError {
-		var sb strings.Builder
-		sb.WriteString("bulk request has error. Errors will be listed below:\n")
-		if items, ok := body["items"].([]interface{}); ok {
-			for _, i := range items {
-				if item, ok := i.(map[string]interface{}); ok {
-					for _, v := range item {
-						if iv, ok := v.(map[string]interface{}); ok {
-							if iv["error"] != nil {
-								sb.WriteString(fmt.Sprintf("%v\n", i))
-							}
-						}
-						break
-					}
-				}
+func joinErrors(body map[string]any) error {
+	var sb strings.Builder
+	sb.WriteString("bulk request has error. Errors will be listed below:\n")
+
+	items, ok := body["items"].([]any)
+	if !ok {
+		return nil
+	}
+
+	for _, i := range items {
+		item, ok := i.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		for _, v := range item {
+			iv, ok := v.(map[string]any)
+			if !ok {
+				continue
+			}
+
+			if iv["error"] != nil {
+				sb.WriteString(fmt.Sprintf("%v\n", i))
 			}
 		}
-		return fmt.Errorf(sb.String())
 	}
-	return nil
+	return fmt.Errorf(sb.String())
 }
