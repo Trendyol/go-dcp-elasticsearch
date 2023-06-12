@@ -170,7 +170,7 @@ func (b *Bulk) flushMessages() error {
 	if len(b.batch) > 0 {
 		err := b.bulkRequest()
 		if err != nil {
-			return err
+			panic(err)
 		}
 		b.batchTicker.Reset(b.batchTickerDuration)
 		b.batch = b.batch[:0]
@@ -209,6 +209,8 @@ func hasResponseError(r *esapi.Response) error {
 		return fmt.Errorf("bulk request has error %v", r.String())
 	}
 	rb := new(bytes.Buffer)
+
+	defer r.Body.Close()
 	_, err := rb.ReadFrom(r.Body)
 	if err != nil {
 		return err
