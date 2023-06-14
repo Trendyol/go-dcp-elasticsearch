@@ -106,7 +106,7 @@ func newConnector(cf any, mapper Mapper, logger logger.Logger, errorLogger logge
 		errorLogger: errorLogger,
 	}
 
-	dcp, err := godcpclient.NewDcp(&cfg.Dcp, connector.listener)
+	dcp, err := godcpclient.NewDcpWithLoggers(&cfg.Dcp, connector.listener, logger, errorLogger)
 	if err != nil {
 		connector.errorLogger.Printf("Dcp error: %v", err)
 		return nil, err
