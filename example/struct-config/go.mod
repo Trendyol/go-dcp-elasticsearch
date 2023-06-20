@@ -5,7 +5,7 @@ go 1.20
 replace github.com/Trendyol/go-elasticsearch-connect-couchbase => ./../..
 
 require (
-	github.com/Trendyol/go-dcp-client v0.0.60
+	github.com/Trendyol/go-dcp-client v0.0.61
 	github.com/Trendyol/go-elasticsearch-connect-couchbase v0.0.0
 )
 
