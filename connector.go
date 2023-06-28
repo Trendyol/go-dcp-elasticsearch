@@ -4,6 +4,8 @@ import (
 	"errors"
 	"os"
 
+	v7 "github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/v7"
+
 	"github.com/Trendyol/go-dcp-client/logger"
 
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
@@ -27,7 +29,7 @@ type connector struct {
 	config      *config.Config
 	logger      logger.Logger
 	errorLogger logger.Logger
-	bulk        *bulk.Bulk
+	bulk        *bulk.Processor
 }
 
 func (c *connector) Start() {
@@ -116,11 +118,18 @@ func newConnector(cf any, mapper Mapper, logger logger.Logger, errorLogger logge
 	dcpConfig.Checkpoint.Type = "manual"
 
 	connector.dcp = dcp
-	connector.bulk, err = bulk.NewBulk(
+
+	v7Client, err := v7.New(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	connector.bulk, err = bulk.NewProcessor(
 		cfg,
 		logger,
 		errorLogger,
 		dcp.Commit,
+		v7Client,
 	)
 	if err != nil {
 		return nil, err

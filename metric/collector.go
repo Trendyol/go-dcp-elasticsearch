@@ -7,7 +7,7 @@ import (
 )
 
 type Collector struct {
-	bulk *bulk.Bulk
+	bulk *bulk.Processor
 
 	processLatency            *prometheus.Desc
 	bulkRequestProcessLatency *prometheus.Desc
@@ -35,7 +35,7 @@ func (s *Collector) Collect(ch chan<- prometheus.Metric) {
 	)
 }
 
-func NewMetricCollector(bulk *bulk.Bulk) *Collector {
+func NewMetricCollector(bulk *bulk.Processor) *Collector {
 	return &Collector{
 		bulk: bulk,
 

@@ -1,4 +1,4 @@
-package client
+package v7
 
 import (
 	"io"

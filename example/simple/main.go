@@ -3,16 +3,16 @@ package main
 import (
 	dcpes "github.com/Trendyol/go-elasticsearch-connect-couchbase"
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/couchbase"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/document"
+	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch"
 )
 
-func mapper(event couchbase.Event) []document.ESActionDocument {
+func mapper(event couchbase.Event) []elasticsearch.ActionDocument {
 	if event.IsMutated {
-		e := document.NewIndexAction(event.Key, event.Value, nil)
-		return []document.ESActionDocument{e}
+		e := elasticsearch.NewIndexAction(event.Key, event.Value, nil)
+		return []elasticsearch.ActionDocument{e}
 	}
-	e := document.NewDeleteAction(event.Key, nil)
-	return []document.ESActionDocument{e}
+	e := elasticsearch.NewDeleteAction(event.Key, nil)
+	return []elasticsearch.ActionDocument{e}
 }
 
 func main() {
