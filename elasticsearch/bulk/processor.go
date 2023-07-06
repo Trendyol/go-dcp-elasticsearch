@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/v7"
+	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/client"
 
 	"github.com/Trendyol/go-dcp-client/logger"
 
@@ -22,7 +22,7 @@ type Processor struct {
 	batchTicker            *time.Ticker
 	isClosed               chan bool
 	actionCh               chan elasticsearch.ActionDocument
-	esClient               v7.Client
+	esClient               client.ESClient
 	metric                 *Metric
 	collectionIndexMapping map[string]string
 	typeName               []byte
@@ -44,7 +44,7 @@ func NewProcessor(
 	logger logger.Logger,
 	errorLogger logger.Logger,
 	dcpCheckpointCommit func(),
-	client v7.Client,
+	client client.ESClient,
 ) (*Processor, error) {
 	p := &Processor{
 		batchTickerDuration:    config.Elasticsearch.BatchTickerDuration,

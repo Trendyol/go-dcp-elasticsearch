@@ -17,7 +17,7 @@ import (
 // nolint:staticcheck
 func TestProcessor_StartBulk(t *testing.T) {
 	// given
-	config := &config.Config{
+	c := &config.Config{
 		Elasticsearch: config.Elasticsearch{
 			BatchSizeLimit:      1000,
 			BatchByteSizeLimit:  1000,
@@ -31,17 +31,17 @@ func TestProcessor_StartBulk(t *testing.T) {
 		return nil
 	})
 
-	processor, err := NewProcessor(config, logger.Log, logger.Log, dcpCheckpointCommit, mockEsClient)
+	processor, err := NewProcessor(c, logger.Log, logger.Log, dcpCheckpointCommit, mockEsClient)
 	if err != nil {
 		t.Fatalf("Failed to create Processor: %v", err)
 	}
 
-	ctx := &mockListenerContext{}
+	mockListenerContext := mock.NewMockListenerContext()
 
 	processor.AddActions(&models.ListenerContext{
-		Commit: ctx.Commit,
+		Commit: mockListenerContext.Commit,
 		Event:  nil,
-		Ack:    ctx.Ack,
+		Ack:    mockListenerContext.Ack,
 	}, time.Now(), make([]elasticsearch.ActionDocument, 100), "example-collection")
 	time.Sleep(100)
 
@@ -52,11 +52,15 @@ func TestProcessor_StartBulk(t *testing.T) {
 	if !reflect.DeepEqual(true, mockEsClient.BulkFnCalled) {
 		t.Errorf("Bulk should be called")
 	}
+
+	if !reflect.DeepEqual(true, mockListenerContext.AckCalled) {
+		t.Errorf("Ack should be called")
+	}
 }
 
 func TestProcessor_AddActions(t *testing.T) {
 	// given
-	config := &config.Config{
+	c := &config.Config{
 		Elasticsearch: config.Elasticsearch{
 			BatchSizeLimit:      1,
 			BatchByteSizeLimit:  100,
@@ -69,29 +73,33 @@ func TestProcessor_AddActions(t *testing.T) {
 	mockEsClient := mock.NewMockEsClient()
 	mockEsClient.OnBulk(func(reader *bytes.Reader) error {
 		if reader.Len() < 100 {
-			t.Errorf("Length of bulk is less than limit. got %v, expected %v", reader.Len(), config.Elasticsearch.BatchByteSizeLimit)
+			t.Errorf("Length of bulk is less than limit. got %v, expected %v", reader.Len(), c.Elasticsearch.BatchByteSizeLimit)
 		}
 
 		return nil
 	})
 
-	processor, err := NewProcessor(config, logger.Log, logger.Log, dcpCheckpointCommit, mockEsClient)
+	processor, err := NewProcessor(c, logger.Log, logger.Log, dcpCheckpointCommit, mockEsClient)
 	if err != nil {
 		t.Fatalf("Failed to create Processor: %v", err)
 	}
 
-	ctx := &mockListenerContext{}
+	mockListenerContext := mock.NewMockListenerContext()
 
 	// when
 	processor.AddActions(&models.ListenerContext{
-		Commit: ctx.Commit,
+		Commit: mockListenerContext.Commit,
 		Event:  nil,
-		Ack:    ctx.Ack,
+		Ack:    mockListenerContext.Ack,
 	}, time.Now(), make([]elasticsearch.ActionDocument, 100), "example-collection")
 
 	// then
 	if !reflect.DeepEqual(true, mockEsClient.BulkFnCalled) {
 		t.Errorf("Bulk should be called")
+	}
+
+	if !reflect.DeepEqual(true, mockListenerContext.AckCalled) {
+		t.Errorf("Ack should be called")
 	}
 }
 
@@ -103,7 +111,7 @@ func TestProcessor_AddActions_EsClient_Return_Err(t *testing.T) {
 		}
 	}()
 
-	config := &config.Config{
+	c := &config.Config{
 		Elasticsearch: config.Elasticsearch{
 			BatchSizeLimit:      1,
 			BatchByteSizeLimit:  100,
@@ -118,29 +126,33 @@ func TestProcessor_AddActions_EsClient_Return_Err(t *testing.T) {
 		return errors.New("es client error")
 	})
 
-	processor, err := NewProcessor(config, logger.Log, logger.Log, dcpCheckpointCommit, mockEsClient)
+	processor, err := NewProcessor(c, logger.Log, logger.Log, dcpCheckpointCommit, mockEsClient)
 	if err != nil {
 		t.Fatalf("Failed to create Processor: %v", err)
 	}
 
-	ctx := &mockListenerContext{}
+	mockListenerContext := mock.NewMockListenerContext()
 
 	// when
 	processor.AddActions(&models.ListenerContext{
-		Commit: ctx.Commit,
+		Commit: mockListenerContext.Commit,
 		Event:  nil,
-		Ack:    ctx.Ack,
+		Ack:    mockListenerContext.Ack,
 	}, time.Now(), make([]elasticsearch.ActionDocument, 100), "example-collection")
 
 	// then
 	if !reflect.DeepEqual(true, mockEsClient.BulkFnCalled) {
 		t.Errorf("Bulk should be called")
 	}
+
+	if !reflect.DeepEqual(true, mockListenerContext.AckCalled) {
+		t.Errorf("Ack should be called")
+	}
 }
 
 func TestProcessor_Close(t *testing.T) {
 	// given
-	config := &config.Config{
+	c := &config.Config{
 		Elasticsearch: config.Elasticsearch{
 			BatchSizeLimit:      1,
 			BatchByteSizeLimit:  1,
@@ -149,7 +161,7 @@ func TestProcessor_Close(t *testing.T) {
 	}
 	dcpCheckpointCommit := func() {}
 
-	processor, err := NewProcessor(config, logger.Log, logger.Log, dcpCheckpointCommit, nil)
+	processor, err := NewProcessor(c, logger.Log, logger.Log, dcpCheckpointCommit, nil)
 	if err != nil {
 		t.Fatalf("Failed to create Processor: %v", err)
 	}
@@ -160,7 +172,7 @@ func TestProcessor_Close(t *testing.T) {
 
 func TestProcessor_GetMetric(t *testing.T) {
 	// given
-	config := &config.Config{
+	c := &config.Config{
 		Elasticsearch: config.Elasticsearch{
 			BatchSizeLimit:      1,
 			BatchByteSizeLimit:  1,
@@ -169,7 +181,7 @@ func TestProcessor_GetMetric(t *testing.T) {
 	}
 	dcpCheckpointCommit := func() {}
 
-	processor, err := NewProcessor(config, logger.Log, logger.Log, dcpCheckpointCommit, nil)
+	processor, err := NewProcessor(c, logger.Log, logger.Log, dcpCheckpointCommit, nil)
 	if err != nil {
 		t.Fatalf("Failed to create Processor: %v", err)
 	}
@@ -181,17 +193,4 @@ func TestProcessor_GetMetric(t *testing.T) {
 	if metric == nil {
 		t.Errorf("Metric shouldn't be nil")
 	}
-}
-
-type mockListenerContext struct {
-	commitCalled bool
-	ackCalled    bool
-}
-
-func (m *mockListenerContext) Commit() {
-	m.commitCalled = true
-}
-
-func (m *mockListenerContext) Ack() {
-	m.ackCalled = true
 }

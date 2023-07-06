@@ -1,8 +1,9 @@
-package v7
+package client
 
 import (
 	"bytes"
 	"fmt"
+	"github.com/elastic/go-elasticsearch/v7"
 	"math"
 	"strings"
 
@@ -10,19 +11,17 @@ import (
 	jsoniter "github.com/json-iterator/go"
 
 	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
-
-	"github.com/elastic/go-elasticsearch/v7"
 )
 
-type Client interface {
+type ESClient interface {
 	Bulk(reader *bytes.Reader) error
 }
 
 type client struct {
-	v7Client *elasticsearch.Client
+	esClient *elasticsearch.Client
 }
 
-func New(cfg *config.Config) (Client, error) {
+func New(cfg *config.Config) (ESClient, error) {
 	es, err := elasticsearch.NewClient(elasticsearch.Config{
 		MaxRetries:           math.MaxInt,
 		Addresses:            cfg.Elasticsearch.Urls,
@@ -35,12 +34,12 @@ func New(cfg *config.Config) (Client, error) {
 	}
 
 	return &client{
-		v7Client: es,
+		esClient: es,
 	}, nil
 }
 
 func (c *client) Bulk(reader *bytes.Reader) error {
-	r, err := c.v7Client.Bulk(reader)
+	r, err := c.esClient.Bulk(reader)
 	if err != nil {
 		return err
 	}

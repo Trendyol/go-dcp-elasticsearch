@@ -4,7 +4,7 @@ import (
 	"errors"
 	"os"
 
-	v7 "github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/v7"
+	v7 "github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/client"
 
 	"github.com/Trendyol/go-dcp-client/logger"
 

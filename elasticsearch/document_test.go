@@ -6,11 +6,14 @@ import (
 )
 
 func TestNewDeleteAction(t *testing.T) {
+	// given
 	key := []byte("key")
 	routing := "routing"
 
+	// when
 	action := NewDeleteAction(key, &routing)
 
+	// then
 	expectedAction := ActionDocument{
 		ID:      key,
 		Routing: &routing,
@@ -23,12 +26,15 @@ func TestNewDeleteAction(t *testing.T) {
 }
 
 func TestNewIndexAction(t *testing.T) {
+	// given
 	key := []byte("key")
 	source := []byte("source")
 	routing := "routing"
 
+	// when
 	action := NewIndexAction(key, source, &routing)
 
+	// then
 	expectedAction := ActionDocument{
 		ID:      key,
 		Routing: &routing,
