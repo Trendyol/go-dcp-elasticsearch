@@ -1,9 +1,8 @@
 package helper
 
 import (
+	"reflect"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestByte(t *testing.T) {
@@ -34,7 +33,9 @@ func TestByte(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			result := Byte(test.input)
-			assert.Equal(t, test.expected, result)
+			if !reflect.DeepEqual(result, test.expected) {
+				t.Errorf("Byte() = %v, expected %v", result, test.expected)
+			}
 		})
 	}
 }
