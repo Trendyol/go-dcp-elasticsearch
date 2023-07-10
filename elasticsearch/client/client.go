@@ -3,9 +3,10 @@ package client
 import (
 	"bytes"
 	"fmt"
-	"github.com/elastic/go-elasticsearch/v7"
 	"math"
 	"strings"
+
+	"github.com/elastic/go-elasticsearch/v7"
 
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 	jsoniter "github.com/json-iterator/go"

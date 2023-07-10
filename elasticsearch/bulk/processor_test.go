@@ -33,7 +33,7 @@ func TestProcessor_StartBulk(t *testing.T) {
 
 	processor, err := NewProcessor(c, logger.Log, logger.Log, dcpCheckpointCommit, mockEsClient)
 	if err != nil {
-		t.Fatalf("Failed to create Processor: %v", err)
+		t.Fatalf("failed to create Processor: %v", err)
 	}
 
 	mockListenerContext := mock.NewMockListenerContext()
@@ -50,11 +50,11 @@ func TestProcessor_StartBulk(t *testing.T) {
 
 	// then
 	if !reflect.DeepEqual(true, mockEsClient.BulkFnCalled) {
-		t.Errorf("Bulk should be called")
+		t.Errorf("bulk should be called")
 	}
 
 	if !reflect.DeepEqual(true, mockListenerContext.AckCalled) {
-		t.Errorf("Ack should be called")
+		t.Errorf("ack should be called")
 	}
 }
 
@@ -73,7 +73,7 @@ func TestProcessor_AddActions(t *testing.T) {
 	mockEsClient := mock.NewMockEsClient()
 	mockEsClient.OnBulk(func(reader *bytes.Reader) error {
 		if reader.Len() < 100 {
-			t.Errorf("Length of bulk is less than limit. got %v, expected %v", reader.Len(), c.Elasticsearch.BatchByteSizeLimit)
+			t.Errorf("length of bulk is less than limit. got %v, expected %v", reader.Len(), c.Elasticsearch.BatchByteSizeLimit)
 		}
 
 		return nil
@@ -81,7 +81,7 @@ func TestProcessor_AddActions(t *testing.T) {
 
 	processor, err := NewProcessor(c, logger.Log, logger.Log, dcpCheckpointCommit, mockEsClient)
 	if err != nil {
-		t.Fatalf("Failed to create Processor: %v", err)
+		t.Fatalf("failed to create Processor: %v", err)
 	}
 
 	mockListenerContext := mock.NewMockListenerContext()
@@ -95,11 +95,11 @@ func TestProcessor_AddActions(t *testing.T) {
 
 	// then
 	if !reflect.DeepEqual(true, mockEsClient.BulkFnCalled) {
-		t.Errorf("Bulk should be called")
+		t.Errorf("bulk should be called")
 	}
 
 	if !reflect.DeepEqual(true, mockListenerContext.AckCalled) {
-		t.Errorf("Ack should be called")
+		t.Errorf("ack should be called")
 	}
 }
 
@@ -107,7 +107,7 @@ func TestProcessor_AddActions_EsClient_Return_Err(t *testing.T) {
 	// given
 	defer func() {
 		if r := recover(); r == nil {
-			t.Errorf("Expected panic, but none occurred")
+			t.Errorf("expected panic, but none occurred")
 		}
 	}()
 
@@ -128,7 +128,7 @@ func TestProcessor_AddActions_EsClient_Return_Err(t *testing.T) {
 
 	processor, err := NewProcessor(c, logger.Log, logger.Log, dcpCheckpointCommit, mockEsClient)
 	if err != nil {
-		t.Fatalf("Failed to create Processor: %v", err)
+		t.Fatalf("failed to create Processor: %v", err)
 	}
 
 	mockListenerContext := mock.NewMockListenerContext()
@@ -142,11 +142,11 @@ func TestProcessor_AddActions_EsClient_Return_Err(t *testing.T) {
 
 	// then
 	if !reflect.DeepEqual(true, mockEsClient.BulkFnCalled) {
-		t.Errorf("Bulk should be called")
+		t.Errorf("bulk should be called")
 	}
 
 	if !reflect.DeepEqual(true, mockListenerContext.AckCalled) {
-		t.Errorf("Ack should be called")
+		t.Errorf("ack should be called")
 	}
 }
 
@@ -163,7 +163,7 @@ func TestProcessor_Close(t *testing.T) {
 
 	processor, err := NewProcessor(c, logger.Log, logger.Log, dcpCheckpointCommit, nil)
 	if err != nil {
-		t.Fatalf("Failed to create Processor: %v", err)
+		t.Fatalf("failed to create Processor: %v", err)
 	}
 
 	// when
@@ -183,7 +183,7 @@ func TestProcessor_GetMetric(t *testing.T) {
 
 	processor, err := NewProcessor(c, logger.Log, logger.Log, dcpCheckpointCommit, nil)
 	if err != nil {
-		t.Fatalf("Failed to create Processor: %v", err)
+		t.Fatalf("failed to create Processor: %v", err)
 	}
 
 	// when
@@ -191,6 +191,6 @@ func TestProcessor_GetMetric(t *testing.T) {
 
 	// then
 	if metric == nil {
-		t.Errorf("Metric shouldn't be nil")
+		t.Errorf("metric shouldn't be nil")
 	}
 }

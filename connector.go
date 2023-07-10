@@ -4,7 +4,7 @@ import (
 	"errors"
 	"os"
 
-	v7 "github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/client"
+	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/client"
 
 	"github.com/Trendyol/go-dcp-client/logger"
 
@@ -119,7 +119,7 @@ func newConnector(cf any, mapper Mapper, logger logger.Logger, errorLogger logge
 
 	connector.dcp = dcp
 
-	v7Client, err := v7.New(cfg)
+	esClient, err := client.New(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func newConnector(cf any, mapper Mapper, logger logger.Logger, errorLogger logge
 		logger,
 		errorLogger,
 		dcp.Commit,
-		v7Client,
+		esClient,
 	)
 	if err != nil {
 		return nil, err
