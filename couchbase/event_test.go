@@ -9,7 +9,7 @@ func TestNewDeleteEvent(t *testing.T) {
 	// given
 	key := []byte("test-key")
 	value := []byte("test-value")
-	collectionName := "test-collection"
+	var collectionName = "test-collection"
 
 	want := Event{
 		Key:            key,
