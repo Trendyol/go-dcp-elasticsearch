@@ -5,11 +5,12 @@ import (
 	"testing"
 )
 
+// nolint:goconst
 func TestNewDeleteEvent(t *testing.T) {
 	// given
 	key := []byte("test-key")
 	value := []byte("test-value")
-	var collectionName = "test-collection"
+	collectionName := "test-collection"
 
 	want := Event{
 		Key:            key,

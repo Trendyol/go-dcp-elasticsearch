@@ -13,8 +13,8 @@ func TestDefaultMapper(t *testing.T) {
 	// given
 	tests := []struct {
 		name  string
-		event couchbase.Event
 		want  []elasticsearch.ActionDocument
+		event couchbase.Event
 	}{
 		{
 			name: "Mutated Event",

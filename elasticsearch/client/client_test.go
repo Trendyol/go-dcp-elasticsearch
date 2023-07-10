@@ -15,9 +15,9 @@ import (
 func TestHasResponseError(t *testing.T) {
 	// given
 	testCases := []struct {
-		name     string
-		response *esapi.Response
 		expected error
+		response *esapi.Response
+		name     string
 	}{
 		{
 			name: "NoError",
@@ -56,10 +56,10 @@ func TestHasResponseError(t *testing.T) {
 
 func TestJoinErrors(t *testing.T) {
 	// given
-	testCases := []struct {
-		name     string
-		body     map[string]interface{}
+	testCases := [32]struct {
 		expected error
+		body     map[string]interface{}
+		name     string
 	}{
 		{
 			name:     "NoErrors",
