@@ -1,12 +1,11 @@
 package config
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
 	"github.com/Trendyol/go-dcp-client/config"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestApplyDefaults(t *testing.T) {
@@ -57,7 +56,9 @@ func TestApplyDefaults(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			c := test.config
 			c.ApplyDefaults()
-			assert.Equal(t, test.expected, c)
+			if !reflect.DeepEqual(c, test.expected) {
+				t.Errorf("ApplyDefaults() = %v, expected %v", c, test.expected)
+			}
 		})
 	}
 }
