@@ -12,7 +12,7 @@ import (
 	"github.com/Trendyol/go-dcp-elasticsearch/metric"
 	"gopkg.in/yaml.v3"
 
-	godcpclient "github.com/Trendyol/go-dcp"
+	"github.com/Trendyol/go-dcp"
 	"github.com/Trendyol/go-dcp/models"
 )
 
@@ -22,7 +22,7 @@ type Connector interface {
 }
 
 type connector struct {
-	dcp         godcpclient.Dcp
+	dcp         dcp.Dcp
 	mapper      Mapper
 	config      *config.Config
 	logger      logger.Logger
@@ -106,7 +106,7 @@ func newConnector(cf any, mapper Mapper, logger logger.Logger, errorLogger logge
 		errorLogger: errorLogger,
 	}
 
-	dcp, err := godcpclient.NewDcpWithLoggers(&cfg.Dcp, connector.listener, logger, errorLogger)
+	dcp, err := dcp.NewDcpWithLoggers(&cfg.Dcp, connector.listener, logger, errorLogger)
 	if err != nil {
 		connector.errorLogger.Printf("Dcp error: %v", err)
 		return nil, err
