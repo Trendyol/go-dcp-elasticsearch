@@ -1,21 +1,20 @@
-package goelasticsearchconnectcouchbase
+package dcpelasticsearch
 
 import (
 	"errors"
 	"os"
 
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/client"
+	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/client"
+	"github.com/Trendyol/go-dcp/logger"
 
-	"github.com/Trendyol/go-dcp-client/logger"
-
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/couchbase"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/bulk"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/metric"
+	"github.com/Trendyol/go-dcp-elasticsearch/config"
+	"github.com/Trendyol/go-dcp-elasticsearch/couchbase"
+	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/bulk"
+	"github.com/Trendyol/go-dcp-elasticsearch/metric"
 	"gopkg.in/yaml.v3"
 
-	godcpclient "github.com/Trendyol/go-dcp-client"
-	"github.com/Trendyol/go-dcp-client/models"
+	"github.com/Trendyol/go-dcp"
+	"github.com/Trendyol/go-dcp/models"
 )
 
 type Connector interface {
@@ -24,7 +23,7 @@ type Connector interface {
 }
 
 type connector struct {
-	dcp         godcpclient.Dcp
+	dcp         dcp.Dcp
 	mapper      Mapper
 	config      *config.Config
 	logger      logger.Logger
@@ -108,7 +107,7 @@ func newConnector(cf any, mapper Mapper, logger logger.Logger, errorLogger logge
 		errorLogger: errorLogger,
 	}
 
-	dcp, err := godcpclient.NewDcpWithLoggers(&cfg.Dcp, connector.listener, logger, errorLogger)
+	dcp, err := dcp.NewDcpWithLoggers(&cfg.Dcp, connector.listener, logger, errorLogger)
 	if err != nil {
 		connector.errorLogger.Printf("Dcp error: %v", err)
 		return nil, err

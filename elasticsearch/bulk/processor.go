@@ -5,14 +5,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/client"
+	"github.com/Trendyol/go-dcp/models"
 
-	"github.com/Trendyol/go-dcp-client/logger"
+	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch"
+	"github.com/Trendyol/go-dcp/logger"
 
-	"github.com/Trendyol/go-dcp-client/models"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/helper"
+	"github.com/Trendyol/go-dcp-elasticsearch/config"
+	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/client"
+	"github.com/Trendyol/go-dcp-elasticsearch/helper"
 )
 
 type Processor struct {

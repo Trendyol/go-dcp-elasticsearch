@@ -6,12 +6,12 @@ import (
 	"math"
 	"strings"
 
+	"github.com/Trendyol/go-dcp-elasticsearch/config"
+
 	"github.com/elastic/go-elasticsearch/v7"
 
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 	jsoniter "github.com/json-iterator/go"
-
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
 )
 
 type ESClient interface {

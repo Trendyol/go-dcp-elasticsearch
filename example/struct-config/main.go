@@ -1,11 +1,11 @@
 package main
 
 import (
-	dcpcf "github.com/Trendyol/go-dcp-client/config"
-	dcpes "github.com/Trendyol/go-elasticsearch-connect-couchbase"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/couchbase"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch"
+	"github.com/Trendyol/go-dcp-elasticsearch"
+	"github.com/Trendyol/go-dcp-elasticsearch/config"
+	"github.com/Trendyol/go-dcp-elasticsearch/couchbase"
+	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch"
+	dcpConfig "github.com/Trendyol/go-dcp/config"
 )
 
 func mapper(event couchbase.Event) []elasticsearch.ActionDocument {
@@ -18,27 +18,27 @@ func mapper(event couchbase.Event) []elasticsearch.ActionDocument {
 }
 
 func main() {
-	connector, err := dcpes.NewConnectorBuilder(config.Config{
+	connector, err := dcpelasticsearch.NewConnectorBuilder(config.Config{
 		Elasticsearch: config.Elasticsearch{
 			CollectionIndexMapping: map[string]string{
 				"_default": "indexname",
 			},
 			Urls: []string{"http://localhost:9200"},
 		},
-		Dcp: dcpcf.Dcp{
+		Dcp: dcpConfig.Dcp{
 			Username:   "user",
 			Password:   "password",
 			BucketName: "dcp-test",
 			Hosts:      []string{"localhost:8091"},
-			Dcp: dcpcf.ExternalDcp{
-				Group: dcpcf.DCPGroup{
+			Dcp: dcpConfig.ExternalDcp{
+				Group: dcpConfig.DCPGroup{
 					Name: "groupName",
-					Membership: dcpcf.DCPGroupMembership{
+					Membership: dcpConfig.DCPGroupMembership{
 						Type: "static",
 					},
 				},
 			},
-			Metadata: dcpcf.Metadata{
+			Metadata: dcpConfig.Metadata{
 				Config: map[string]string{
 					"bucket":     "checkpoint-bucket-name",
 					"scope":      "_default",

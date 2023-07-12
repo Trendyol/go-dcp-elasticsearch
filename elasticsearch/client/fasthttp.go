@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
+	"github.com/Trendyol/go-dcp-elasticsearch/config"
 
 	"github.com/valyala/fasthttp"
 )

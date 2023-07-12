@@ -2,11 +2,11 @@ module example
 
 go 1.20
 
-replace github.com/Trendyol/go-elasticsearch-connect-couchbase => ./../..
+replace github.com/Trendyol/go-dcp-elasticsearch => ./../..
 
 require (
-	github.com/Trendyol/go-dcp-client v0.0.61
-	github.com/Trendyol/go-elasticsearch-connect-couchbase v0.0.0
+	github.com/Trendyol/go-dcp v0.0.65
+	github.com/Trendyol/go-dcp-elasticsearch v0.0.0
 )
 
 require (

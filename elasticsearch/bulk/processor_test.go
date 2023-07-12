@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Trendyol/go-dcp-client/logger"
-	"github.com/Trendyol/go-dcp-client/models"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/mock"
+	"github.com/Trendyol/go-dcp-elasticsearch/config"
+	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch"
+	"github.com/Trendyol/go-dcp-elasticsearch/mock"
+	"github.com/Trendyol/go-dcp/logger"
+	"github.com/Trendyol/go-dcp/models"
 )
 
 // nolint:staticcheck

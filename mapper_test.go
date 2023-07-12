@@ -1,12 +1,11 @@
-package goelasticsearchconnectcouchbase_test
+package dcpelasticsearch
 
 import (
 	"testing"
 	"time"
 
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/couchbase"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch"
+	"github.com/Trendyol/go-dcp-elasticsearch/couchbase"
+	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch"
 )
 
 func TestDefaultMapper(t *testing.T) {
@@ -58,7 +57,7 @@ func TestDefaultMapper(t *testing.T) {
 	// when & then
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := goelasticsearchconnectcouchbase.DefaultMapper(tt.event)
+			got := DefaultMapper(tt.event)
 			if len(got) != len(tt.want) {
 				t.Errorf("got %d actions, want %d actions", len(got), len(tt.want))
 			}

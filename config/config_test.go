@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Trendyol/go-dcp-client/config"
+	"github.com/Trendyol/go-dcp/config"
 )
 
 func TestApplyDefaults(t *testing.T) {
