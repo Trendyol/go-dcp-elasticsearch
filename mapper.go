@@ -1,8 +1,8 @@
-package goelasticsearchconnectcouchbase
+package dcpelasticsearch
 
 import (
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/couchbase"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/document"
+	"github.com/Trendyol/go-dcp-elasticsearch/couchbase"
+	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/document"
 )
 
 type Mapper func(event couchbase.Event) []document.ESActionDocument

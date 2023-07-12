@@ -1,9 +1,9 @@
 package main
 
 import (
-	dcpes "github.com/Trendyol/go-elasticsearch-connect-couchbase"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/couchbase"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/document"
+	"github.com/Trendyol/go-dcp-elasticsearch"
+	"github.com/Trendyol/go-dcp-elasticsearch/couchbase"
+	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/document"
 )
 
 func mapper(event couchbase.Event) []document.ESActionDocument {
@@ -16,7 +16,7 @@ func mapper(event couchbase.Event) []document.ESActionDocument {
 }
 
 func main() {
-	connector, err := dcpes.NewConnectorBuilder("config.yml").
+	connector, err := dcpelasticsearch.NewConnectorBuilder("config.yml").
 		SetMapper(mapper).
 		Build()
 	if err != nil {

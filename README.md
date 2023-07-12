@@ -1,11 +1,11 @@
-# Go Elasticsearch Connect Couchbase
+# Go Dcp Elasticsearch
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/Trendyol/go-elasticsearch-connect-couchbase.svg)](https://pkg.go.dev/github.com/Trendyol/go-elasticsearch-connect-couchbase) [![Go Report Card](https://goreportcard.com/badge/github.com/Trendyol/go-elasticsearch-connect-couchbase)](https://goreportcard.com/report/github.com/Trendyol/go-elasticsearch-connect-couchbase)
+[![Go Reference](https://pkg.go.dev/badge/github.com/Trendyol/go-dcp-elasticsearch.svg)](https://pkg.go.dev/github.com/Trendyol/go-dcp-elasticsearch) [![Go Report Card](https://goreportcard.com/badge/github.com/Trendyol/go-dcp-elasticsearch)](https://goreportcard.com/report/github.com/Trendyol/go-dcp-elasticsearch)
 
 Go implementation of
 the [Elasticsearch Connect Couchbase](https://github.com/couchbase/couchbase-elasticsearch-connector).
 
-**Go Elasticsearch Connect Couchbase** streams documents from Couchbase Database Change Protocol (DCP) and writes to
+**Go Dcp Elasticsearch** streams documents from Couchbase Database Change Protocol (DCP) and writes to
 Elasticsearch index in near real-time.
 
 ## Features
@@ -17,7 +17,7 @@ Elasticsearch index in near real-time.
 * **Elasticsearch compression request body** support.
 * **Managing batch configurations** such as maximum batch size, batch bytes, batch ticker durations.
 * **Scale up and down** by custom membership algorithms(Couchbase, KubernetesHa, Kubernetes StatefulSet or
-  Static, see [examples](https://github.com/Trendyol/go-dcp-client#examples)).
+  Static, see [examples](https://github.com/Trendyol/go-dcp#examples)).
 * **Easily manageable configurations**.
 
 ## Benchmarks
@@ -28,55 +28,61 @@ used for both connectors.
 
 | Package                                         | Time to Process Events | Elasticsearch Indexing Rate(/s) | Average CPU Usage(Core) | Average Memory Usage |
 |:------------------------------------------------|:----------------------:|:-------------------------------:|:-----------------------:|:--------------------:|
-| **Go Elasticsearch Connect Couchbase**(Go 1.20) |        **50s**         |    ![go](./benchmark/go.png)    |        **0.486**        |      **408MB**       
+| **Go Dcp Elasticsearch**(Go 1.20) |        **50s**         |    ![go](./benchmark/go.png)    |        **0.486**        |      **408MB**       
 | Java Elasticsearch Connect Couchbase(JDK15)     |          80s           |   ![go](./benchmark/java.png)   |          0.31           |        1091MB         
 
 ## Example
 [Struct Config](example/struct-config/main.go)
 ```go
 func mapper(event couchbase.Event) []document.ESActionDocument {
-  if event.IsMutated {
-    e := document.NewIndexAction(event.Key, event.Value, nil)
-    return []document.ESActionDocument{e}
-  }
-  e := document.NewDeleteAction(event.Key, nil)
-  return []document.ESActionDocument{e}
+	if event.IsMutated {
+		e := document.NewIndexAction(event.Key, event.Value, nil)
+		return []document.ESActionDocument{e}
+	}
+	e := document.NewDeleteAction(event.Key, nil)
+	return []document.ESActionDocument{e}
 }
 
 func main() {
-  connector, err := dcpes.NewConnectorBuilder(config.Config{
-    Elasticsearch: config.Elasticsearch{
-      CollectionIndexMapping: map[string]string{
-        "_default": "indexname",
-      },
-      Urls: []string{"http://localhost:9200"},
-    },
-    Dcp: dcpcf.Dcp{
-      Username:   "user",
-      Password:   "password",
-      BucketName: "dcp-test",
-      Hosts:      []string{"localhost:8091"},
-      Dcp: dcpcf.ExternalDcp{
-        Group: dcpcf.DCPGroup{
-          Name: "groupName",
-          Membership: dcpcf.DCPGroupMembership{
-            Type: "static",
-          },
-        },
-      },
-    },
-  }).
-    SetMapper(mapper).
-    Build()
-  if err != nil {
-    panic(err)
-  }
+	connector, err := dcpelasticsearch.NewConnectorBuilder(config.Config{
+		Elasticsearch: config.Elasticsearch{
+			CollectionIndexMapping: map[string]string{
+				"_default": "indexname",
+			},
+			Urls: []string{"http://localhost:9200"},
+		},
+		Dcp: dcpConfig.Dcp{
+			Username:   "user",
+			Password:   "password",
+			BucketName: "dcp-test",
+			Hosts:      []string{"localhost:8091"},
+			Dcp: dcpConfig.ExternalDcp{
+				Group: dcpConfig.DCPGroup{
+					Name: "groupName",
+					Membership: dcpConfig.DCPGroupMembership{
+						Type: "static",
+					},
+				},
+			},
+			Metadata: dcpConfig.Metadata{
+				Config: map[string]string{
+					"bucket":     "checkpoint-bucket-name",
+					"scope":      "_default",
+					"collection": "_default",
+				},
+				Type: "couchbase",
+			},
+		},
+	}).
+		SetMapper(mapper).
+		Build()
+	if err != nil {
+		panic(err)
+	}
 
-  defer connector.Close()
-  connector.Start()
+	defer connector.Close()
+	connector.Start()
 }
-
-
 ```
 
 [File Config](example/simple/main.go)
@@ -84,7 +90,7 @@ func main() {
 
 ### Dcp Configuration
 
-Check out on [go-dcp-client](https://github.com/Trendyol/go-dcp-client#configuration)
+Check out on [go-dcp](https://github.com/Trendyol/go-dcp#configuration)
 
 ### Elasticsearch Specific Configuration
 
@@ -107,11 +113,11 @@ Check out on [go-dcp-client](https://github.com/Trendyol/go-dcp-client#configura
 | elasticsearch_connector_latency_ms                      | Time to adding to the batch.  | N/A    | Gauge      |
 | elasticsearch_connector_bulk_request_process_latency_ms | Time to process bulk request. | N/A    | Gauge      |
 
-For DCP related metrics see [also](https://github.com/Trendyol/go-dcp-client#exposed-metrics).
+For DCP related metrics see [also](https://github.com/Trendyol/go-dcp#exposed-metrics).
 
 ## Contributing
 
-Go Elasticsearch Connect Couchbase is always open for direct contributions. For more information please check
+Go Dcp Elasticsearch is always open for direct contributions. For more information please check
 our [Contribution Guideline document](./CONTRIBUTING.md).
 
 ## License

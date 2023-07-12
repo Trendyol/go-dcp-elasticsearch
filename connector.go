@@ -1,19 +1,19 @@
-package goelasticsearchconnectcouchbase
+package dcpelasticsearch
 
 import (
 	"errors"
 	"os"
 
-	"github.com/Trendyol/go-dcp-client/logger"
+	"github.com/Trendyol/go-dcp/logger"
 
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/couchbase"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/bulk"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/metric"
+	"github.com/Trendyol/go-dcp-elasticsearch/config"
+	"github.com/Trendyol/go-dcp-elasticsearch/couchbase"
+	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/bulk"
+	"github.com/Trendyol/go-dcp-elasticsearch/metric"
 	"gopkg.in/yaml.v3"
 
-	godcpclient "github.com/Trendyol/go-dcp-client"
-	"github.com/Trendyol/go-dcp-client/models"
+	godcpclient "github.com/Trendyol/go-dcp"
+	"github.com/Trendyol/go-dcp/models"
 )
 
 type Connector interface {

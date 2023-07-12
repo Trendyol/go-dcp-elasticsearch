@@ -3,7 +3,7 @@ package config
 import (
 	"time"
 
-	"github.com/Trendyol/go-dcp-client/config"
+	"github.com/Trendyol/go-dcp/config"
 )
 
 type Elasticsearch struct {
