@@ -1,8 +1,8 @@
 package metric
 
 import (
-	"github.com/Trendyol/go-dcp-client/helpers"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/bulk"
+	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/bulk"
+	"github.com/Trendyol/go-dcp/helpers"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

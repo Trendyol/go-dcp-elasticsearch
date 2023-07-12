@@ -9,13 +9,13 @@ import (
 
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 
-	"github.com/Trendyol/go-dcp-client/logger"
+	"github.com/Trendyol/go-dcp/logger"
 
-	"github.com/Trendyol/go-dcp-client/models"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/config"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/client"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/elasticsearch/document"
-	"github.com/Trendyol/go-elasticsearch-connect-couchbase/helper"
+	"github.com/Trendyol/go-dcp-elasticsearch/config"
+	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/client"
+	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/document"
+	"github.com/Trendyol/go-dcp-elasticsearch/helper"
+	"github.com/Trendyol/go-dcp/models"
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/json-iterator/go"
 )
