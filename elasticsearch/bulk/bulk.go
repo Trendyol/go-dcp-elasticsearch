@@ -37,6 +37,7 @@ type Bulk struct {
 	batchTickerDuration    time.Duration
 	flushLock              sync.Mutex
 	batchByteSizeLimit     int
+	isDcpRebalancing       bool
 }
 
 type Metric struct {
@@ -79,6 +80,22 @@ func (b *Bulk) StartBulk() {
 	}
 }
 
+func (b *Bulk) PrepareStartRebalancing() {
+	b.flushLock.Lock()
+	defer b.flushLock.Unlock()
+
+	b.isDcpRebalancing = true
+	b.batch = b.batch[:0]
+	b.batchSize = 0
+}
+
+func (b *Bulk) PrepareEndRebalancing() {
+	b.flushLock.Lock()
+	defer b.flushLock.Unlock()
+
+	b.isDcpRebalancing = false
+}
+
 func (b *Bulk) AddActions(
 	ctx *models.ListenerContext,
 	eventTime time.Time,
@@ -86,7 +103,11 @@ func (b *Bulk) AddActions(
 	collectionName string,
 ) {
 	b.flushLock.Lock()
-
+	if b.isDcpRebalancing {
+		b.errorLogger.Printf("could not add new message to batch while rebalancing")
+		b.flushLock.Unlock()
+		return
+	}
 	for _, action := range actions {
 		b.batch = append(
 			b.batch,
@@ -157,7 +178,9 @@ func (b *Bulk) Close() {
 func (b *Bulk) flushMessages() {
 	b.flushLock.Lock()
 	defer b.flushLock.Unlock()
-
+	if b.isDcpRebalancing {
+		return
+	}
 	if len(b.batch) > 0 {
 		err := b.bulkRequest()
 		if err != nil {
