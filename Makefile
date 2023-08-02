@@ -17,3 +17,6 @@ linter:
 
 run:
 	go run main.go
+
+compose:
+	docker compose up --wait --build --force-recreate --remove-orphans
