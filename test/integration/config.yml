@@ -1,0 +1,29 @@
+hosts:
+  - localhost:8091
+username: user
+password: 123456
+bucketName: dcp-test
+rollbackMitigation:
+  disabled: true
+checkpoint:
+  type: manual
+dcp:
+  group:
+    name: groupName
+    membership:
+      type: static
+metadata:
+  type: couchbase
+  readOnly: true
+  config:
+    bucket: dcp-test
+    scope: _default
+    collection: _default
+elasticsearch:
+  batchSizeLimit: 1000
+  batchTickerDuration: 5s
+  batchByteSizeLimit: 90614720
+  collectionIndexMapping:
+    _default: test
+  urls:
+    - "http://localhost:9200"
