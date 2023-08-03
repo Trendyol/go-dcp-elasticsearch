@@ -21,6 +21,7 @@ import (
 )
 
 type Bulk struct {
+	reader                 *bytes.Reader
 	errorLogger            logger.Logger
 	logger                 logger.Logger
 	dcpCheckpointCommit    func()
@@ -70,6 +71,7 @@ func NewBulk(
 		metric:                 &Metric{},
 		collectionIndexMapping: config.Elasticsearch.CollectionIndexMapping,
 		typeName:               helper.Byte(config.Elasticsearch.TypeName),
+		reader:                 bytes.NewReader([]byte{}),
 	}
 	return bulk, nil
 }
@@ -196,8 +198,8 @@ func (b *Bulk) flushMessages() {
 
 func (b *Bulk) bulkRequest() error {
 	startedTime := time.Now()
-	reader := bytes.NewReader(b.batch)
-	r, err := b.esClient.Bulk(reader)
+	b.reader.Reset(b.batch)
+	r, err := b.esClient.Bulk(b.reader)
 	b.metric.BulkRequestProcessLatencyMs = time.Since(startedTime).Milliseconds()
 	if err != nil {
 		return err
