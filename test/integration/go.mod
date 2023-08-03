@@ -1,10 +1,14 @@
 module integration-test-example
 
-go 1.19
+go 1.20
 
 replace github.com/Trendyol/go-dcp-elasticsearch => ../../.
 
-require github.com/Trendyol/go-dcp-elasticsearch v0.0.0
+require (
+	github.com/Trendyol/go-dcp-elasticsearch v0.0.0
+	github.com/elastic/go-elasticsearch/v7 v7.17.7
+	github.com/json-iterator/go v1.1.12
+)
 
 require (
 	github.com/Trendyol/go-dcp v0.0.69 // indirect
@@ -15,7 +19,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/couchbase/gocbcore/v10 v10.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/elastic/go-elasticsearch/v7 v7.17.7 // indirect
 	github.com/emicklei/go-restful/v3 v3.10.2 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
@@ -31,7 +34,6 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
-	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.16.3 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
