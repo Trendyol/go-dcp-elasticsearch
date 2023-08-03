@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"context"
 	dcpelasticsearch "github.com/Trendyol/go-dcp-elasticsearch"
 	"github.com/Trendyol/go-dcp-elasticsearch/couchbase"
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/document"
@@ -19,7 +20,7 @@ func Mapper(event couchbase.Event) []document.ESActionDocument {
 }
 
 func TestElasticsearch(t *testing.T) {
-	newDcp, err := dcpelasticsearch.NewConnectorBuilder("config.yml").SetMapper(Mapper).Build()
+	connector, err := dcpelasticsearch.NewConnectorBuilder("config.yml").SetMapper(Mapper).Build()
 	if err != nil {
 		return
 	}
@@ -28,11 +29,11 @@ func TestElasticsearch(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		newDcp.Start()
+		connector.Start()
 	}()
 
 	go func() {
-		time.Sleep(20 * time.Second)
+		time.Sleep(40 * time.Second)
 		es, err := elasticsearch.NewClient(elasticsearch.Config{
 			Addresses: []string{"http://localhost:9200"},
 		})
@@ -40,20 +41,33 @@ func TestElasticsearch(t *testing.T) {
 			t.Fatalf("could not open connection to elasticsearch %s", err)
 		}
 
-		response, err := es.Count(
-			es.Count.WithIndex("test"),
-		)
-		if err != nil {
-			t.Fatalf("could not get count from elasticsearch %s", err)
+		ctx, _ := context.WithTimeout(context.Background(), 3*time.Minute)
+
+	CountCheckLoop:
+		for {
+			select {
+			case <-ctx.Done():
+				t.Fatalf("deadline exceed")
+			default:
+				response, err := es.Count(
+					es.Count.WithIndex("test"),
+				)
+				if err != nil {
+					t.Fatalf("could not get count from elasticsearch %s", err)
+				}
+				var countResponse CountResponse
+				err = jsoniter.NewDecoder(response.Body).Decode(&countResponse)
+				if err != nil {
+					t.Fatalf("could not decode response from elasticsearch %s", err)
+				}
+				if countResponse.Count == 31591 {
+					connector.Close()
+					goto CountCheckLoop
+				}
+				time.Sleep(2 * time.Second)
+			}
 		}
-		var countResponse CountResponse
-		err = jsoniter.NewDecoder(response.Body).Decode(&countResponse)
-		if err != nil {
-			t.Fatalf("could not decode response from elasticsearch %s", err)
-		}
-		if countResponse.Count == 31591 {
-			newDcp.Close()
-		}
+
 	}()
 
 	wg.Wait()
