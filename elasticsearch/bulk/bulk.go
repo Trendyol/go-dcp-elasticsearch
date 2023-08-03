@@ -71,7 +71,7 @@ func NewBulk(
 		metric:                 &Metric{},
 		collectionIndexMapping: config.Elasticsearch.CollectionIndexMapping,
 		typeName:               helper.Byte(config.Elasticsearch.TypeName),
-		reader:                 bytes.NewReader([]byte{}),
+		reader:                 bytes.NewReader(nil),
 	}
 	return bulk, nil
 }
