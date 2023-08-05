@@ -23,69 +23,73 @@ Elasticsearch index in near real-time.
 ## Benchmarks
 
 The benchmark was made with the  **1,001,006** Couchbase document, because it is possible to more clearly observe the
-difference in the batch structure between the two packages. **Default configurations** for Java Elasticsearch Connect Couchbase
+difference in the batch structure between the two packages. **Default configurations** for Java Elasticsearch Connect
+Couchbase
 used for both connectors.
 
-| Package                                         | Time to Process Events | Elasticsearch Indexing Rate(/s) | Average CPU Usage(Core) | Average Memory Usage |
-|:------------------------------------------------|:----------------------:|:-------------------------------:|:-----------------------:|:--------------------:|
-| **Go Dcp Elasticsearch**(Go 1.20) |        **50s**         |    ![go](./benchmark/go.png)    |        **0.486**        |      **408MB**       
-| Java Elasticsearch Connect Couchbase(JDK15)     |          80s           |   ![go](./benchmark/java.png)   |          0.31           |        1091MB         
+| Package                                     | Time to Process Events | Elasticsearch Indexing Rate(/s) | Average CPU Usage(Core) | Average Memory Usage |
+|:--------------------------------------------|:----------------------:|:-------------------------------:|:-----------------------:|:--------------------:|
+| **Go Dcp Elasticsearch**(Go 1.20)           |        **50s**         |    ![go](./benchmark/go.png)    |        **0.486**        |      **408MB**       
+| Java Elasticsearch Connect Couchbase(JDK15) |          80s           |   ![go](./benchmark/java.png)   |          0.31           |        1091MB        
 
 ## Example
+
 [Struct Config](example/struct-config/main.go)
+
 ```go
 func mapper(event couchbase.Event) []document.ESActionDocument {
-	if event.IsMutated {
-		e := document.NewIndexAction(event.Key, event.Value, nil)
-		return []document.ESActionDocument{e}
-	}
-	e := document.NewDeleteAction(event.Key, nil)
-	return []document.ESActionDocument{e}
+if event.IsMutated {
+e := document.NewIndexAction(event.Key, event.Value, nil)
+return []document.ESActionDocument{e}
+}
+e := document.NewDeleteAction(event.Key, nil)
+return []document.ESActionDocument{e}
 }
 
 func main() {
-	connector, err := dcpelasticsearch.NewConnectorBuilder(config.Config{
-		Elasticsearch: config.Elasticsearch{
-			CollectionIndexMapping: map[string]string{
-				"_default": "indexname",
-			},
-			Urls: []string{"http://localhost:9200"},
-		},
-		Dcp: dcpConfig.Dcp{
-			Username:   "user",
-			Password:   "password",
-			BucketName: "dcp-test",
-			Hosts:      []string{"localhost:8091"},
-			Dcp: dcpConfig.ExternalDcp{
-				Group: dcpConfig.DCPGroup{
-					Name: "groupName",
-					Membership: dcpConfig.DCPGroupMembership{
-						Type: "static",
-					},
-				},
-			},
-			Metadata: dcpConfig.Metadata{
-				Config: map[string]string{
-					"bucket":     "checkpoint-bucket-name",
-					"scope":      "_default",
-					"collection": "_default",
-				},
-				Type: "couchbase",
-			},
-		},
-	}).
-		SetMapper(mapper).
-		Build()
-	if err != nil {
-		panic(err)
-	}
+connector, err := dcpelasticsearch.NewConnectorBuilder(config.Config{
+Elasticsearch: config.Elasticsearch{
+CollectionIndexMapping: map[string]string{
+"_default": "indexname",
+},
+Urls: []string{"http://localhost:9200"},
+},
+Dcp: dcpConfig.Dcp{
+Username:   "user",
+Password:   "password",
+BucketName: "dcp-test",
+Hosts:      []string{"localhost:8091"},
+Dcp: dcpConfig.ExternalDcp{
+Group: dcpConfig.DCPGroup{
+Name: "groupName",
+Membership: dcpConfig.DCPGroupMembership{
+Type: "static",
+},
+},
+},
+Metadata: dcpConfig.Metadata{
+Config: map[string]string{
+"bucket":     "checkpoint-bucket-name",
+"scope":      "_default",
+"collection": "_default",
+},
+Type: "couchbase",
+},
+},
+}).
+SetMapper(mapper).
+Build()
+if err != nil {
+panic(err)
+}
 
-	defer connector.Close()
-	connector.Start()
+defer connector.Close()
+connector.Start()
 }
 ```
 
 [File Config](example/simple/main.go)
+
 ## Configuration
 
 ### Dcp Configuration
@@ -105,6 +109,7 @@ Check out on [go-dcp](https://github.com/Trendyol/go-dcp#configuration)
 | `elasticsearch.maxConnsPerHost`        | int               | no       | 512      | Maximum number of connections per each host which may be established                                |
 | `elasticsearch.maxIdleConnDuration`    | time.Duration     | no       | 10s      | Idle keep-alive connections are closed after this duration.                                         | 
 | `elasticsearch.compressionEnabled`     | boolean           | no       | false    | Compression can be used if message size is large, CPU usage may be affected.                        |
+| `elasticsearch.concurrentRequest`      | int               | no       | 1        | Concurrent bulk request count                                                                       |
 
 ## Exposed metrics
 

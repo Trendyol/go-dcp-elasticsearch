@@ -15,6 +15,7 @@ type Elasticsearch struct {
 	BatchSizeLimit         int               `yaml:"batchSizeLimit"`
 	BatchByteSizeLimit     int               `yaml:"batchByteSizeLimit"`
 	BatchTickerDuration    time.Duration     `yaml:"batchTickerDuration"`
+	ConcurrentRequest      int               `yaml:"concurrentRequest"`
 	CompressionEnabled     bool              `yaml:"compressionEnabled"`
 }
 
@@ -34,5 +35,9 @@ func (c *Config) ApplyDefaults() {
 
 	if c.Elasticsearch.BatchByteSizeLimit == 0 {
 		c.Elasticsearch.BatchByteSizeLimit = 10485760
+	}
+
+	if c.Elasticsearch.ConcurrentRequest == 0 {
+		c.Elasticsearch.ConcurrentRequest = 1
 	}
 }
