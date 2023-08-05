@@ -210,7 +210,7 @@ func (b *Bulk) flushMessages() {
 func (b *Bulk) request(concurrentRequestIndex int, batch [][]byte) func() error {
 	return func() error {
 		reader := b.readers[concurrentRequestIndex]
-		reader.Reset(bytes.Join(batch, []byte{}))
+		reader.Reset(helper.Flatten(batch))
 		r, err := b.esClient.Bulk(reader)
 		if err != nil {
 			return err
@@ -231,7 +231,11 @@ func (b *Bulk) bulkRequest() error {
 	startedTime := time.Now()
 
 	for i := 0; i < len(chunks); i++ {
-		eg.Go(b.request(i, chunks[i]))
+		chunk := chunks[i]
+		if len(chunk) == 0 {
+			continue
+		}
+		eg.Go(b.request(i, chunk))
 	}
 
 	err := eg.Wait()
