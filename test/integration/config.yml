@@ -23,6 +23,7 @@ elasticsearch:
   batchSizeLimit: 1000
   batchTickerDuration: 5s
   batchByteSizeLimit: 90614720
+  concurrentRequest: 12
   collectionIndexMapping:
     _default: test
   urls:
