@@ -8,8 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/exp/maps"
-
 	"github.com/Trendyol/go-dcp/helpers"
 	"golang.org/x/sync/errgroup"
 
@@ -29,16 +27,18 @@ import (
 type Bulk struct {
 	errorLogger            logger.Logger
 	logger                 logger.Logger
-	batch                  map[string][]byte
+	metric                 *Metric
+	collectionIndexMapping map[string]string
+	batchKeys              map[string]int
 	dcpCheckpointCommit    func()
 	batchTicker            *time.Ticker
 	isClosed               chan bool
 	actionCh               chan document.ESActionDocument
 	esClient               *elasticsearch.Client
-	metric                 *Metric
-	collectionIndexMapping map[string]string
+	batch                  [][]byte
 	typeName               []byte
-	readers                []*bytes.Reader
+	readers                []*helper.MultiDimByteReader
+	batchIndex             int
 	batchSize              int
 	batchSizeLimit         int
 	batchTickerDuration    time.Duration
@@ -65,9 +65,9 @@ func NewBulk(
 		return nil, err
 	}
 
-	readers := make([]*bytes.Reader, config.Elasticsearch.ConcurrentRequest)
+	readers := make([]*helper.MultiDimByteReader, config.Elasticsearch.ConcurrentRequest)
 	for i := 0; i < config.Elasticsearch.ConcurrentRequest; i++ {
-		readers[i] = bytes.NewReader(nil)
+		readers[i] = helper.NewMultiDimByteReader(nil)
 	}
 
 	bulk := &Bulk{
@@ -86,7 +86,7 @@ func NewBulk(
 		typeName:               helper.Byte(config.Elasticsearch.TypeName),
 		readers:                readers,
 		concurrentRequest:      config.Elasticsearch.ConcurrentRequest,
-		batch:                  make(map[string][]byte, config.Elasticsearch.BatchSizeLimit),
+		batchKeys:              make(map[string]int, config.Elasticsearch.BatchSizeLimit),
 	}
 	return bulk, nil
 }
@@ -102,7 +102,9 @@ func (b *Bulk) PrepareStartRebalancing() {
 	defer b.flushLock.Unlock()
 
 	b.isDcpRebalancing = true
-	b.batch = make(map[string][]byte, b.batchSizeLimit)
+	b.batch = b.batch[:0]
+	b.batchKeys = make(map[string]int, b.batchSizeLimit)
+	b.batchIndex = 0
 	b.batchSize = 0
 	b.batchByteSize = 0
 }
@@ -137,7 +139,14 @@ func (b *Bulk) AddActions(
 			b.typeName,
 		)
 
-		b.batch[key] = value
+		if batchIndex, ok := b.batchKeys[key]; ok {
+			b.batch[batchIndex] = value
+		} else {
+			b.batch = append(b.batch, value)
+			b.batchKeys[key] = b.batchIndex
+			b.batchIndex++
+		}
+
 		b.batchByteSize += len(value)
 	}
 	ctx.Ack()
@@ -206,7 +215,9 @@ func (b *Bulk) flushMessages() {
 			panic(err)
 		}
 		b.batchTicker.Reset(b.batchTickerDuration)
-		b.batch = make(map[string][]byte, b.batchSizeLimit)
+		b.batch = b.batch[:0]
+		b.batchKeys = make(map[string]int, b.batchSizeLimit)
+		b.batchIndex = 0
 		b.batchSize = 0
 		b.batchByteSize = 0
 	}
@@ -217,7 +228,7 @@ func (b *Bulk) flushMessages() {
 func (b *Bulk) request(concurrentRequestIndex int, batch [][]byte) func() error {
 	return func() error {
 		reader := b.readers[concurrentRequestIndex]
-		reader.Reset(helper.Flatten(batch))
+		reader.Reset(batch)
 		r, err := b.esClient.Bulk(reader)
 		if err != nil {
 			return err
@@ -233,16 +244,14 @@ func (b *Bulk) request(concurrentRequestIndex int, batch [][]byte) func() error 
 func (b *Bulk) bulkRequest() error {
 	eg, _ := errgroup.WithContext(context.Background())
 
-	chunks := helpers.ChunkSlice(maps.Values(b.batch), b.concurrentRequest)
+	chunks := helpers.ChunkSlice(b.batch, b.concurrentRequest)
 
 	startedTime := time.Now()
 
-	for i := 0; i < len(chunks); i++ {
-		chunk := chunks[i]
-		if len(chunk) == 0 {
-			continue
+	for i, chunk := range chunks {
+		if len(chunk) > 0 {
+			eg.Go(b.request(i, chunk))
 		}
-		eg.Go(b.request(i, chunk))
 	}
 
 	err := eg.Wait()
