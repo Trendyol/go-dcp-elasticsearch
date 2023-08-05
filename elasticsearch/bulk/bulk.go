@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/exp/maps"
+
 	"github.com/Trendyol/go-dcp/helpers"
 	"golang.org/x/sync/errgroup"
 
@@ -25,9 +27,9 @@ import (
 )
 
 type Bulk struct {
-	readers                []*bytes.Reader
 	errorLogger            logger.Logger
 	logger                 logger.Logger
+	batch                  map[string][]byte
 	dcpCheckpointCommit    func()
 	batchTicker            *time.Ticker
 	isClosed               chan bool
@@ -36,14 +38,15 @@ type Bulk struct {
 	metric                 *Metric
 	collectionIndexMapping map[string]string
 	typeName               []byte
-	batch                  [][]byte
+	readers                []*bytes.Reader
 	batchSize              int
 	batchSizeLimit         int
 	batchTickerDuration    time.Duration
-	flushLock              sync.Mutex
 	batchByteSizeLimit     int
-	isDcpRebalancing       bool
+	batchByteSize          int
 	concurrentRequest      int
+	flushLock              sync.Mutex
+	isDcpRebalancing       bool
 }
 
 type Metric struct {
@@ -83,6 +86,7 @@ func NewBulk(
 		typeName:               helper.Byte(config.Elasticsearch.TypeName),
 		readers:                readers,
 		concurrentRequest:      config.Elasticsearch.ConcurrentRequest,
+		batch:                  make(map[string][]byte, config.Elasticsearch.BatchSizeLimit),
 	}
 	return bulk, nil
 }
@@ -98,8 +102,9 @@ func (b *Bulk) PrepareStartRebalancing() {
 	defer b.flushLock.Unlock()
 
 	b.isDcpRebalancing = true
-	b.batch = b.batch[:0]
+	b.batch = make(map[string][]byte, b.batchSizeLimit)
 	b.batchSize = 0
+	b.batchByteSize = 0
 }
 
 func (b *Bulk) PrepareEndRebalancing() {
@@ -122,17 +127,18 @@ func (b *Bulk) AddActions(
 		return
 	}
 	for _, action := range actions {
-		b.batch = append(
-			b.batch,
-			getEsActionJSON(
-				action.ID,
-				action.Type,
-				b.collectionIndexMapping[collectionName],
-				action.Routing,
-				action.Source,
-				b.typeName,
-			),
+		key := string(action.ID)
+		value := getEsActionJSON(
+			action.ID,
+			action.Type,
+			b.collectionIndexMapping[collectionName],
+			action.Routing,
+			action.Source,
+			b.typeName,
 		)
+
+		b.batch[key] = value
+		b.batchByteSize += len(value)
 	}
 	ctx.Ack()
 
@@ -200,8 +206,9 @@ func (b *Bulk) flushMessages() {
 			panic(err)
 		}
 		b.batchTicker.Reset(b.batchTickerDuration)
-		b.batch = b.batch[:0]
+		b.batch = make(map[string][]byte, b.batchSizeLimit)
 		b.batchSize = 0
+		b.batchByteSize = 0
 	}
 
 	b.dcpCheckpointCommit()
@@ -226,7 +233,7 @@ func (b *Bulk) request(concurrentRequestIndex int, batch [][]byte) func() error 
 func (b *Bulk) bulkRequest() error {
 	eg, _ := errgroup.WithContext(context.Background())
 
-	chunks := helpers.ChunkSlice(b.batch, b.concurrentRequest)
+	chunks := helpers.ChunkSlice(maps.Values(b.batch), b.concurrentRequest)
 
 	startedTime := time.Now()
 
