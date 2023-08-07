@@ -2,10 +2,14 @@ package bulk
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/Trendyol/go-dcp/helpers"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 
@@ -21,23 +25,27 @@ import (
 )
 
 type Bulk struct {
-	reader                 *bytes.Reader
 	errorLogger            logger.Logger
 	logger                 logger.Logger
+	metric                 *Metric
+	collectionIndexMapping map[string]string
+	batchKeys              map[string]int
 	dcpCheckpointCommit    func()
 	batchTicker            *time.Ticker
 	isClosed               chan bool
 	actionCh               chan document.ESActionDocument
 	esClient               *elasticsearch.Client
-	metric                 *Metric
-	collectionIndexMapping map[string]string
+	batch                  [][]byte
 	typeName               []byte
-	batch                  []byte
+	readers                []*helper.MultiDimByteReader
+	batchIndex             int
 	batchSize              int
 	batchSizeLimit         int
 	batchTickerDuration    time.Duration
-	flushLock              sync.Mutex
 	batchByteSizeLimit     int
+	batchByteSize          int
+	concurrentRequest      int
+	flushLock              sync.Mutex
 	isDcpRebalancing       bool
 }
 
@@ -57,6 +65,11 @@ func NewBulk(
 		return nil, err
 	}
 
+	readers := make([]*helper.MultiDimByteReader, config.Elasticsearch.ConcurrentRequest)
+	for i := 0; i < config.Elasticsearch.ConcurrentRequest; i++ {
+		readers[i] = helper.NewMultiDimByteReader(nil)
+	}
+
 	bulk := &Bulk{
 		batchTickerDuration:    config.Elasticsearch.BatchTickerDuration,
 		batchTicker:            time.NewTicker(config.Elasticsearch.BatchTickerDuration),
@@ -71,7 +84,9 @@ func NewBulk(
 		metric:                 &Metric{},
 		collectionIndexMapping: config.Elasticsearch.CollectionIndexMapping,
 		typeName:               helper.Byte(config.Elasticsearch.TypeName),
-		reader:                 bytes.NewReader(nil),
+		readers:                readers,
+		concurrentRequest:      config.Elasticsearch.ConcurrentRequest,
+		batchKeys:              make(map[string]int, config.Elasticsearch.BatchSizeLimit),
 	}
 	return bulk, nil
 }
@@ -88,7 +103,10 @@ func (b *Bulk) PrepareStartRebalancing() {
 
 	b.isDcpRebalancing = true
 	b.batch = b.batch[:0]
+	b.batchKeys = make(map[string]int, b.batchSizeLimit)
+	b.batchIndex = 0
 	b.batchSize = 0
+	b.batchByteSize = 0
 }
 
 func (b *Bulk) PrepareEndRebalancing() {
@@ -111,17 +129,25 @@ func (b *Bulk) AddActions(
 		return
 	}
 	for _, action := range actions {
-		b.batch = append(
-			b.batch,
-			getEsActionJSON(
-				action.ID,
-				action.Type,
-				b.collectionIndexMapping[collectionName],
-				action.Routing,
-				action.Source,
-				b.typeName,
-			)...,
+		key := string(action.ID)
+		value := getEsActionJSON(
+			action.ID,
+			action.Type,
+			b.collectionIndexMapping[collectionName],
+			action.Routing,
+			action.Source,
+			b.typeName,
 		)
+
+		if batchIndex, ok := b.batchKeys[key]; ok {
+			b.batch[batchIndex] = value
+		} else {
+			b.batch = append(b.batch, value)
+			b.batchKeys[key] = b.batchIndex
+			b.batchIndex++
+		}
+
+		b.batchByteSize += len(value)
 	}
 	ctx.Ack()
 
@@ -190,25 +216,49 @@ func (b *Bulk) flushMessages() {
 		}
 		b.batchTicker.Reset(b.batchTickerDuration)
 		b.batch = b.batch[:0]
+		b.batchKeys = make(map[string]int, b.batchSizeLimit)
+		b.batchIndex = 0
 		b.batchSize = 0
+		b.batchByteSize = 0
 	}
 
 	b.dcpCheckpointCommit()
 }
 
+func (b *Bulk) requestFunc(concurrentRequestIndex int, batch [][]byte) func() error {
+	return func() error {
+		reader := b.readers[concurrentRequestIndex]
+		reader.Reset(batch)
+		r, err := b.esClient.Bulk(reader)
+		if err != nil {
+			return err
+		}
+		err = hasResponseError(r)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
 func (b *Bulk) bulkRequest() error {
+	eg, _ := errgroup.WithContext(context.Background())
+
+	chunks := helpers.ChunkSlice(b.batch, b.concurrentRequest)
+
 	startedTime := time.Now()
-	b.reader.Reset(b.batch)
-	r, err := b.esClient.Bulk(b.reader)
+
+	for i, chunk := range chunks {
+		if len(chunk) > 0 {
+			eg.Go(b.requestFunc(i, chunk))
+		}
+	}
+
+	err := eg.Wait()
+
 	b.metric.BulkRequestProcessLatencyMs = time.Since(startedTime).Milliseconds()
-	if err != nil {
-		return err
-	}
-	err = hasResponseError(r)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func (b *Bulk) GetMetric() *Metric {
