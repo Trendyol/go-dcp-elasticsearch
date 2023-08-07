@@ -225,7 +225,7 @@ func (b *Bulk) flushMessages() {
 	b.dcpCheckpointCommit()
 }
 
-func (b *Bulk) request(concurrentRequestIndex int, batch [][]byte) func() error {
+func (b *Bulk) requestFunc(concurrentRequestIndex int, batch [][]byte) func() error {
 	return func() error {
 		reader := b.readers[concurrentRequestIndex]
 		reader.Reset(batch)
@@ -250,7 +250,7 @@ func (b *Bulk) bulkRequest() error {
 
 	for i, chunk := range chunks {
 		if len(chunk) > 0 {
-			eg.Go(b.request(i, chunk))
+			eg.Go(b.requestFunc(i, chunk))
 		}
 	}
 
