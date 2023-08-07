@@ -105,6 +105,7 @@ Check out on [go-dcp](https://github.com/Trendyol/go-dcp#configuration)
 | `elasticsearch.maxConnsPerHost`        | int               | no       | 512      | Maximum number of connections per each host which may be established                                |
 | `elasticsearch.maxIdleConnDuration`    | time.Duration     | no       | 10s      | Idle keep-alive connections are closed after this duration.                                         | 
 | `elasticsearch.compressionEnabled`     | boolean           | no       | false    | Compression can be used if message size is large, CPU usage may be affected.                        |
+| `elasticsearch.concurrentRequest`      | int               | no       | 1        | Concurrent bulk request count                                                                       |
 
 ## Exposed metrics
 

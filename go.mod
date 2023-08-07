@@ -8,6 +8,8 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/prometheus/client_golang v1.16.0
 	github.com/valyala/fasthttp v1.48.0
+	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea
+	golang.org/x/sync v0.3.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -50,7 +52,6 @@ require (
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/oauth2 v0.6.0 // indirect
-	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/term v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
