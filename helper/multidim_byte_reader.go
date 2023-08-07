@@ -5,11 +5,11 @@ import (
 )
 
 type MultiDimByteReader struct {
-	s                          [][]byte
-	currentSliceIndex          int
-	currentIndexInCurrentSlice int
-	currentSliceLen            int
-	totalLen                   int
+	s                          [][]byte // slices
+	currentSliceIndex          int      // index of current slice
+	currentIndexInCurrentSlice int      // index of current byte in current slice
+	currentSliceLen            int      // length of current slice
+	totalLen                   int      // total length of all slices
 }
 
 func (r *MultiDimByteReader) Read(b []byte) (n int, err error) {
