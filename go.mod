@@ -3,7 +3,7 @@ module github.com/Trendyol/go-dcp-elasticsearch
 go 1.20
 
 require (
-	github.com/Trendyol/go-dcp v0.0.71
+	github.com/Trendyol/go-dcp v0.0.72
 	github.com/elastic/go-elasticsearch/v7 v7.17.7
 	github.com/json-iterator/go v1.1.12
 	github.com/prometheus/client_golang v1.16.0
@@ -50,14 +50,14 @@ require (
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
-	golang.org/x/net v0.8.0 // indirect
-	golang.org/x/oauth2 v0.6.0 // indirect
+	golang.org/x/net v0.10.0 // indirect
+	golang.org/x/oauth2 v0.7.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
-	golang.org/x/term v0.6.0 // indirect
-	golang.org/x/text v0.8.0 // indirect
+	golang.org/x/term v0.8.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/protobuf v1.30.0 // indirect
+	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	k8s.io/api v0.27.4 // indirect
