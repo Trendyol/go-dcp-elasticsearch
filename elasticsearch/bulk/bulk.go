@@ -32,8 +32,6 @@ type Bulk struct {
 	batchKeys              map[string]int
 	dcpCheckpointCommit    func()
 	batchTicker            *time.Ticker
-	isClosed               chan bool
-	actionCh               chan document.ESActionDocument
 	esClient               *elasticsearch.Client
 	batch                  [][]byte
 	typeName               []byte
@@ -73,10 +71,9 @@ func NewBulk(
 	bulk := &Bulk{
 		batchTickerDuration:    config.Elasticsearch.BatchTickerDuration,
 		batchTicker:            time.NewTicker(config.Elasticsearch.BatchTickerDuration),
-		actionCh:               make(chan document.ESActionDocument, config.Elasticsearch.BatchSizeLimit),
+		batch:                  make([][]byte, 0, config.Elasticsearch.BatchSizeLimit),
 		batchSizeLimit:         config.Elasticsearch.BatchSizeLimit,
 		batchByteSizeLimit:     config.Elasticsearch.BatchByteSizeLimit,
-		isClosed:               make(chan bool, 1),
 		logger:                 logger,
 		errorLogger:            errorLogger,
 		dcpCheckpointCommit:    dcpCheckpointCommit,
@@ -102,6 +99,9 @@ func (b *Bulk) PrepareStartRebalancing() {
 	defer b.flushLock.Unlock()
 
 	b.isDcpRebalancing = true
+	for _, batchBytes := range b.batch {
+		bytesPool.Put(batchBytes)
+	}
 	b.batch = b.batch[:0]
 	b.batchKeys = make(map[string]int, b.batchSizeLimit)
 	b.batchIndex = 0
@@ -170,6 +170,10 @@ var (
 	postFix       = helper.Byte(`"}}`)
 )
 
+var bytesPool = sync.Pool{
+	New: func() interface{} { return []byte{} },
+}
+
 func getEsActionJSON(
 	docID []byte,
 	action document.EsAction,
@@ -178,7 +182,8 @@ func getEsActionJSON(
 	source []byte,
 	typeName []byte,
 ) []byte {
-	var meta []byte
+	meta := bytesPool.Get().([]byte)
+	meta = meta[:0]
 	if action == document.Index {
 		meta = indexPrefix
 	} else {
@@ -222,6 +227,9 @@ func (b *Bulk) flushMessages() {
 			panic(err)
 		}
 		b.batchTicker.Reset(b.batchTickerDuration)
+		for _, batchBytes := range b.batch {
+			bytesPool.Put(batchBytes)
+		}
 		b.batch = b.batch[:0]
 		b.batchKeys = make(map[string]int, b.batchSizeLimit)
 		b.batchIndex = 0
