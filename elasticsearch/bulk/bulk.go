@@ -7,6 +7,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unsafe"
+
+	"github.com/modern-go/reflect2"
 
 	"github.com/Trendyol/go-dcp/helpers"
 	"golang.org/x/sync/errgroup"
@@ -130,24 +133,26 @@ func (b *Bulk) AddActions(
 	}
 	for _, action := range actions {
 		key := helper.String(action.ID)
-		value := getEsActionJSON(
+		var meta []byte
+		meta = getEsActionJSON(
 			action.ID,
 			action.Type,
 			b.collectionIndexMapping[collectionName],
 			action.Routing,
 			action.Source,
 			b.typeName,
+			reflect2.NoEscape(unsafe.Pointer(&meta)),
 		)
 
 		if batchIndex, ok := b.batchKeys[key]; ok {
-			b.batch[batchIndex] = value
+			b.batch[batchIndex] = meta
 		} else {
-			b.batch = append(b.batch, value)
+			b.batch = append(b.batch, meta)
 			b.batchKeys[key] = b.batchIndex
 			b.batchIndex++
 		}
 
-		b.batchByteSize += len(value)
+		b.batchByteSize += len(meta)
 	}
 	ctx.Ack()
 
@@ -170,6 +175,7 @@ var (
 	postFix       = helper.Byte(`"}}`)
 )
 
+//nolint:staticcheck
 func getEsActionJSON(
 	docID []byte,
 	action document.EsAction,
@@ -177,8 +183,10 @@ func getEsActionJSON(
 	routing *string,
 	source []byte,
 	typeName []byte,
+	metaPtr unsafe.Pointer,
 ) []byte {
-	var meta []byte
+	meta := *(*[]byte)(metaPtr)
+
 	if action == document.Index {
 		meta = indexPrefix
 	} else {
