@@ -30,13 +30,14 @@ type Bulk struct {
 	metric                 *Metric
 	collectionIndexMapping map[string]string
 	batchKeys              map[string]int
+	batchKeyData           []helper.BatchKeyData
+	batchKeyDataIndex      int
 	dcpCheckpointCommit    func()
 	batchTicker            *time.Ticker
 	esClient               *elasticsearch.Client
-	batch                  [][]byte
+	batch                  []byte
 	typeName               []byte
-	readers                []*helper.MultiDimByteReader
-	batchIndex             int
+	readers                []*helper.BatchKeyDataReader
 	batchSize              int
 	batchSizeLimit         int
 	batchTickerDuration    time.Duration
@@ -63,15 +64,14 @@ func NewBulk(
 		return nil, err
 	}
 
-	readers := make([]*helper.MultiDimByteReader, config.Elasticsearch.ConcurrentRequest)
+	readers := make([]*helper.BatchKeyDataReader, config.Elasticsearch.ConcurrentRequest)
 	for i := 0; i < config.Elasticsearch.ConcurrentRequest; i++ {
-		readers[i] = helper.NewMultiDimByteReader(nil)
+		readers[i] = helper.NewBatchKeyDataReader(nil, nil)
 	}
 
 	bulk := &Bulk{
 		batchTickerDuration:    config.Elasticsearch.BatchTickerDuration,
 		batchTicker:            time.NewTicker(config.Elasticsearch.BatchTickerDuration),
-		batch:                  make([][]byte, 0, config.Elasticsearch.BatchSizeLimit),
 		batchSizeLimit:         config.Elasticsearch.BatchSizeLimit,
 		batchByteSizeLimit:     config.Elasticsearch.BatchByteSizeLimit,
 		logger:                 logger,
@@ -100,12 +100,10 @@ func (b *Bulk) PrepareStartRebalancing() {
 	defer b.flushLock.Unlock()
 
 	b.isDcpRebalancing = true
-	for _, batchBytes := range b.batch {
-		bytesPool.Put(batchBytes)
-	}
 	b.batch = b.batch[:0]
 	b.batchKeys = make(map[string]int, b.batchSizeLimit)
-	b.batchIndex = 0
+	b.batchKeyData = b.batchKeyData[:0]
+	b.batchKeyDataIndex = 0
 	b.batchSize = 0
 	b.batchByteSize = 0
 }
@@ -131,24 +129,43 @@ func (b *Bulk) AddActions(
 	}
 	for _, action := range actions {
 		key := helper.String(action.ID)
-		value := getEsActionJSON(
-			action.ID,
-			action.Type,
-			b.collectionIndexMapping[collectionName],
-			action.Routing,
-			action.Source,
-			b.typeName,
-		)
+
+		var index = len(b.batch)
+		if action.Type == document.Index {
+			b.batch = append(b.batch, indexPrefix...)
+		} else {
+			b.batch = append(b.batch, deletePrefix...)
+		}
+		b.batch = append(b.batch, helper.Byte(b.collectionIndexMapping[collectionName])...)
+		b.batch = append(b.batch, idPrefix...)
+		b.batch = append(b.batch, action.ID...)
+		if action.Routing != nil {
+			b.batch = append(b.batch, routingPrefix...)
+			b.batch = append(b.batch, helper.Byte(*action.Routing)...)
+		}
+		if b.typeName != nil {
+			b.batch = append(b.batch, typePrefix...)
+			b.batch = append(b.batch, b.typeName...)
+		}
+		b.batch = append(b.batch, postFix...)
+		if action.Type == document.Index {
+			b.batch = append(b.batch, '\n')
+			b.batch = append(b.batch, action.Source...)
+		}
+		b.batch = append(b.batch, '\n')
+		size := len(b.batch) - index
+
+		batchKeyData := helper.BatchKeyData{Index: index, Size: size}
 
 		if batchIndex, ok := b.batchKeys[key]; ok {
-			b.batch[batchIndex] = value
+			b.batchKeyData[batchIndex] = batchKeyData
 		} else {
-			b.batch = append(b.batch, value)
-			b.batchKeys[key] = b.batchIndex
-			b.batchIndex++
+			b.batchKeyData = append(b.batchKeyData, batchKeyData)
+			b.batchKeys[key] = b.batchKeyDataIndex
+			b.batchKeyDataIndex++
 		}
 
-		b.batchByteSize += len(value)
+		b.batchByteSize += size
 	}
 	ctx.Ack()
 
@@ -171,44 +188,6 @@ var (
 	postFix       = helper.Byte(`"}}`)
 )
 
-var bytesPool = sync.Pool{
-	New: func() interface{} { return []byte{} },
-}
-
-func getEsActionJSON(
-	docID []byte,
-	action document.EsAction,
-	indexName string,
-	routing *string,
-	source []byte,
-	typeName []byte,
-) []byte {
-	meta := (bytesPool.Get().([]byte))[:0]
-	if action == document.Index {
-		meta = append(meta, indexPrefix...)
-	} else {
-		meta = append(meta, deletePrefix...)
-	}
-	meta = append(meta, helper.Byte(indexName)...)
-	meta = append(meta, idPrefix...)
-	meta = append(meta, docID...)
-	if routing != nil {
-		meta = append(meta, routingPrefix...)
-		meta = append(meta, helper.Byte(*routing)...)
-	}
-	if typeName != nil {
-		meta = append(meta, typePrefix...)
-		meta = append(meta, typeName...)
-	}
-	meta = append(meta, postFix...)
-	if action == document.Index {
-		meta = append(meta, '\n')
-		meta = append(meta, source...)
-	}
-	meta = append(meta, '\n')
-	return meta
-}
-
 func (b *Bulk) Close() {
 	b.batchTicker.Stop()
 
@@ -228,12 +207,10 @@ func (b *Bulk) flushMessages() {
 			panic(err)
 		}
 		b.batchTicker.Reset(b.batchTickerDuration)
-		for _, batchBytes := range b.batch {
-			bytesPool.Put(batchBytes)
-		}
 		b.batch = b.batch[:0]
 		b.batchKeys = make(map[string]int, b.batchSizeLimit)
-		b.batchIndex = 0
+		b.batchKeyData = b.batchKeyData[:0]
+		b.batchKeyDataIndex = 0
 		b.batchSize = 0
 		b.batchByteSize = 0
 	}
@@ -241,10 +218,10 @@ func (b *Bulk) flushMessages() {
 	b.dcpCheckpointCommit()
 }
 
-func (b *Bulk) requestFunc(concurrentRequestIndex int, batch [][]byte) func() error {
+func (b *Bulk) requestFunc(concurrentRequestIndex int, batch []helper.BatchKeyData) func() error {
 	return func() error {
 		reader := b.readers[concurrentRequestIndex]
-		reader.Reset(batch)
+		reader.Reset(b.batch, batch)
 		r, err := b.esClient.Bulk(reader)
 		if err != nil {
 			return err
@@ -260,7 +237,7 @@ func (b *Bulk) requestFunc(concurrentRequestIndex int, batch [][]byte) func() er
 func (b *Bulk) bulkRequest() error {
 	eg, _ := errgroup.WithContext(context.Background())
 
-	chunks := helpers.ChunkSlice(b.batch, b.concurrentRequest)
+	chunks := helpers.ChunkSlice(b.batchKeyData, b.concurrentRequest)
 
 	startedTime := time.Now()
 
