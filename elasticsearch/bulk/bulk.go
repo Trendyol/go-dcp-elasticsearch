@@ -130,26 +130,24 @@ func (b *Bulk) AddActions(
 	}
 	for _, action := range actions {
 		key := helper.String(action.ID)
-		var meta []byte
-		getEsActionJSON(
+		value := getEsActionJSON(
 			action.ID,
 			action.Type,
 			b.collectionIndexMapping[collectionName],
 			action.Routing,
 			action.Source,
 			b.typeName,
-			&meta,
 		)
 
 		if batchIndex, ok := b.batchKeys[key]; ok {
-			b.batch[batchIndex] = meta
+			b.batch[batchIndex] = value
 		} else {
-			b.batch = append(b.batch, meta)
+			b.batch = append(b.batch, value)
 			b.batchKeys[key] = b.batchIndex
 			b.batchIndex++
 		}
 
-		b.batchByteSize += len(meta)
+		b.batchByteSize += len(value)
 	}
 	ctx.Ack()
 
@@ -179,30 +177,31 @@ func getEsActionJSON(
 	routing *string,
 	source []byte,
 	typeName []byte,
-	meta *[]byte,
-) {
+) []byte {
+	var meta []byte
 	if action == document.Index {
-		*meta = indexPrefix
+		meta = indexPrefix
 	} else {
-		*meta = deletePrefix
+		meta = deletePrefix
 	}
-	*meta = append(*meta, helper.Byte(indexName)...)
-	*meta = append(*meta, idPrefix...)
-	*meta = append(*meta, docID...)
+	meta = append(meta, helper.Byte(indexName)...)
+	meta = append(meta, idPrefix...)
+	meta = append(meta, docID...)
 	if routing != nil {
-		*meta = append(*meta, routingPrefix...)
-		*meta = append(*meta, helper.Byte(*routing)...)
+		meta = append(meta, routingPrefix...)
+		meta = append(meta, helper.Byte(*routing)...)
 	}
 	if typeName != nil {
-		*meta = append(*meta, typePrefix...)
-		*meta = append(*meta, typeName...)
+		meta = append(meta, typePrefix...)
+		meta = append(meta, typeName...)
 	}
-	*meta = append(*meta, postFix...)
+	meta = append(meta, postFix...)
 	if action == document.Index {
-		*meta = append(*meta, '\n')
-		*meta = append(*meta, source...)
+		meta = append(meta, '\n')
+		meta = append(meta, source...)
 	}
-	*meta = append(*meta, '\n')
+	meta = append(meta, '\n')
+	return meta
 }
 
 func (b *Bulk) Close() {
