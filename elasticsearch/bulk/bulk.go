@@ -25,19 +25,19 @@ import (
 )
 
 type Bulk struct {
-	logger                 logger.Logger
 	errorLogger            logger.Logger
-	batchTicker            *time.Ticker
+	logger                 logger.Logger
 	metric                 *Metric
 	collectionIndexMapping map[string]string
 	batchKeys              map[string]int
-	esClient               *elasticsearch.Client
-	dcpCheckpointCommit    func()
-	batch                  []byte
 	batchKeyData           []helper.BatchKeyData
+	batchKeyDataIndex      int
+	dcpCheckpointCommit    func()
+	batchTicker            *time.Ticker
+	esClient               *elasticsearch.Client
+	batch                  []byte
 	typeName               []byte
 	readers                []*helper.BatchKeyDataReader
-	batchKeyDataIndex      int
 	batchSize              int
 	batchSizeLimit         int
 	batchTickerDuration    time.Duration
@@ -130,7 +130,7 @@ func (b *Bulk) AddActions(
 	for _, action := range actions {
 		key := helper.String(action.ID)
 
-		index := len(b.batch)
+		var index = len(b.batch)
 		if action.Type == document.Index {
 			b.batch = append(b.batch, indexPrefix...)
 		} else {
