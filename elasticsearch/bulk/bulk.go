@@ -91,10 +91,6 @@ func NewBulk(
 	return bulk, nil
 }
 
-var bytesPool = sync.Pool{
-	New: func() any { return []byte{} },
-}
-
 func (b *Bulk) StartBulk() {
 	for range b.batchTicker.C {
 		b.flushMessages()
@@ -106,9 +102,6 @@ func (b *Bulk) PrepareStartRebalancing() {
 	defer b.flushLock.Unlock()
 
 	b.isDcpRebalancing = true
-	for _, byteDoc := range b.batch {
-		bytesPool.Put(byteDoc)
-	}
 	b.batch = b.batch[:0]
 	b.batchKeys = make(map[string]int, b.batchSizeLimit)
 	b.batchIndex = 0
@@ -136,7 +129,7 @@ func (b *Bulk) AddActions(
 		return
 	}
 	for _, action := range actions {
-		key := helper.String(action.ID)
+		key := string(action.ID)
 		value := getEsActionJSON(
 			action.ID,
 			action.Type,
@@ -147,9 +140,7 @@ func (b *Bulk) AddActions(
 		)
 
 		if batchIndex, ok := b.batchKeys[key]; ok {
-			oldElement := b.batch[batchIndex]
 			b.batch[batchIndex] = value
-			bytesPool.Put(oldElement)
 		} else {
 			b.batch = append(b.batch, value)
 			b.batchKeys[key] = b.batchIndex
@@ -180,8 +171,7 @@ var (
 )
 
 func getEsActionJSON(docID []byte, action document.EsAction, indexName string, routing *string, source []byte, typeName []byte) []byte {
-	meta := bytesPool.Get().([]byte)
-	meta = meta[:0]
+	var meta []byte
 	if action == document.Index {
 		meta = indexPrefix
 	} else {
@@ -225,9 +215,6 @@ func (b *Bulk) flushMessages() {
 			panic(err)
 		}
 		b.batchTicker.Reset(b.batchTickerDuration)
-		for _, byteDoc := range b.batch {
-			bytesPool.Put(byteDoc)
-		}
 		b.batch = b.batch[:0]
 		b.batchKeys = make(map[string]int, b.batchSizeLimit)
 		b.batchIndex = 0
