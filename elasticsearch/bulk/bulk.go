@@ -94,7 +94,6 @@ func (b *Bulk) StartBulk() {
 	}
 }
 
-//nolint:staticcheck
 func (b *Bulk) PrepareStartRebalancing() {
 	b.flushLock.Lock()
 	defer b.flushLock.Unlock()
@@ -175,7 +174,6 @@ var bytesPool = sync.Pool{
 	New: func() interface{} { return []byte{} },
 }
 
-//nolint:ineffassign
 func getEsActionJSON(
 	docID []byte,
 	action document.EsAction,
@@ -184,7 +182,8 @@ func getEsActionJSON(
 	source []byte,
 	typeName []byte,
 ) []byte {
-	meta := (bytesPool.Get().([]byte))[:0]
+	meta := bytesPool.Get().([]byte)
+	meta = meta[:0]
 	if action == document.Index {
 		meta = indexPrefix
 	} else {
@@ -216,7 +215,6 @@ func (b *Bulk) Close() {
 	b.flushMessages()
 }
 
-//nolint:staticcheck
 func (b *Bulk) flushMessages() {
 	b.flushLock.Lock()
 	defer b.flushLock.Unlock()
