@@ -2,8 +2,10 @@ module github.com/Trendyol/go-dcp-elasticsearch
 
 go 1.20
 
+replace github.com/elastic/go-elasticsearch/v7 => ./es
+
 require (
-	github.com/Trendyol/go-dcp v0.0.73
+	github.com/Trendyol/go-dcp v0.0.74
 	github.com/elastic/go-elasticsearch/v7 v7.17.7
 	github.com/json-iterator/go v1.1.12
 	github.com/prometheus/client_golang v1.16.0

@@ -4,6 +4,8 @@ go 1.20
 
 replace github.com/Trendyol/go-dcp-elasticsearch => ../../.
 
+replace github.com/elastic/go-elasticsearch/v7 => ../../es
+
 require (
 	github.com/Trendyol/go-dcp-elasticsearch v0.0.0
 	github.com/elastic/go-elasticsearch/v7 v7.17.7
@@ -11,7 +13,7 @@ require (
 )
 
 require (
-	github.com/Trendyol/go-dcp v0.0.73 // indirect
+	github.com/Trendyol/go-dcp v0.0.74 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/ansrivas/fiberprometheus/v2 v2.6.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
