@@ -40,7 +40,6 @@ github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAE
 github.com/Trendyol/go-dcp v0.0.72 h1:jQivPPnHKqr94kOLknqiFLBWxT55ObB6n4ufBlitahw=
 github.com/Trendyol/go-dcp v0.0.72/go.mod h1:izQNSqXpG9fnpYp0wUQOIjZEOvvVPhdlUgDJF2Jd37s=
 github.com/Trendyol/go-dcp v0.0.73/go.mod h1:L9FW5kQ5CFTBTjK3QmpQ2qkkUS06BYsaQu37hBkUzE0=
-github.com/Trendyol/go-dcp v0.0.74/go.mod h1:L9FW5kQ5CFTBTjK3QmpQ2qkkUS06BYsaQu37hBkUzE0=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
