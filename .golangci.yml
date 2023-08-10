@@ -25,6 +25,7 @@ linters:
     - misspell
     - nakedret
     - gofumpt
+    - staticcheck
     - stylecheck
     - typecheck
     - unconvert
