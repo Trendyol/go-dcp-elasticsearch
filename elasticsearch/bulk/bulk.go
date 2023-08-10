@@ -1,7 +1,6 @@
 package bulk
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"strings"
@@ -11,8 +10,6 @@ import (
 	"github.com/Trendyol/go-dcp/helpers"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/elastic/go-elasticsearch/v7/esapi"
-
 	"github.com/Trendyol/go-dcp/logger"
 
 	"github.com/Trendyol/go-dcp-elasticsearch/config"
@@ -20,7 +17,6 @@ import (
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/document"
 	"github.com/Trendyol/go-dcp-elasticsearch/helper"
 	"github.com/Trendyol/go-dcp/models"
-	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/json-iterator/go"
 )
 
@@ -31,7 +27,7 @@ type Bulk struct {
 	metric                 *Metric
 	collectionIndexMapping map[string]string
 	batchKeys              map[string]int
-	esClient               *elasticsearch.Client
+	elasticClient          client.ElasticClient
 	dcpCheckpointCommit    func()
 	batch                  []byte
 	batchKeyData           []helper.BatchKeyData
@@ -59,10 +55,7 @@ func NewBulk(
 	errorLogger logger.Logger,
 	dcpCheckpointCommit func(),
 ) (*Bulk, error) {
-	esClient, err := client.NewElasticClient(config)
-	if err != nil {
-		return nil, err
-	}
+	elasticClient := client.NewElasticClient(config)
 
 	readers := make([]*helper.BatchKeyDataReader, config.Elasticsearch.ConcurrentRequest)
 	for i := 0; i < config.Elasticsearch.ConcurrentRequest; i++ {
@@ -77,7 +70,7 @@ func NewBulk(
 		logger:                 logger,
 		errorLogger:            errorLogger,
 		dcpCheckpointCommit:    dcpCheckpointCommit,
-		esClient:               esClient,
+		elasticClient:          elasticClient,
 		metric:                 &Metric{},
 		collectionIndexMapping: config.Elasticsearch.CollectionIndexMapping,
 		typeName:               helper.Byte(config.Elasticsearch.TypeName),
@@ -222,7 +215,11 @@ func (b *Bulk) requestFunc(concurrentRequestIndex int, batch []helper.BatchKeyDa
 	return func() error {
 		reader := b.readers[concurrentRequestIndex]
 		reader.Reset(b.batch, batch)
-		r, err := b.esClient.Bulk(reader)
+		size := 0
+		for _, i := range batch {
+			size += i.Size
+		}
+		r, err := b.elasticClient.Bulk(reader, size)
 		if err != nil {
 			return err
 		}
@@ -258,22 +255,12 @@ func (b *Bulk) GetMetric() *Metric {
 	return b.metric
 }
 
-func hasResponseError(r *esapi.Response) error {
+func hasResponseError(r []byte) error {
 	if r == nil {
-		return fmt.Errorf("esapi response is nil")
-	}
-	if r.IsError() {
-		return fmt.Errorf("bulk request has error %v", r.String())
-	}
-	rb := new(bytes.Buffer)
-
-	defer r.Body.Close()
-	_, err := rb.ReadFrom(r.Body)
-	if err != nil {
-		return err
+		return fmt.Errorf("bulk response is nil")
 	}
 	b := make(map[string]any)
-	err = jsoniter.Unmarshal(rb.Bytes(), &b)
+	err := jsoniter.Unmarshal(r, &b)
 	if err != nil {
 		return err
 	}
