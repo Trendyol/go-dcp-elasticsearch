@@ -207,20 +207,20 @@ func (b *Bulk) AddActions(
 			remainingActions = actions[index:]
 			b.forceFlush = true
 			break
-		}
-
-		size := b.batchLen - startIndex
-		batchKeyData := helper.BatchKeyData{Index: startIndex, Size: size}
-
-		if batchIndex, ok := b.batchKeys[key]; ok {
-			b.batchKeyData[batchIndex] = batchKeyData
 		} else {
-			b.batchKeyData = append(b.batchKeyData, batchKeyData)
-			b.batchKeys[key] = b.batchKeyDataIndex
-			b.batchKeyDataIndex++
-		}
+			size := b.batchLen - startIndex
+			batchKeyData := helper.BatchKeyData{Index: startIndex, Size: size}
 
-		b.batchByteSize += size
+			if batchIndex, ok := b.batchKeys[key]; ok {
+				b.batchKeyData[batchIndex] = batchKeyData
+			} else {
+				b.batchKeyData = append(b.batchKeyData, batchKeyData)
+				b.batchKeys[key] = b.batchKeyDataIndex
+				b.batchKeyDataIndex++
+			}
+
+			b.batchByteSize += size
+		}
 	}
 	ctx.Ack()
 
