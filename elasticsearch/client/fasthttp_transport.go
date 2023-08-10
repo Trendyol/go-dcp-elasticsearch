@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/Trendyol/go-dcp-elasticsearch/config"
-	"github.com/Trendyol/go-dcp-elasticsearch/helper"
+
 	"github.com/valyala/fasthttp"
 )
 
@@ -82,12 +82,12 @@ func (t *transport) copyResponse(dst *http.Response, src *fasthttp.Response) *ht
 	dst.StatusCode = src.StatusCode()
 
 	src.Header.VisitAll(func(k, v []byte) {
-		dst.Header.Set(helper.String(k), helper.String(v))
+		dst.Header.Set(string(k), string(v))
 	})
 
 	// Cast to a string to make a copy seeing as src.Body() won't
 	// be valid after the response is released back to the pool (fasthttp.ReleaseResponse).
-	dst.Body = io.NopCloser(strings.NewReader(helper.String(src.Body())))
+	dst.Body = io.NopCloser(strings.NewReader(string(src.Body())))
 
 	return dst
 }
