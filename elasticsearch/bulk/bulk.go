@@ -206,7 +206,6 @@ func (b *Bulk) AddActions(
 			b.batch = b.batch[:b.batchLen]
 			remainingActions = actions[index:]
 			b.forceFlush = true
-			break
 		} else {
 			size := b.batchLen - startIndex
 			batchKeyData := helper.BatchKeyData{Index: startIndex, Size: size}
