@@ -19,7 +19,7 @@ func Mapper(event couchbase.Event) []document.ESActionDocument {
 	return nil
 }
 
-func TestElasticsearch(t *testing.T) {
+func BenchmarkElasticsearch(t *testing.B) {
 	connector, err := dcpelasticsearch.NewConnectorBuilder("config.yml").SetMapper(Mapper).Build()
 	if err != nil {
 		return
