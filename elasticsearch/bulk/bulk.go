@@ -175,6 +175,7 @@ var bytesPool = sync.Pool{
 	New: func() interface{} { return []byte{} },
 }
 
+//nolint:ineffassign
 func getEsActionJSON(
 	docID []byte,
 	action document.EsAction,
@@ -185,9 +186,9 @@ func getEsActionJSON(
 ) []byte {
 	meta := (bytesPool.Get().([]byte))[:0]
 	if action == document.Index {
-		meta = append(meta, indexPrefix...)
+		meta = indexPrefix
 	} else {
-		meta = append(meta, deletePrefix...)
+		meta = deletePrefix
 	}
 	meta = append(meta, helper.Byte(indexName)...)
 	meta = append(meta, idPrefix...)
