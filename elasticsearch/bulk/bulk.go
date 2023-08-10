@@ -23,27 +23,25 @@ import (
 type Bulk struct {
 	logger                 logger.Logger
 	errorLogger            logger.Logger
-	elasticClient          client.ElasticClient
 	batchTicker            *time.Ticker
 	metric                 *Metric
 	collectionIndexMapping map[string]string
 	batchKeys              map[string]int
+	elasticClient          client.ElasticClient
 	dcpCheckpointCommit    func()
-	typeName               []byte
-	batchKeyData           []helper.BatchKeyData
 	batch                  []byte
+	batchKeyData           []helper.BatchKeyData
+	typeName               []byte
 	readers                []*helper.BatchKeyDataReader
-	batchTickerDuration    time.Duration
+	batchKeyDataIndex      int
 	batchSize              int
 	batchSizeLimit         int
-	batchKeyDataIndex      int
+	batchTickerDuration    time.Duration
 	batchByteSizeLimit     int
 	batchByteSize          int
 	concurrentRequest      int
-	batchLen               int
 	flushLock              sync.Mutex
 	isDcpRebalancing       bool
-	forceFlush             bool
 }
 
 type Metric struct {
@@ -65,7 +63,6 @@ func NewBulk(
 	}
 
 	bulk := &Bulk{
-		batch:                  make([]byte, config.Elasticsearch.BatchByteSizeLimit),
 		batchTickerDuration:    config.Elasticsearch.BatchTickerDuration,
 		batchTicker:            time.NewTicker(config.Elasticsearch.BatchTickerDuration),
 		batchSizeLimit:         config.Elasticsearch.BatchSizeLimit,
@@ -96,14 +93,12 @@ func (b *Bulk) PrepareStartRebalancing() {
 	defer b.flushLock.Unlock()
 
 	b.isDcpRebalancing = true
-	b.batch = b.batch[:cap(b.batch)]
+	b.batch = b.batch[:0]
 	b.batchKeys = make(map[string]int, b.batchSizeLimit)
 	b.batchKeyData = b.batchKeyData[:0]
-	b.batchLen = 0
 	b.batchKeyDataIndex = 0
 	b.batchSize = 0
 	b.batchByteSize = 0
-	b.forceFlush = false
 }
 
 func (b *Bulk) PrepareEndRebalancing() {
@@ -111,74 +106,6 @@ func (b *Bulk) PrepareEndRebalancing() {
 	defer b.flushLock.Unlock()
 
 	b.isDcpRebalancing = false
-}
-
-func (b *Bulk) copyToBatch(src []byte) bool {
-	if len(src) > b.batchByteSizeLimit-b.batchLen {
-		return true
-	}
-
-	b.batchLen += copy(b.batch[b.batchLen:], src)
-	return false
-}
-
-func (b *Bulk) eolToBatch() bool {
-	if 1 > b.batchByteSizeLimit-b.batchLen {
-		return true
-	}
-
-	b.batchLen += copy(b.batch[b.batchLen:], "\n")
-	return false
-}
-
-func (b *Bulk) addActionToBatch(action document.ESActionDocument, collectionName string) bool {
-	var overflow bool
-	if action.Type == document.Index {
-		overflow = b.copyToBatch(indexPrefix)
-	} else {
-		overflow = b.copyToBatch(deletePrefix)
-	}
-	if !overflow {
-		overflow = b.copyToBatch(helper.Byte(b.collectionIndexMapping[collectionName]))
-	}
-	if !overflow {
-		overflow = b.copyToBatch(idPrefix)
-	}
-	if !overflow {
-		overflow = b.copyToBatch(action.ID)
-	}
-	if action.Routing != nil {
-		if !overflow {
-			overflow = b.copyToBatch(routingPrefix)
-		}
-		if !overflow {
-			overflow = b.copyToBatch(helper.Byte(*action.Routing))
-		}
-	}
-	if b.typeName != nil {
-		if !overflow {
-			overflow = b.copyToBatch(typePrefix)
-		}
-		if !overflow {
-			overflow = b.copyToBatch(b.typeName)
-		}
-	}
-	if !overflow {
-		overflow = b.copyToBatch(postFix)
-	}
-	if action.Type == document.Index {
-		if !overflow {
-			overflow = b.eolToBatch()
-		}
-		if !overflow {
-			overflow = b.copyToBatch(action.Source)
-		}
-	}
-	if !overflow {
-		overflow = b.eolToBatch()
-	}
-
-	return overflow
 }
 
 func (b *Bulk) AddActions(
@@ -193,46 +120,55 @@ func (b *Bulk) AddActions(
 		b.flushLock.Unlock()
 		return
 	}
-
-	var remainingActions []document.ESActionDocument
-
-	for index, action := range actions {
+	for _, action := range actions {
 		key := helper.String(action.ID)
-		startIndex := b.batchLen
-		overflow := b.addActionToBatch(action, collectionName)
 
-		if overflow {
-			b.batchLen = startIndex
-			b.batch = b.batch[:b.batchLen]
-			remainingActions = actions[index:]
-			b.forceFlush = true
+		index := len(b.batch)
+		if action.Type == document.Index {
+			b.batch = append(b.batch, indexPrefix...)
 		} else {
-			size := b.batchLen - startIndex
-			batchKeyData := helper.BatchKeyData{Index: startIndex, Size: size}
-
-			if batchIndex, ok := b.batchKeys[key]; ok {
-				b.batchKeyData[batchIndex] = batchKeyData
-			} else {
-				b.batchKeyData = append(b.batchKeyData, batchKeyData)
-				b.batchKeys[key] = b.batchKeyDataIndex
-				b.batchKeyDataIndex++
-			}
-
-			b.batchByteSize += size
+			b.batch = append(b.batch, deletePrefix...)
 		}
+		b.batch = append(b.batch, helper.Byte(b.collectionIndexMapping[collectionName])...)
+		b.batch = append(b.batch, idPrefix...)
+		b.batch = append(b.batch, action.ID...)
+		if action.Routing != nil {
+			b.batch = append(b.batch, routingPrefix...)
+			b.batch = append(b.batch, helper.Byte(*action.Routing)...)
+		}
+		if b.typeName != nil {
+			b.batch = append(b.batch, typePrefix...)
+			b.batch = append(b.batch, b.typeName...)
+		}
+		b.batch = append(b.batch, postFix...)
+		if action.Type == document.Index {
+			b.batch = append(b.batch, '\n')
+			b.batch = append(b.batch, action.Source...)
+		}
+		b.batch = append(b.batch, '\n')
+		size := len(b.batch) - index
+
+		batchKeyData := helper.BatchKeyData{Index: index, Size: size}
+
+		if batchIndex, ok := b.batchKeys[key]; ok {
+			b.batchKeyData[batchIndex] = batchKeyData
+		} else {
+			b.batchKeyData = append(b.batchKeyData, batchKeyData)
+			b.batchKeys[key] = b.batchKeyDataIndex
+			b.batchKeyDataIndex++
+		}
+
+		b.batchByteSize += size
 	}
 	ctx.Ack()
 
-	b.batchSize += len(actions) - len(remainingActions)
+	b.batchSize += len(actions)
 
 	b.flushLock.Unlock()
 
 	b.metric.ProcessLatencyMs = time.Since(eventTime).Milliseconds()
-	if b.forceFlush || b.batchSize >= b.batchSizeLimit || b.batchLen >= b.batchByteSizeLimit {
+	if b.batchSize >= b.batchSizeLimit || len(b.batch) >= b.batchByteSizeLimit {
 		b.flushMessages()
-		if len(remainingActions) > 0 {
-			b.AddActions(ctx, eventTime, remainingActions, collectionName)
-		}
 	}
 }
 
@@ -258,20 +194,18 @@ func (b *Bulk) flushMessages() {
 	if b.isDcpRebalancing {
 		return
 	}
-	if b.batchLen > 0 {
+	if len(b.batch) > 0 {
 		err := b.bulkRequest()
 		if err != nil {
 			panic(err)
 		}
 		b.batchTicker.Reset(b.batchTickerDuration)
-		b.batch = b.batch[:cap(b.batch)]
+		b.batch = b.batch[:0]
 		b.batchKeys = make(map[string]int, b.batchSizeLimit)
 		b.batchKeyData = b.batchKeyData[:0]
-		b.batchLen = 0
 		b.batchKeyDataIndex = 0
 		b.batchSize = 0
 		b.batchByteSize = 0
-		b.forceFlush = false
 	}
 
 	b.dcpCheckpointCommit()
