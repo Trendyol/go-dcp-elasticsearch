@@ -114,7 +114,8 @@ Check out on [go-dcp](https://github.com/Trendyol/go-dcp#configuration)
 | elasticsearch_connector_latency_ms                      | Time to adding to the batch.  | N/A    | Gauge      |
 | elasticsearch_connector_bulk_request_process_latency_ms | Time to process bulk request. | N/A    | Gauge      |
 
-For DCP related metrics see [also](https://github.com/Trendyol/go-dcp#exposed-metrics).
+You can also use all DCP-related metrics explained [here](https://github.com/Trendyol/go-dcp#exposed-metrics).
+All DCP-related metrics are automatically injected. It means you don't need to do anything. 
 
 ## Contributing
 
