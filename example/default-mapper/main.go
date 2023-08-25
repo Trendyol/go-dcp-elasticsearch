@@ -5,9 +5,7 @@ import (
 )
 
 func main() {
-	connector, err := dcpelasticsearch.NewConnectorBuilder("config.yml").
-		SetMapper(dcpelasticsearch.DefaultMapper).
-		Build()
+	connector, err := dcpelasticsearch.NewConnectorBuilder("config.yml").Build()
 	if err != nil {
 		panic(err)
 	}
