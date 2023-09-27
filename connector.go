@@ -2,6 +2,7 @@ package dcpelasticsearch
 
 import (
 	"errors"
+	"github.com/sirupsen/logrus"
 	"os"
 
 	"github.com/Trendyol/go-dcp/logger"
@@ -22,12 +23,10 @@ type Connector interface {
 }
 
 type connector struct {
-	dcp         dcp.Dcp
-	mapper      Mapper
-	config      *config.Config
-	logger      logger.Logger
-	errorLogger logger.Logger
-	bulk        *bulk.Bulk
+	dcp    dcp.Dcp
+	mapper Mapper
+	config *config.Config
+	bulk   *bulk.Bulk
 }
 
 func (c *connector) Start() {
@@ -92,7 +91,7 @@ func newConfig(cf any) (*config.Config, error) {
 	}
 }
 
-func newConnector(cf any, mapper Mapper, logger logger.Logger, errorLogger logger.Logger) (Connector, error) {
+func newConnector(cf any, mapper Mapper) (Connector, error) {
 	cfg, err := newConfig(cf)
 	if err != nil {
 		return nil, err
@@ -100,15 +99,13 @@ func newConnector(cf any, mapper Mapper, logger logger.Logger, errorLogger logge
 	cfg.ApplyDefaults()
 
 	connector := &connector{
-		mapper:      mapper,
-		config:      cfg,
-		logger:      logger,
-		errorLogger: errorLogger,
+		mapper: mapper,
+		config: cfg,
 	}
 
-	dcp, err := dcp.NewDcpWithLoggers(&cfg.Dcp, connector.listener, logger, errorLogger)
+	dcp, err := dcp.NewDcp(&cfg.Dcp, connector.listener)
 	if err != nil {
-		connector.errorLogger.Printf("Dcp error: %v", err)
+		logger.Log.Error("Dcp error: %v", err)
 		return nil, err
 	}
 
@@ -118,8 +115,6 @@ func newConnector(cf any, mapper Mapper, logger logger.Logger, errorLogger logge
 	connector.dcp = dcp
 	connector.bulk, err = bulk.NewBulk(
 		cfg,
-		logger,
-		errorLogger,
 		dcp.Commit,
 	)
 	if err != nil {
@@ -138,18 +133,14 @@ func newConnector(cf any, mapper Mapper, logger logger.Logger, errorLogger logge
 }
 
 type ConnectorBuilder struct {
-	logger      logger.Logger
-	errorLogger logger.Logger
-	mapper      Mapper
-	config      any
+	mapper Mapper
+	config any
 }
 
 func NewConnectorBuilder(config any) ConnectorBuilder {
 	return ConnectorBuilder{
-		config:      config,
-		mapper:      DefaultMapper,
-		logger:      logger.Log,
-		errorLogger: logger.Log,
+		config: config,
+		mapper: DefaultMapper,
 	}
 }
 
@@ -158,16 +149,13 @@ func (c ConnectorBuilder) SetMapper(mapper Mapper) ConnectorBuilder {
 	return c
 }
 
-func (c ConnectorBuilder) SetLogger(logger logger.Logger) ConnectorBuilder {
-	c.logger = logger
-	return c
-}
-
-func (c ConnectorBuilder) SetErrorLogger(errorLogger logger.Logger) ConnectorBuilder {
-	c.errorLogger = errorLogger
-	return c
-}
-
 func (c ConnectorBuilder) Build() (Connector, error) {
-	return newConnector(c.config, c.mapper, c.logger, c.errorLogger)
+	return newConnector(c.config, c.mapper)
+}
+
+func (c ConnectorBuilder) SetLogger(logrus *logrus.Logger) ConnectorBuilder {
+	logger.Log = &logger.Loggers{
+		Logrus: logrus,
+	}
+	return c
 }
