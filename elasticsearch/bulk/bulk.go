@@ -25,8 +25,6 @@ import (
 )
 
 type Bulk struct {
-	errorLogger            logger.Logger
-	logger                 logger.Logger
 	metric                 *Metric
 	collectionIndexMapping map[string]string
 	batchKeys              map[string]int
@@ -56,8 +54,6 @@ type Metric struct {
 
 func NewBulk(
 	config *config.Config,
-	logger logger.Logger,
-	errorLogger logger.Logger,
 	dcpCheckpointCommit func(),
 ) (*Bulk, error) {
 	esClient, err := client.NewElasticClient(config)
@@ -77,8 +73,6 @@ func NewBulk(
 		batchSizeLimit:         config.Elasticsearch.BatchSizeLimit,
 		batchByteSizeLimit:     config.Elasticsearch.BatchByteSizeLimit,
 		isClosed:               make(chan bool, 1),
-		logger:                 logger,
-		errorLogger:            errorLogger,
 		dcpCheckpointCommit:    dcpCheckpointCommit,
 		esClient:               esClient,
 		metric:                 &Metric{},
@@ -124,7 +118,7 @@ func (b *Bulk) AddActions(
 ) {
 	b.flushLock.Lock()
 	if b.isDcpRebalancing {
-		b.errorLogger.Printf("could not add new message to batch while rebalancing")
+		logger.Log.Error("could not add new message to batch while rebalancing")
 		b.flushLock.Unlock()
 		return
 	}
