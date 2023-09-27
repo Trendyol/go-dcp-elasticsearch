@@ -2,8 +2,9 @@ package dcpelasticsearch
 
 import (
 	"errors"
-	"github.com/sirupsen/logrus"
 	"os"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/Trendyol/go-dcp/logger"
 
