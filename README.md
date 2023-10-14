@@ -108,6 +108,28 @@ Check out on [go-dcp](https://github.com/Trendyol/go-dcp#configuration)
 | `elasticsearch.maxIdleConnDuration`    | time.Duration     | no       | 10s      | Idle keep-alive connections are closed after this duration.                                         | 
 | `elasticsearch.compressionEnabled`     | boolean           | no       | false    | Compression can be used if message size is large, CPU usage may be affected.                        |
 | `elasticsearch.concurrentRequest`      | int               | no       | 1        | Concurrent bulk request count                                                                       |
+| `elasticsearch.username`      		 | string            | no       |    ""     | Elasticsearch username	                                 |
+| `elasticsearch.password`      		 | string            | no       |    ""     | Elasticsearch password	                                 |
+| `elasticsearch.cloudId`      		 	 | string            | no       |    ""     | Elasticsearch cloud id	                               	 |
+| `elasticsearch.apiKey`      		 	 | string            | no       |    ""     | Elasticsearch API Key	                               	 |
+| `elasticsearch.serviceToken`      	 | string            | no       |    ""     | Elasticsearch service token	                               	 		 |
+| `elasticsearch.certificateFingerprint` | string            | no       |    ""     | Elasticsearch certificate fingerprint	                                 		 |
+| `elasticsearch.header`      		 	 | map[string][]string	| no       |   nil      | Headers to set when client makes a request. 	                                 		 |
+| `elasticsearch.caCert`      		 	 | []byte            | no       |    nil     | Elasticsearch PEM-encoded certificate authorities. 	                               	 		 |
+| `elasticsearch.retryOnStatus`      	 | []int             | no       |   502, 503, 504      | List of status codes for retry for the client	                               	 		 |
+| `elasticsearch.disableRetry`      	 | bool              | no       |   false      | Disables retry on client.	                                 |
+| `elasticsearch.enableRetryOnTimeout`   | bool              | no       |   false     | Enables retry when timeout occurs.	                                 |
+| `elasticsearch.discoverNodesOnStart`   | bool              | no       |   false       | Enables discovery of nodes when initializing the client.	                               	 |
+| `elasticsearch.discoverNodesInterval`  | time.Duration     | no       |  0       | Sets time interval to discover nodes periodically.	                               	 |
+| `elasticsearch.enableMetrics`      	 | bool              | no       |   false     | Enables the metrics collection. 	                               	 		 |
+| `elasticsearch.enableDebugLogger` 	 | bool              | no       |    false    | Enables the debug logging. 	                                 		 |
+| `elasticsearch.enableCompatibilityMode`| bool              | no       |    false     | Enables sending compatibility header. 	                                 		 |
+| `elasticsearch.disableMetaHeader`      | bool              | no       |    false     | Disables the additional "X-Elastic-Client-Meta" HTTP header when client performs a request. 	                               	 		 |
+| `elasticsearch.useResponseCheckOnly`   | bool              | no       |    false     | Disables checking if the cluster is a genuine Elasticsearch product before performing request.
+| `elasticsearch.retryBackoff` 			 | func(int) time.Duration	| no       |   nil      | Retry backoff duration. 	                                 		 |
+| `elasticsearch.logger`      		 	 | estransport.Logger	| no       |    nil     | The logger object. 	                                 		 |
+| `elasticsearch.selector`      		 | estransport.Selector	| no       |    nil     | The selector object.	                               	 		 |
+| `elasticsearch.connectionPoolFunc`     | func([]*estransport.Connection, estransport.Selector) estransport.ConnectionPool	| no       |  nil       | Constructor function for a custom ConnectionPool. 	                               	 		 |
 
 ## Exposed metrics
 
