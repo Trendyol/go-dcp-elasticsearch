@@ -4,19 +4,42 @@ import (
 	"time"
 
 	"github.com/Trendyol/go-dcp/config"
+	"github.com/elastic/go-elasticsearch/v7/estransport"
 )
 
 type Elasticsearch struct {
-	CollectionIndexMapping map[string]string `yaml:"collectionIndexMapping"`
-	MaxConnsPerHost        *int              `yaml:"maxConnsPerHost"`
-	MaxIdleConnDuration    *time.Duration    `yaml:"maxIdleConnDuration"`
-	TypeName               string            `yaml:"typeName"`
-	Urls                   []string          `yaml:"urls"`
-	BatchSizeLimit         int               `yaml:"batchSizeLimit"`
-	BatchByteSizeLimit     int               `yaml:"batchByteSizeLimit"`
-	BatchTickerDuration    time.Duration     `yaml:"batchTickerDuration"`
-	ConcurrentRequest      int               `yaml:"concurrentRequest"`
-	CompressionEnabled     bool              `yaml:"compressionEnabled"`
+	CollectionIndexMapping  map[string]string                                                                `yaml:"collectionIndexMapping"`
+	MaxConnsPerHost         *int                                                                             `yaml:"maxConnsPerHost"`
+	MaxIdleConnDuration     *time.Duration                                                                   `yaml:"maxIdleConnDuration"`
+	TypeName                string                                                                           `yaml:"typeName"`
+	Urls                    []string                                                                         `yaml:"urls"`
+	BatchSizeLimit          int                                                                              `yaml:"batchSizeLimit"`
+	BatchByteSizeLimit      int                                                                              `yaml:"batchByteSizeLimit"`
+	BatchTickerDuration     time.Duration                                                                    `yaml:"batchTickerDuration"`
+	ConcurrentRequest       int                                                                              `yaml:"concurrentRequest"`
+	CompressionEnabled      bool                                                                             `yaml:"compressionEnabled"`
+	Username                string                                                                           `yaml:"username"`
+	Password                string                                                                           `yaml:"password"`
+	CloudID                 string                                                                           `yaml:"cloudId"`
+	APIKey                  string                                                                           `yaml:"apiKey"`
+	ServiceToken            string                                                                           `yaml:"serviceToken"`
+	CertificateFingerprint  string                                                                           `yaml:"certificateFingerprint"`
+	Header                  map[string][]string                                                              `yaml:"header"`
+	CACert                  []byte                                                                           `yaml:"caCert"`
+	RetryOnStatus           []int                                                                            `yaml:"retryOnStatus"`
+	DisableRetry            bool                                                                             `yaml:"disableRetry"`
+	EnableRetryOnTimeout    bool                                                                             `yaml:"enableRetryOnTimeout"`
+	DiscoverNodesOnStart    bool                                                                             `yaml:"discoverNodesOnStart"`
+	DiscoverNodesInterval   time.Duration                                                                    `yaml:"discoverNodesInterval"`
+	EnableMetrics           bool                                                                             `yaml:"enableMetrics"`
+	EnableDebugLogger       bool                                                                             `yaml:"enableDebugLogger"`
+	EnableCompatibilityMode bool                                                                             `yaml:"enableCompatibilityMode"`
+	DisableMetaHeader       bool                                                                             `yaml:"disableMetaHeader"`
+	UseResponseCheckOnly    bool                                                                             `yaml:"useResponseCheckOnly"`
+	RetryBackoff            func(int) time.Duration                                                          `yaml:"retryBackoff"`
+	Logger                  estransport.Logger                                                               `yaml:"logger"`
+	Selector                estransport.Selector                                                             `yaml:"selector"`
+	ConnectionPoolFunc      func([]*estransport.Connection, estransport.Selector) estransport.ConnectionPool `yaml:"connectionPoolFunc"`
 }
 
 type Config struct {
