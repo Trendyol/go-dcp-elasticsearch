@@ -9,7 +9,7 @@ import (
 )
 
 func NewElasticClient(config *config.Config) (*elasticsearch.Client, error) {
-	es, err := elasticsearch.NewClient(elasticsearch.Config{	
+	es, err := elasticsearch.NewClient(elasticsearch.Config{
 		MaxRetries:              math.MaxInt,
 		Addresses:               config.Elasticsearch.Urls,
 		Transport:               newTransport(config.Elasticsearch),
