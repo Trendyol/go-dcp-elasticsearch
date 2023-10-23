@@ -160,7 +160,7 @@ var (
 	deletePrefix  = helper.Byte(`{"delete":{"_index":"`)
 	idPrefix      = helper.Byte(`","_id":"`)
 	typePrefix    = helper.Byte(`","_type":"`)
-	routingPrefix = helper.Byte(`","_routing":"`)
+	routingPrefix = helper.Byte(`","routing":"`)
 	postFix       = helper.Byte(`"}}`)
 )
 
