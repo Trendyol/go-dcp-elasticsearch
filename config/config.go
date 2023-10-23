@@ -7,16 +7,18 @@ import (
 )
 
 type Elasticsearch struct {
-	CollectionIndexMapping map[string]string `yaml:"collectionIndexMapping"`
-	MaxConnsPerHost        *int              `yaml:"maxConnsPerHost"`
-	MaxIdleConnDuration    *time.Duration    `yaml:"maxIdleConnDuration"`
-	TypeName               string            `yaml:"typeName"`
-	Urls                   []string          `yaml:"urls"`
-	BatchSizeLimit         int               `yaml:"batchSizeLimit"`
-	BatchByteSizeLimit     int               `yaml:"batchByteSizeLimit"`
-	BatchTickerDuration    time.Duration     `yaml:"batchTickerDuration"`
-	ConcurrentRequest      int               `yaml:"concurrentRequest"`
-	CompressionEnabled     bool              `yaml:"compressionEnabled"`
+	CollectionIndexMapping      map[string]string `yaml:"collectionIndexMapping"`
+	MaxConnsPerHost             *int              `yaml:"maxConnsPerHost"`
+	MaxIdleConnDuration         *time.Duration    `yaml:"maxIdleConnDuration"`
+	DiscoverNodesInterval       *time.Duration    `yaml:"discoverNodesInterval"`
+	TypeName                    string            `yaml:"typeName"`
+	Urls                        []string          `yaml:"urls"`
+	BatchSizeLimit              int               `yaml:"batchSizeLimit"`
+	BatchByteSizeLimit          int               `yaml:"batchByteSizeLimit"`
+	BatchTickerDuration         time.Duration     `yaml:"batchTickerDuration"`
+	ConcurrentRequest           int               `yaml:"concurrentRequest"`
+	CompressionEnabled          bool              `yaml:"compressionEnabled"`
+	DisableDiscoverNodesOnStart bool              `yaml:"disableDiscoverNodesOnStart"`
 }
 
 type Config struct {
@@ -39,5 +41,10 @@ func (c *Config) ApplyDefaults() {
 
 	if c.Elasticsearch.ConcurrentRequest == 0 {
 		c.Elasticsearch.ConcurrentRequest = 1
+	}
+
+	if c.Elasticsearch.DiscoverNodesInterval == nil {
+		duration := 5 * time.Minute
+		c.Elasticsearch.DiscoverNodesInterval = &duration
 	}
 }

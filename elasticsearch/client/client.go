@@ -10,10 +10,12 @@ import (
 
 func NewElasticClient(config *config.Config) (*elasticsearch.Client, error) {
 	es, err := elasticsearch.NewClient(elasticsearch.Config{
-		MaxRetries:          math.MaxInt,
-		Addresses:           config.Elasticsearch.Urls,
-		Transport:           newTransport(config.Elasticsearch),
-		CompressRequestBody: config.Elasticsearch.CompressionEnabled,
+		MaxRetries:            math.MaxInt,
+		Addresses:             config.Elasticsearch.Urls,
+		Transport:             newTransport(config.Elasticsearch),
+		CompressRequestBody:   config.Elasticsearch.CompressionEnabled,
+		DiscoverNodesOnStart:  !config.Elasticsearch.DisableDiscoverNodesOnStart,
+		DiscoverNodesInterval: *config.Elasticsearch.DiscoverNodesInterval,
 	})
 	if err != nil {
 		return nil, err
