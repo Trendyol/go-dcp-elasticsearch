@@ -47,6 +47,8 @@ github.com/Trendyol/go-dcp v1.1.3 h1:2QsCXwl4eah+Wuh+OxloZCenBYWjQsg3KlQK9Ctjuc4
 github.com/Trendyol/go-dcp v1.1.3/go.mod h1:X/zS6v4T8uidvErQALi6/jQ0HDkp0x+fkgcwhpvYxEs=
 github.com/Trendyol/go-dcp v1.1.4 h1:bDlZGI31ZifkuZ/Kbwm59s3vp8y+DSHKjaiVm/OcQfs=
 github.com/Trendyol/go-dcp v1.1.4/go.mod h1:tBgaRePSYEOmnHhFFSaQMtH5sXjTnD+qc99E6TnzGpQ=
+github.com/Trendyol/go-dcp v1.1.5 h1:JjoU1guxS8oAtm2dmwFJqDECCt9ZS9/nqwmYYWtHSHo=
+github.com/Trendyol/go-dcp v1.1.5/go.mod h1:tBgaRePSYEOmnHhFFSaQMtH5sXjTnD+qc99E6TnzGpQ=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
