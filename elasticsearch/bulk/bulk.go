@@ -118,7 +118,7 @@ func (b *Bulk) AddActions(
 ) {
 	b.flushLock.Lock()
 	if b.isDcpRebalancing {
-		logger.Log.Error("could not add new message to batch while rebalancing")
+		logger.Log.Warn("could not add new message to batch while rebalancing")
 		b.flushLock.Unlock()
 		return
 	}
