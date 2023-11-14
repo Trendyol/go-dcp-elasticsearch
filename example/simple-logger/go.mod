@@ -10,7 +10,7 @@ require (
 )
 
 require (
-	github.com/Trendyol/go-dcp v1.1.11 // indirect
+	github.com/Trendyol/go-dcp v1.1.12 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/ansrivas/fiberprometheus/v2 v2.6.1 // indirect
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef // indirect
