@@ -1,0 +1,12 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "chore: bump"
+    allow:
+      - dependency-name: github.com/Trendyol/go-dcp
+      - dependency-name: github.com/elastic/go-elasticsearch/v7
