@@ -71,7 +71,7 @@ func NewBulk(
 		batchTicker:            time.NewTicker(config.Elasticsearch.BatchTickerDuration),
 		actionCh:               make(chan document.ESActionDocument, config.Elasticsearch.BatchSizeLimit),
 		batchSizeLimit:         config.Elasticsearch.BatchSizeLimit,
-		batchByteSizeLimit:     config.Elasticsearch.BatchByteSizeLimit,
+		batchByteSizeLimit:     helpers.ResolveUnionIntOrStringValue(config.Elasticsearch.BatchByteSizeLimit),
 		isClosed:               make(chan bool, 1),
 		dcpCheckpointCommit:    dcpCheckpointCommit,
 		esClient:               esClient,
