@@ -4,6 +4,7 @@ github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migc
 github.com/Microsoft/hcsshim v0.11.1 h1:hJ3s7GbWlGK4YVV92sO88BQSyF4ZLVy7/awqOlPxFbA=
 github.com/Trendyol/go-dcp v1.1.13 h1:g4Ku+I5Gx+jQcxaysdEE7bOZzRVbqfLxZBSQplPVjR4=
 github.com/Trendyol/go-dcp v1.1.13/go.mod h1:epMDitjzGJw9lQOUYWjBSQ8drs/4WGu6Ct3BRkeXQAM=
+github.com/Trendyol/go-dcp v1.1.14/go.mod h1:cvx1tjVrJ++6MCTLv8uVM1im+98eEtMM41NZ9ELfrrk=
 github.com/andybalholm/brotli v1.0.5 h1:8uQZIdzKmjc/iuPu7O2ioW48L81FgatrcpfFmiq/cCs=
 github.com/andybalholm/brotli v1.0.5/go.mod h1:fO7iG3H7G2nSZ7m0zPUDn85XEX2GTukHGRSepvi9Eig=
 github.com/ansrivas/fiberprometheus/v2 v2.6.1 h1:wac3pXaE6BYYTF04AC6K0ktk6vCD+MnDOJZ3SK66kXM=
@@ -101,6 +102,7 @@ github.com/matttproud/golang_protobuf_extensions v1.0.4 h1:mmDVorXM7PCGKw94cs5zk
 github.com/matttproud/golang_protobuf_extensions v1.0.4/go.mod h1:BSXmuO+STAnVfrANrmjBb36TMTDstsz7MSK+HVaYKv4=
 github.com/mhmtszr/concurrent-swiss-map v1.0.4 h1:g1Ouq7blePtaXClzrpiGRMgFzF4DAHEHJv9OYxQkLck=
 github.com/mhmtszr/concurrent-swiss-map v1.0.4/go.mod h1:F6QETL48Qn7jEJ3ZPt7EqRZjAAZu7lRQeQGIzXuUIDc=
+github.com/mhmtszr/concurrent-swiss-map v1.0.5/go.mod h1:F6QETL48Qn7jEJ3ZPt7EqRZjAAZu7lRQeQGIzXuUIDc=
 github.com/moby/patternmatcher v0.6.0 h1:GmP9lR19aU5GqSSFko+5pRqHi+Ohk1O69aFiKkVGiPk=
 github.com/moby/sys/sequential v0.5.0 h1:OPvI35Lzn9K04PBbCLW0g4LcFAJgHsvXsRyewg5lXtc=
 github.com/moby/term v0.5.0 h1:xt8Q1nalod/v7BqbG21f8mQPqH+xAaC9C3N3wfWbVP0=
