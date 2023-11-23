@@ -47,11 +47,11 @@ func (c *connector) listener(ctx *models.ListenerContext) {
 	var e couchbase.Event
 	switch event := ctx.Event.(type) {
 	case models.DcpMutation:
-		e = couchbase.NewMutateEvent(event.Key, event.Value, event.CollectionName)
+		e = couchbase.NewMutateEvent(event.Key, event.Value, event.CollectionName, event.Cas, event.EventTime)
 	case models.DcpExpiration:
-		e = couchbase.NewExpireEvent(event.Key, nil, event.CollectionName)
+		e = couchbase.NewExpireEvent(event.Key, nil, event.CollectionName, event.Cas, event.EventTime)
 	case models.DcpDeletion:
-		e = couchbase.NewDeleteEvent(event.Key, nil, event.CollectionName)
+		e = couchbase.NewDeleteEvent(event.Key, nil, event.CollectionName, event.Cas, event.EventTime)
 	default:
 		return
 	}
