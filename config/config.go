@@ -3,10 +3,13 @@ package config
 import (
 	"time"
 
+	"github.com/Trendyol/go-dcp/helpers"
+
 	"github.com/Trendyol/go-dcp/config"
 )
 
 type Elasticsearch struct {
+	BatchByteSizeLimit          any               `yaml:"batchByteSizeLimit"`
 	CollectionIndexMapping      map[string]string `yaml:"collectionIndexMapping"`
 	MaxConnsPerHost             *int              `yaml:"maxConnsPerHost"`
 	MaxIdleConnDuration         *time.Duration    `yaml:"maxIdleConnDuration"`
@@ -14,7 +17,6 @@ type Elasticsearch struct {
 	TypeName                    string            `yaml:"typeName"`
 	Urls                        []string          `yaml:"urls"`
 	BatchSizeLimit              int               `yaml:"batchSizeLimit"`
-	BatchByteSizeLimit          int               `yaml:"batchByteSizeLimit"`
 	BatchTickerDuration         time.Duration     `yaml:"batchTickerDuration"`
 	ConcurrentRequest           int               `yaml:"concurrentRequest"`
 	CompressionEnabled          bool              `yaml:"compressionEnabled"`
@@ -36,7 +38,7 @@ func (c *Config) ApplyDefaults() {
 	}
 
 	if c.Elasticsearch.BatchByteSizeLimit == 0 {
-		c.Elasticsearch.BatchByteSizeLimit = 10485760
+		c.Elasticsearch.BatchByteSizeLimit = helpers.ResolveUnionIntOrStringValue("10mb")
 	}
 
 	if c.Elasticsearch.ConcurrentRequest == 0 {
