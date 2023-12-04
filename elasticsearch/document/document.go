@@ -8,10 +8,11 @@ const (
 )
 
 type ESActionDocument struct {
-	Routing *string
-	Type    EsAction
-	Source  []byte
-	ID      []byte
+	Routing   *string
+	Type      EsAction
+	Source    []byte
+	ID        []byte
+	IndexName string
 }
 
 func NewDeleteAction(key []byte, routing *string) ESActionDocument {
