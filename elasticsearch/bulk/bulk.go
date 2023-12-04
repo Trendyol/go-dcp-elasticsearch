@@ -127,7 +127,7 @@ func (b *Bulk) AddActions(
 		value := getEsActionJSON(
 			action.ID,
 			action.Type,
-			b.collectionIndexMapping[collectionName],
+			b.getIndexName(collectionName, action.IndexName),
 			action.Routing,
 			action.Source,
 			b.typeName,
@@ -312,4 +312,17 @@ func joinErrors(body map[string]any) error {
 		}
 	}
 	return fmt.Errorf(sb.String())
+}
+
+func (b *Bulk) getIndexName(collectionName, actionIndexName string) string {
+	if actionIndexName != "" {
+		return actionIndexName
+	}
+
+	indexName := b.collectionIndexMapping[collectionName]
+	if indexName == "" {
+		panic(fmt.Sprintf("there is no index mapping for collection: %s on your configuration", collectionName))
+	}
+
+	return indexName
 }
