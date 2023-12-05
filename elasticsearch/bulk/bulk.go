@@ -123,16 +123,17 @@ func (b *Bulk) AddActions(
 		return
 	}
 	for _, action := range actions {
-		key := string(action.ID)
+		indexName := b.getIndexName(collectionName, action.IndexName)
 		value := getEsActionJSON(
 			action.ID,
 			action.Type,
-			b.getIndexName(collectionName, action.IndexName),
+			indexName,
 			action.Routing,
 			action.Source,
 			b.typeName,
 		)
 
+		key := fmt.Sprintf("%s:%s", action.ID, indexName)
 		if batchIndex, ok := b.batchKeys[key]; ok {
 			b.batch[batchIndex] = value
 		} else {
