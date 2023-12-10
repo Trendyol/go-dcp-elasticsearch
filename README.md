@@ -100,7 +100,7 @@ Check out on [go-dcp](https://github.com/Trendyol/go-dcp#configuration)
 |---------------------------------------------|-------------------|----------|---------|-----------------------------------------------------------------------------------------------------|
 | `elasticsearch.collectionIndexMapping`      | map[string]string | yes      |         | Defines which Couchbase collection events will be written to which index                            |
 | `elasticsearch.urls`                        | []string          | yes      |         | Elasticsearch connection urls                                                                       |
-| `elasticsearch.typeName`                    | string            | no       | _doc    | Defines Elasticsearch index type name                                                               |
+| `elasticsearch.typeName`                    | string            | no       |         | Defines Elasticsearch index type name                                                               |
 | `elasticsearch.batchSizeLimit`              | int               | no       | 1000    | Maximum message count for batch, if exceed flush will be triggered.                                 |
 | `elasticsearch.batchTickerDuration`         | time.Duration     | no       | 10s     | Batch is being flushed automatically at specific time intervals for long waiting messages in batch. |
 | `elasticsearch.batchByteSizeLimit`          | int, string       | no       | 10mb    | Maximum size(byte) for batch, if exceed flush will be triggered. `10mb` is default.                 |
