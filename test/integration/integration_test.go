@@ -20,6 +20,8 @@ func Mapper(event couchbase.Event) []document.ESActionDocument {
 }
 
 func TestElasticsearch(t *testing.T) {
+	time.Sleep(time.Minute)
+
 	connector, err := dcpelasticsearch.NewConnectorBuilder("config.yml").SetMapper(Mapper).Build()
 	if err != nil {
 		return
@@ -33,7 +35,6 @@ func TestElasticsearch(t *testing.T) {
 	}()
 
 	go func() {
-		time.Sleep(40 * time.Second)
 		es, err := elasticsearch.NewClient(elasticsearch.Config{
 			Addresses: []string{"http://localhost:9200"},
 		})
@@ -71,7 +72,6 @@ func TestElasticsearch(t *testing.T) {
 	}()
 
 	wg.Wait()
-	t.Log("done")
 }
 
 type CountResponse struct {

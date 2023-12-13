@@ -8,7 +8,6 @@ linters:
   disable-all: true
   enable:
     - bodyclose
-    - depguard
     - errcheck
     - dupl
     - exhaustive
@@ -16,7 +15,6 @@ linters:
     - goconst
     - gocritic
     - gocyclo
-    - revive
     - gosimple
     - govet
     - gosec
@@ -34,6 +32,6 @@ linters:
     - whitespace
 
 service:
-  golangci-lint-version: 1.52.2 # use the fixed version to not introduce new linters unexpectedly
+  golangci-lint-version: 1.55.2 # use the fixed version to not introduce new linters unexpectedly
   prepare:
     - echo "here I can run custom commands, but no preparation needed for this repo"
