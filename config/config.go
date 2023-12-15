@@ -24,7 +24,7 @@ type Elasticsearch struct {
 }
 
 type Config struct {
-	Elasticsearch Elasticsearch `yaml:"elasticsearch" mapstructure:"kafka"`
+	Elasticsearch Elasticsearch `yaml:"elasticsearch" mapstructure:"elasticsearch"`
 	Dcp           config.Dcp    `yaml:",inline" mapstructure:",squash"`
 }
 
