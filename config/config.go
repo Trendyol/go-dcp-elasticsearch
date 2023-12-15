@@ -24,8 +24,8 @@ type Elasticsearch struct {
 }
 
 type Config struct {
-	Elasticsearch Elasticsearch `yaml:"elasticsearch"`
-	Dcp           config.Dcp    `yaml:",inline"`
+	Elasticsearch Elasticsearch `yaml:"elasticsearch" mapstructure:"elasticsearch"`
+	Dcp           config.Dcp    `yaml:",inline" mapstructure:",squash"`
 }
 
 func (c *Config) ApplyDefaults() {
