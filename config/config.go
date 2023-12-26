@@ -37,7 +37,7 @@ func (c *Config) ApplyDefaults() {
 		c.Elasticsearch.BatchSizeLimit = 1000
 	}
 
-	if c.Elasticsearch.BatchByteSizeLimit == 0 {
+	if c.Elasticsearch.BatchByteSizeLimit == nil {
 		c.Elasticsearch.BatchByteSizeLimit = helpers.ResolveUnionIntOrStringValue("10mb")
 	}
 
