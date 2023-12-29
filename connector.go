@@ -138,23 +138,23 @@ type ConnectorBuilder struct {
 	config any
 }
 
-func NewConnectorBuilder(config any) ConnectorBuilder {
-	return ConnectorBuilder{
+func NewConnectorBuilder(config any) *ConnectorBuilder {
+	return &ConnectorBuilder{
 		config: config,
 		mapper: DefaultMapper,
 	}
 }
 
-func (c ConnectorBuilder) SetMapper(mapper Mapper) ConnectorBuilder {
+func (c *ConnectorBuilder) SetMapper(mapper Mapper) *ConnectorBuilder {
 	c.mapper = mapper
 	return c
 }
 
-func (c ConnectorBuilder) Build() (Connector, error) {
+func (c *ConnectorBuilder) Build() (Connector, error) {
 	return newConnector(c.config, c.mapper)
 }
 
-func (c ConnectorBuilder) SetLogger(logrus *logrus.Logger) ConnectorBuilder {
+func (c *ConnectorBuilder) SetLogger(logrus *logrus.Logger) *ConnectorBuilder {
 	logger.Log = &logger.Loggers{
 		Logrus: logrus,
 	}
