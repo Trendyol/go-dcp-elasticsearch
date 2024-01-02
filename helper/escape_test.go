@@ -6,7 +6,7 @@ import (
 
 func TestEscapeQuote(t *testing.T) {
 	input := "12345-999\""
-	byteArr := Byte(input)
+	byteArr := []byte(input)
 	result := EscapePredefinedBytes(byteArr)
 	if len(result) == 10 || result[len(result)-1] != 34 {
 		t.Error("Expected backslash byte")
@@ -15,7 +15,7 @@ func TestEscapeQuote(t *testing.T) {
 
 func TestDoNotEscapeQuote(t *testing.T) {
 	input := "12345-999"
-	byteArr := Byte(input)
+	byteArr := []byte(input)
 
 	result := EscapePredefinedBytes(byteArr)
 	if len(result) != 9 {
