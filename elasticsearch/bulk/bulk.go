@@ -174,7 +174,7 @@ func getEsActionJSON(docID []byte, action document.EsAction, indexName string, r
 	}
 	meta = append(meta, helper.Byte(indexName)...)
 	meta = append(meta, idPrefix...)
-	meta = append(meta, docID...)
+	meta = append(meta, helper.EscapePredefinedBytes(docID)...)
 	if routing != nil {
 		meta = append(meta, routingPrefix...)
 		meta = append(meta, helper.Byte(*routing)...)
