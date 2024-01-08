@@ -16,6 +16,7 @@ import (
 	"github.com/Trendyol/go-dcp/logger"
 
 	"github.com/Trendyol/go-dcp-elasticsearch/config"
+	dcpElasticsearch "github.com/Trendyol/go-dcp-elasticsearch/elasticsearch"
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/client"
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/document"
 	"github.com/Trendyol/go-dcp-elasticsearch/helper"
@@ -33,7 +34,7 @@ type Bulk struct {
 	isClosed               chan bool
 	actionCh               chan document.ESActionDocument
 	esClient               *elasticsearch.Client
-	batch                  [][]byte
+	batch                  []BatchItem
 	typeName               []byte
 	readers                []*helper.MultiDimByteReader
 	batchIndex             int
@@ -45,6 +46,7 @@ type Bulk struct {
 	concurrentRequest      int
 	flushLock              sync.Mutex
 	isDcpRebalancing       bool
+	sinkResponseHandler    dcpElasticsearch.SinkResponseHandler
 }
 
 type Metric struct {
@@ -52,9 +54,15 @@ type Metric struct {
 	BulkRequestProcessLatencyMs int64
 }
 
+type BatchItem struct {
+	Bytes  []byte
+	Action *document.ESActionDocument
+}
+
 func NewBulk(
 	config *config.Config,
 	dcpCheckpointCommit func(),
+	sinkResponseHandler dcpElasticsearch.SinkResponseHandler,
 ) (*Bulk, error) {
 	esClient, err := client.NewElasticClient(config)
 	if err != nil {
@@ -81,6 +89,7 @@ func NewBulk(
 		readers:                readers,
 		concurrentRequest:      config.Elasticsearch.ConcurrentRequest,
 		batchKeys:              make(map[string]int, config.Elasticsearch.BatchSizeLimit),
+		sinkResponseHandler:    sinkResponseHandler,
 	}
 	return bulk, nil
 }
@@ -122,22 +131,29 @@ func (b *Bulk) AddActions(
 		b.flushLock.Unlock()
 		return
 	}
-	for _, action := range actions {
+	for i, action := range actions {
 		indexName := b.getIndexName(collectionName, action.IndexName)
+		actions[i].IndexName = indexName
 		value := getEsActionJSON(
 			action.ID,
 			action.Type,
-			indexName,
+			actions[i].IndexName,
 			action.Routing,
 			action.Source,
 			b.typeName,
 		)
 
-		key := fmt.Sprintf("%s:%s", action.ID, indexName)
+		key := getActionKey(action)
 		if batchIndex, ok := b.batchKeys[key]; ok {
-			b.batch[batchIndex] = value
+			b.batch[batchIndex] = BatchItem{
+				Action: &actions[i],
+				Bytes:  value,
+			}
 		} else {
-			b.batch = append(b.batch, value)
+			b.batch = append(b.batch, BatchItem{
+				Action: &actions[i],
+				Bytes:  value,
+			})
 			b.batchKeys[key] = b.batchIndex
 			b.batchIndex++
 		}
@@ -206,7 +222,7 @@ func (b *Bulk) flushMessages() {
 	}
 	if len(b.batch) > 0 {
 		err := b.bulkRequest()
-		if err != nil {
+		if err != nil && b.sinkResponseHandler == nil {
 			panic(err)
 		}
 		b.batchTicker.Reset(b.batchTickerDuration)
@@ -220,15 +236,17 @@ func (b *Bulk) flushMessages() {
 	b.dcpCheckpointCommit()
 }
 
-func (b *Bulk) requestFunc(concurrentRequestIndex int, batch [][]byte) func() error {
+func (b *Bulk) requestFunc(concurrentRequestIndex int, batchItems []BatchItem) func() error {
 	return func() error {
 		reader := b.readers[concurrentRequestIndex]
-		reader.Reset(batch)
+		reader.Reset(getBytes(batchItems))
 		r, err := b.esClient.Bulk(reader)
 		if err != nil {
 			return err
 		}
-		err = hasResponseError(r)
+		errorData, err := hasResponseError(r)
+		b.executeSinkResponseHandler(getActions(batchItems), errorData)
+
 		if err != nil {
 			return err
 		}
@@ -260,39 +278,40 @@ func (b *Bulk) GetMetric() *Metric {
 	return b.metric
 }
 
-func hasResponseError(r *esapi.Response) error {
+func hasResponseError(r *esapi.Response) (map[string]string, error) {
 	if r == nil {
-		return fmt.Errorf("esapi response is nil")
+		return nil, fmt.Errorf("esapi response is nil")
 	}
 	if r.IsError() {
-		return fmt.Errorf("bulk request has error %v", r.String())
+		return nil, fmt.Errorf("bulk request has error %v", r.String())
 	}
 	rb := new(bytes.Buffer)
 
 	defer r.Body.Close()
 	_, err := rb.ReadFrom(r.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	b := make(map[string]any)
 	err = jsoniter.Unmarshal(rb.Bytes(), &b)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	hasError, ok := b["errors"].(bool)
 	if !ok || !hasError {
-		return nil
+		return nil, nil
 	}
 	return joinErrors(b)
 }
 
-func joinErrors(body map[string]any) error {
+func joinErrors(body map[string]any) (map[string]string, error) {
 	var sb strings.Builder
+	ivd := make(map[string]string)
 	sb.WriteString("bulk request has error. Errors will be listed below:\n")
 
 	items, ok := body["items"].([]any)
 	if !ok {
-		return nil
+		return nil, nil
 	}
 
 	for _, i := range items {
@@ -308,11 +327,14 @@ func joinErrors(body map[string]any) error {
 			}
 
 			if iv["error"] != nil {
-				sb.WriteString(fmt.Sprintf("%v\n", i))
+				itemValue := fmt.Sprintf("%v\n", i)
+				sb.WriteString(itemValue)
+				itemValueDataKey := fmt.Sprintf("%s:%s", iv["_id"].(string), iv["_index"].(string))
+				ivd[itemValueDataKey] = itemValue
 			}
 		}
 	}
-	return fmt.Errorf(sb.String())
+	return ivd, fmt.Errorf(sb.String())
 }
 
 func (b *Bulk) getIndexName(collectionName, actionIndexName string) string {
@@ -326,4 +348,44 @@ func (b *Bulk) getIndexName(collectionName, actionIndexName string) string {
 	}
 
 	return indexName
+}
+
+func (b *Bulk) executeSinkResponseHandler(batchActions []*document.ESActionDocument, errorData map[string]string) {
+	if b.sinkResponseHandler == nil {
+		return
+	}
+
+	for _, action := range batchActions {
+		key := getActionKey(*action)
+		if _, ok := errorData[key]; ok {
+			b.sinkResponseHandler.OnError(&dcpElasticsearch.SinkResponseHandlerContext{
+				Action: action,
+				Err:    fmt.Errorf(errorData[key]),
+			})
+		} else {
+			b.sinkResponseHandler.OnSuccess(&dcpElasticsearch.SinkResponseHandlerContext{
+				Action: action,
+			})
+		}
+	}
+}
+
+func getActionKey(action document.ESActionDocument) string {
+	return fmt.Sprintf("%s:%s", action.ID, action.IndexName)
+}
+
+func getBytes(batchItems []BatchItem) [][]byte {
+	var batchBytes [][]byte
+	for _, batchItem := range batchItems {
+		batchBytes = append(batchBytes, batchItem.Bytes)
+	}
+	return batchBytes
+}
+
+func getActions(batchItems []BatchItem) []*document.ESActionDocument {
+	var batchActions []*document.ESActionDocument
+	for _, batchItem := range batchItems {
+		batchActions = append(batchActions, batchItem.Action)
+	}
+	return batchActions
 }
