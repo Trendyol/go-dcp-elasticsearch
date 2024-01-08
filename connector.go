@@ -2,20 +2,17 @@ package dcpelasticsearch
 
 import (
 	"errors"
-	"os"
-
-	"github.com/sirupsen/logrus"
-
-	"github.com/Trendyol/go-dcp/logger"
-
+	"github.com/Trendyol/go-dcp"
 	"github.com/Trendyol/go-dcp-elasticsearch/config"
 	"github.com/Trendyol/go-dcp-elasticsearch/couchbase"
+	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch"
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/bulk"
 	"github.com/Trendyol/go-dcp-elasticsearch/metric"
-	"gopkg.in/yaml.v3"
-
-	"github.com/Trendyol/go-dcp"
+	"github.com/Trendyol/go-dcp/logger"
 	"github.com/Trendyol/go-dcp/models"
+	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v3"
+	"os"
 )
 
 type Connector interface {
@@ -24,10 +21,11 @@ type Connector interface {
 }
 
 type connector struct {
-	dcp    dcp.Dcp
-	mapper Mapper
-	config *config.Config
-	bulk   *bulk.Bulk
+	dcp                 dcp.Dcp
+	mapper              Mapper
+	config              *config.Config
+	bulk                *bulk.Bulk
+	sinkResponseHandler elasticsearch.SinkResponseHandler
 }
 
 func (c *connector) Start() {
@@ -92,7 +90,7 @@ func newConfig(cf any) (*config.Config, error) {
 	}
 }
 
-func newConnector(cf any, mapper Mapper) (Connector, error) {
+func newConnector(cf any, mapper Mapper, sinkResponseHandler elasticsearch.SinkResponseHandler) (Connector, error) {
 	cfg, err := newConfig(cf)
 	if err != nil {
 		return nil, err
@@ -100,8 +98,9 @@ func newConnector(cf any, mapper Mapper) (Connector, error) {
 	cfg.ApplyDefaults()
 
 	connector := &connector{
-		mapper: mapper,
-		config: cfg,
+		mapper:              mapper,
+		config:              cfg,
+		sinkResponseHandler: sinkResponseHandler,
 	}
 
 	dcp, err := dcp.NewDcp(&cfg.Dcp, connector.listener)
@@ -117,6 +116,7 @@ func newConnector(cf any, mapper Mapper) (Connector, error) {
 	connector.bulk, err = bulk.NewBulk(
 		cfg,
 		dcp.Commit,
+		sinkResponseHandler,
 	)
 	if err != nil {
 		return nil, err
@@ -134,8 +134,9 @@ func newConnector(cf any, mapper Mapper) (Connector, error) {
 }
 
 type ConnectorBuilder struct {
-	mapper Mapper
-	config any
+	mapper              Mapper
+	config              any
+	sinkResponseHandler elasticsearch.SinkResponseHandler
 }
 
 func NewConnectorBuilder(config any) *ConnectorBuilder {
@@ -145,18 +146,23 @@ func NewConnectorBuilder(config any) *ConnectorBuilder {
 	}
 }
 
+func (c *ConnectorBuilder) Build() (Connector, error) {
+	return newConnector(c.config, c.mapper, c.sinkResponseHandler)
+}
+
 func (c *ConnectorBuilder) SetMapper(mapper Mapper) *ConnectorBuilder {
 	c.mapper = mapper
 	return c
-}
-
-func (c *ConnectorBuilder) Build() (Connector, error) {
-	return newConnector(c.config, c.mapper)
 }
 
 func (c *ConnectorBuilder) SetLogger(logrus *logrus.Logger) *ConnectorBuilder {
 	logger.Log = &logger.Loggers{
 		Logrus: logrus,
 	}
+	return c
+}
+
+func (c *ConnectorBuilder) SetSinkResponseHandler(sinkResponseHandler elasticsearch.SinkResponseHandler) *ConnectorBuilder {
+	c.sinkResponseHandler = sinkResponseHandler
 	return c
 }
