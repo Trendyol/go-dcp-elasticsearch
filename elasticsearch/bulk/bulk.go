@@ -347,7 +347,6 @@ func (b *Bulk) getIndexName(collectionName, actionIndexName string) string {
 }
 
 func (b *Bulk) executeSinkResponseHandler(batchActions []document.ESActionDocument, errorData map[string]string) {
-
 	if b.sinkResponseHandler == nil {
 		return
 	}
