@@ -3,7 +3,7 @@ package elasticsearch
 import "github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/document"
 
 type SinkResponseHandlerContext struct {
-	Action document.ESActionDocument
+	Action *document.ESActionDocument
 	Err    error
 }
 

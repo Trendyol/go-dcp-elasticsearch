@@ -56,7 +56,7 @@ type Metric struct {
 
 type BatchItem struct {
 	Bytes  []byte
-	Action document.ESActionDocument
+	Action *document.ESActionDocument
 }
 
 func NewBulk(
@@ -131,13 +131,13 @@ func (b *Bulk) AddActions(
 		b.flushLock.Unlock()
 		return
 	}
-	for _, action := range actions {
+	for i, action := range actions {
 		indexName := b.getIndexName(collectionName, action.IndexName)
-		action.IndexName = indexName
+		actions[i].IndexName = indexName
 		value := getEsActionJSON(
 			action.ID,
 			action.Type,
-			action.IndexName,
+			actions[i].IndexName,
 			action.Routing,
 			action.Source,
 			b.typeName,
@@ -146,12 +146,12 @@ func (b *Bulk) AddActions(
 		key := getActionKey(action)
 		if batchIndex, ok := b.batchKeys[key]; ok {
 			b.batch[batchIndex] = BatchItem{
-				Action: action,
+				Action: &actions[i],
 				Bytes:  value,
 			}
 		} else {
 			b.batch = append(b.batch, BatchItem{
-				Action: action,
+				Action: &actions[i],
 				Bytes:  value,
 			})
 			b.batchKeys[key] = b.batchIndex
@@ -350,13 +350,13 @@ func (b *Bulk) getIndexName(collectionName, actionIndexName string) string {
 	return indexName
 }
 
-func (b *Bulk) executeSinkResponseHandler(batchActions []document.ESActionDocument, errorData map[string]string) {
+func (b *Bulk) executeSinkResponseHandler(batchActions []*document.ESActionDocument, errorData map[string]string) {
 	if b.sinkResponseHandler == nil {
 		return
 	}
 
 	for _, action := range batchActions {
-		key := getActionKey(action)
+		key := getActionKey(*action)
 		if _, ok := errorData[key]; ok {
 			b.sinkResponseHandler.OnError(&dcpElasticsearch.SinkResponseHandlerContext{
 				Action: action,
@@ -382,8 +382,8 @@ func getBytes(batchItems []BatchItem) [][]byte {
 	return batchBytes
 }
 
-func getActions(batchItems []BatchItem) []document.ESActionDocument {
-	var batchActions []document.ESActionDocument
+func getActions(batchItems []BatchItem) []*document.ESActionDocument {
+	var batchActions []*document.ESActionDocument
 	for _, batchItem := range batchItems {
 		batchActions = append(batchActions, batchItem.Action)
 	}
