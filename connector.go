@@ -2,17 +2,21 @@ package dcpelasticsearch
 
 import (
 	"errors"
-	"github.com/Trendyol/go-dcp"
+	"os"
+
+	"github.com/sirupsen/logrus"
+
+	"github.com/Trendyol/go-dcp/logger"
+
 	"github.com/Trendyol/go-dcp-elasticsearch/config"
 	"github.com/Trendyol/go-dcp-elasticsearch/couchbase"
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch"
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/bulk"
 	"github.com/Trendyol/go-dcp-elasticsearch/metric"
-	"github.com/Trendyol/go-dcp/logger"
-	"github.com/Trendyol/go-dcp/models"
-	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
-	"os"
+
+	"github.com/Trendyol/go-dcp"
+	"github.com/Trendyol/go-dcp/models"
 )
 
 type Connector interface {
