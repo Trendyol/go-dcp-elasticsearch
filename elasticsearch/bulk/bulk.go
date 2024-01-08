@@ -4,21 +4,25 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/Trendyol/go-dcp/helpers"
+	"golang.org/x/sync/errgroup"
+
+	"github.com/elastic/go-elasticsearch/v7/esapi"
+
+	"github.com/Trendyol/go-dcp/logger"
+
 	"github.com/Trendyol/go-dcp-elasticsearch/config"
 	dcpElasticsearch "github.com/Trendyol/go-dcp-elasticsearch/elasticsearch"
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/client"
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/document"
 	"github.com/Trendyol/go-dcp-elasticsearch/helper"
-	"github.com/Trendyol/go-dcp/helpers"
-	"github.com/Trendyol/go-dcp/logger"
 	"github.com/Trendyol/go-dcp/models"
 	"github.com/elastic/go-elasticsearch/v7"
-	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"github.com/json-iterator/go"
-	"golang.org/x/sync/errgroup"
-	"strings"
-	"sync"
-	"time"
 )
 
 type Bulk struct {
