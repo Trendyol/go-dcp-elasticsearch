@@ -52,7 +52,7 @@ type Metric struct {
 
 type BatchItem struct {
 	Bytes  []byte
-	Action *document.ESActionDocument
+	Action document.ESActionDocument
 }
 
 func NewBulk(
@@ -142,12 +142,12 @@ func (b *Bulk) AddActions(
 		key := getActionKey(action)
 		if batchIndex, ok := b.batchKeys[key]; ok {
 			b.batch[batchIndex] = BatchItem{
-				Action: &action,
+				Action: action,
 				Bytes:  value,
 			}
 		} else {
 			b.batch = append(b.batch, BatchItem{
-				Action: &action,
+				Action: action,
 				Bytes:  value,
 			})
 			b.batchKeys[key] = b.batchIndex
@@ -240,8 +240,8 @@ func (b *Bulk) requestFunc(concurrentRequestIndex int, batchItems []BatchItem) f
 		if err != nil {
 			return err
 		}
-		err, errorData := hasResponseError(r)
-		b.handleResponse(getActions(batchItems), errorData)
+		errorData, err := hasResponseError(r)
+		b.executeSinkResponseHandler(getActions(batchItems), errorData)
 
 		if err != nil {
 			return err
@@ -274,24 +274,24 @@ func (b *Bulk) GetMetric() *Metric {
 	return b.metric
 }
 
-func hasResponseError(r *esapi.Response) (error, map[string]string) {
+func hasResponseError(r *esapi.Response) (map[string]string, error) {
 	if r == nil {
-		return fmt.Errorf("esapi response is nil"), nil
+		return nil, fmt.Errorf("esapi response is nil")
 	}
 	if r.IsError() {
-		return fmt.Errorf("bulk request has error %v", r.String()), nil
+		return nil, fmt.Errorf("bulk request has error %v", r.String())
 	}
 	rb := new(bytes.Buffer)
 
 	defer r.Body.Close()
 	_, err := rb.ReadFrom(r.Body)
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 	b := make(map[string]any)
 	err = jsoniter.Unmarshal(rb.Bytes(), &b)
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 	hasError, ok := b["errors"].(bool)
 	if !ok || !hasError {
@@ -300,7 +300,7 @@ func hasResponseError(r *esapi.Response) (error, map[string]string) {
 	return joinErrors(b)
 }
 
-func joinErrors(body map[string]any) (error, map[string]string) {
+func joinErrors(body map[string]any) (map[string]string, error) {
 	var sb strings.Builder
 	ivd := make(map[string]string)
 	sb.WriteString("bulk request has error. Errors will be listed below:\n")
@@ -330,7 +330,7 @@ func joinErrors(body map[string]any) (error, map[string]string) {
 			}
 		}
 	}
-	return fmt.Errorf(sb.String()), ivd
+	return ivd, fmt.Errorf(sb.String())
 }
 
 func (b *Bulk) getIndexName(collectionName, actionIndexName string) string {
@@ -346,7 +346,12 @@ func (b *Bulk) getIndexName(collectionName, actionIndexName string) string {
 	return indexName
 }
 
-func (b *Bulk) handleResponse(batchActions []document.ESActionDocument, errorData map[string]string) {
+func (b *Bulk) executeSinkResponseHandler(batchActions []document.ESActionDocument, errorData map[string]string) {
+
+	if b.sinkResponseHandler == nil {
+		return
+	}
+
 	for _, action := range batchActions {
 		key := getActionKey(action)
 		if _, ok := errorData[key]; ok {
@@ -377,7 +382,7 @@ func getBytes(batchItems []BatchItem) [][]byte {
 func getActions(batchItems []BatchItem) []document.ESActionDocument {
 	var batchActions []document.ESActionDocument
 	for _, batchItem := range batchItems {
-		batchActions = append(batchActions, *batchItem.Action)
+		batchActions = append(batchActions, batchItem.Action)
 	}
 	return batchActions
 }
