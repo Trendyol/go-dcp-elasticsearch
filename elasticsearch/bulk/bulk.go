@@ -157,7 +157,7 @@ func (b *Bulk) AddActions(
 			})
 			b.batchKeys[key] = b.batchIndex
 			b.batchIndex++
-			b.batchSize += len(actions)
+			b.batchSize++
 			b.batchByteSize += len(value)
 		}
 	}
