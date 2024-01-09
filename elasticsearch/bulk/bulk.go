@@ -145,6 +145,7 @@ func (b *Bulk) AddActions(
 
 		key := getActionKey(action)
 		if batchIndex, ok := b.batchKeys[key]; ok {
+			b.batchByteSize += len(value) - len(b.batch[batchIndex].Bytes)
 			b.batch[batchIndex] = BatchItem{
 				Action: &actions[i],
 				Bytes:  value,
@@ -156,18 +157,16 @@ func (b *Bulk) AddActions(
 			})
 			b.batchKeys[key] = b.batchIndex
 			b.batchIndex++
+			b.batchSize++
+			b.batchByteSize += len(value)
 		}
-
-		b.batchByteSize += len(value)
 	}
 	ctx.Ack()
-
-	b.batchSize += len(actions)
 
 	b.flushLock.Unlock()
 
 	b.metric.ProcessLatencyMs = time.Since(eventTime).Milliseconds()
-	if b.batchSize >= b.batchSizeLimit || len(b.batch) >= b.batchByteSizeLimit {
+	if b.batchSize >= b.batchSizeLimit || b.batchByteSize >= b.batchByteSizeLimit {
 		b.flushMessages()
 	}
 }
