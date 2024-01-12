@@ -8,12 +8,13 @@ type Event struct {
 	Key            []byte
 	Value          []byte
 	Cas            uint64
+	VbID           uint16
 	IsDeleted      bool
 	IsExpired      bool
 	IsMutated      bool
 }
 
-func NewDeleteEvent(key []byte, value []byte, collectionName string, cas uint64, eventTime time.Time) Event {
+func NewDeleteEvent(key []byte, value []byte, collectionName string, cas uint64, eventTime time.Time, vbID uint16) Event {
 	return Event{
 		Key:            key,
 		Value:          value,
@@ -21,10 +22,11 @@ func NewDeleteEvent(key []byte, value []byte, collectionName string, cas uint64,
 		CollectionName: collectionName,
 		Cas:            cas,
 		EventTime:      eventTime,
+		VbID:           vbID,
 	}
 }
 
-func NewExpireEvent(key []byte, value []byte, collectionName string, cas uint64, eventTime time.Time) Event {
+func NewExpireEvent(key []byte, value []byte, collectionName string, cas uint64, eventTime time.Time, vbID uint16) Event {
 	return Event{
 		Key:            key,
 		Value:          value,
@@ -32,10 +34,11 @@ func NewExpireEvent(key []byte, value []byte, collectionName string, cas uint64,
 		CollectionName: collectionName,
 		Cas:            cas,
 		EventTime:      eventTime,
+		VbID:           vbID,
 	}
 }
 
-func NewMutateEvent(key []byte, value []byte, collectionName string, cas uint64, eventTime time.Time) Event {
+func NewMutateEvent(key []byte, value []byte, collectionName string, cas uint64, eventTime time.Time, vbID uint16) Event {
 	return Event{
 		Key:            key,
 		Value:          value,
@@ -43,5 +46,6 @@ func NewMutateEvent(key []byte, value []byte, collectionName string, cas uint64,
 		CollectionName: collectionName,
 		Cas:            cas,
 		EventTime:      eventTime,
+		VbID:           vbID,
 	}
 }
