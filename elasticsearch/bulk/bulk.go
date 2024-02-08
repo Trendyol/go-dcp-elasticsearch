@@ -179,7 +179,7 @@ var (
 	routingPrefix = helper.Byte(`","routing":"`)
 	postFix       = helper.Byte(`"}}`)
 
-	preCalculatedPrefixesLength = len(deletePrefix) + len(idPrefix) + len(routingPrefix) + len(typePrefix) + len(postFix)
+	allPrefixesLength = len(deletePrefix) + len(idPrefix) + len(routingPrefix) + len(typePrefix) + len(postFix)
 )
 
 func getEsActionJSON(docID []byte, action document.EsAction, indexName string, routing *string, source []byte, typeName []byte) []byte {
@@ -189,7 +189,7 @@ func getEsActionJSON(docID []byte, action document.EsAction, indexName string, r
 	if routing != nil {
 		routingLength = len(*routing)
 	}
-	meta := make([]byte, 0, preCalculatedPrefixesLength+len(docID)+len(indexNameBytes)+len(typeName)+len(source)+routingLength+4)
+	meta := make([]byte, 0, calculateTotalLengthOfAction(docID, indexNameBytes, typeName, source, routingLength))
 
 	if action == document.Index {
 		meta = append(meta, indexPrefix...)
@@ -215,6 +215,10 @@ func getEsActionJSON(docID []byte, action document.EsAction, indexName string, r
 	}
 	meta = append(meta, '\n')
 	return meta
+}
+
+func calculateTotalLengthOfAction(docID []byte, indexNameBytes []byte, typeName []byte, source []byte, routingLength int) int {
+	return allPrefixesLength + len(docID) + len(indexNameBytes) + len(typeName) + len(source) + routingLength + 4
 }
 
 func (b *Bulk) Close() {
