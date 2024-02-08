@@ -178,16 +178,26 @@ var (
 	typePrefix    = helper.Byte(`","_type":"`)
 	routingPrefix = helper.Byte(`","routing":"`)
 	postFix       = helper.Byte(`"}}`)
+
+	preCalculatedPrefixesLength = len(deletePrefix) + len(idPrefix) + len(routingPrefix) + len(typePrefix) + len(postFix)
 )
 
 func getEsActionJSON(docID []byte, action document.EsAction, indexName string, routing *string, source []byte, typeName []byte) []byte {
-	var meta []byte
-	if action == document.Index {
-		meta = indexPrefix
-	} else {
-		meta = deletePrefix
+	indexNameBytes := helper.Byte(indexName)
+
+	routingLength := 0
+	if routing != nil {
+		routingLength = len(*routing)
 	}
-	meta = append(meta, helper.Byte(indexName)...)
+	meta := make([]byte, 0, preCalculatedPrefixesLength+len(docID)+len(indexNameBytes)+len(typeName)+len(source)+routingLength)
+
+	if action == document.Index {
+		meta = append(meta, indexPrefix...)
+	} else {
+		meta = append(meta, deletePrefix...)
+	}
+
+	meta = append(meta, indexNameBytes...)
 	meta = append(meta, idPrefix...)
 	meta = append(meta, helper.EscapePredefinedBytes(docID)...)
 	if routing != nil {
