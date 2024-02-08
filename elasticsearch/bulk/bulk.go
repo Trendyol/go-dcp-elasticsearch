@@ -187,11 +187,12 @@ var metaPool = sync.Pool{
 }
 
 func getEsActionJSON(docID []byte, action document.EsAction, indexName string, routing *string, source []byte, typeName []byte) []byte {
-	meta := metaPool.Get().([]byte)
+	meta := metaPool.Get().([]byte)[:0]
+
 	if action == document.Index {
-		meta = indexPrefix
+		meta = append(meta, indexPrefix...)
 	} else {
-		meta = deletePrefix
+		meta = append(meta, deletePrefix...)
 	}
 	meta = append(meta, helper.Byte(indexName)...)
 	meta = append(meta, idPrefix...)
@@ -232,6 +233,7 @@ func (b *Bulk) flushMessages() {
 		}
 		b.batchTicker.Reset(b.batchTickerDuration)
 		for _, batch := range b.batch {
+			//nolint:staticcheck
 			metaPool.Put(batch.Bytes)
 		}
 		b.batch = b.batch[:0]
