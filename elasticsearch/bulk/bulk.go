@@ -134,7 +134,11 @@ func (b *Bulk) AddActions(
 	for i, action := range actions {
 		indexName := b.getIndexName(collectionName, action.IndexName)
 		actions[i].IndexName = indexName
-		value := getEsActionJSON(
+
+		var meta []byte
+
+		getEsActionJSON(
+			&meta,
 			action.ID,
 			action.Type,
 			actions[i].IndexName,
@@ -145,20 +149,20 @@ func (b *Bulk) AddActions(
 
 		key := getActionKey(action)
 		if batchIndex, ok := b.batchKeys[key]; ok {
-			b.batchByteSize += len(value) - len(b.batch[batchIndex].Bytes)
+			b.batchByteSize += len(meta) - len(b.batch[batchIndex].Bytes)
 			b.batch[batchIndex] = BatchItem{
 				Action: &actions[i],
-				Bytes:  value,
+				Bytes:  meta,
 			}
 		} else {
 			b.batch = append(b.batch, BatchItem{
 				Action: &actions[i],
-				Bytes:  value,
+				Bytes:  meta,
 			})
 			b.batchKeys[key] = b.batchIndex
 			b.batchIndex++
 			b.batchSize++
-			b.batchByteSize += len(value)
+			b.batchByteSize += len(meta)
 		}
 	}
 	ctx.Ack()
@@ -180,38 +184,29 @@ var (
 	postFix       = helper.Byte(`"}}`)
 )
 
-var metaPool = sync.Pool{
-	New: func() interface{} {
-		return []byte{}
-	},
-}
-
-func getEsActionJSON(docID []byte, action document.EsAction, indexName string, routing *string, source []byte, typeName []byte) []byte {
-	meta := metaPool.Get().([]byte)[:0]
-
+func getEsActionJSON(meta *[]byte, docID []byte, action document.EsAction, indexName string, routing *string, source []byte, typeName []byte) {
 	if action == document.Index {
-		meta = append(meta, indexPrefix...)
+		*meta = append(*meta, indexPrefix...)
 	} else {
-		meta = append(meta, deletePrefix...)
+		*meta = append(*meta, deletePrefix...)
 	}
-	meta = append(meta, helper.Byte(indexName)...)
-	meta = append(meta, idPrefix...)
-	meta = append(meta, helper.EscapePredefinedBytes(docID)...)
+	*meta = append(*meta, helper.Byte(indexName)...)
+	*meta = append(*meta, idPrefix...)
+	*meta = append(*meta, helper.EscapePredefinedBytes(docID)...)
 	if routing != nil {
-		meta = append(meta, routingPrefix...)
-		meta = append(meta, helper.Byte(*routing)...)
+		*meta = append(*meta, routingPrefix...)
+		*meta = append(*meta, helper.Byte(*routing)...)
 	}
 	if typeName != nil {
-		meta = append(meta, typePrefix...)
-		meta = append(meta, typeName...)
+		*meta = append(*meta, typePrefix...)
+		*meta = append(*meta, typeName...)
 	}
-	meta = append(meta, postFix...)
+	*meta = append(*meta, postFix...)
 	if action == document.Index {
-		meta = append(meta, '\n')
-		meta = append(meta, source...)
+		*meta = append(*meta, '\n')
+		*meta = append(*meta, source...)
 	}
-	meta = append(meta, '\n')
-	return meta
+	*meta = append(*meta, '\n')
 }
 
 func (b *Bulk) Close() {
@@ -232,10 +227,6 @@ func (b *Bulk) flushMessages() {
 			panic(err)
 		}
 		b.batchTicker.Reset(b.batchTickerDuration)
-		for _, batch := range b.batch {
-			//nolint:staticcheck
-			metaPool.Put(batch.Bytes)
-		}
 		b.batch = b.batch[:0]
 		b.batchKeys = make(map[string]int, b.batchSizeLimit)
 		b.batchIndex = 0
