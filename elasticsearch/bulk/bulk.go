@@ -26,6 +26,7 @@ import (
 )
 
 type Bulk struct {
+	sinkResponseHandler    dcpElasticsearch.SinkResponseHandler
 	metric                 *Metric
 	collectionIndexMapping map[string]string
 	batchKeys              map[string]int
@@ -34,9 +35,9 @@ type Bulk struct {
 	isClosed               chan bool
 	actionCh               chan document.ESActionDocument
 	esClient               *elasticsearch.Client
-	batch                  []BatchItem
-	typeName               []byte
 	readers                []*helper.MultiDimByteReader
+	typeName               []byte
+	batch                  []BatchItem
 	batchIndex             int
 	batchSize              int
 	batchSizeLimit         int
@@ -46,7 +47,6 @@ type Bulk struct {
 	concurrentRequest      int
 	flushLock              sync.Mutex
 	isDcpRebalancing       bool
-	sinkResponseHandler    dcpElasticsearch.SinkResponseHandler
 }
 
 type Metric struct {
@@ -55,8 +55,8 @@ type Metric struct {
 }
 
 type BatchItem struct {
-	Bytes  []byte
 	Action *document.ESActionDocument
+	Bytes  []byte
 }
 
 func NewBulk(

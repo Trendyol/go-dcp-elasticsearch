@@ -10,9 +10,9 @@ const (
 type ESActionDocument struct {
 	Routing   *string
 	Type      EsAction
+	IndexName string
 	Source    []byte
 	ID        []byte
-	IndexName string
 }
 
 func NewDeleteAction(key []byte, routing *string) ESActionDocument {
