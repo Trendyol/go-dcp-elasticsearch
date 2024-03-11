@@ -3,7 +3,7 @@ module github.com/Trendyol/go-dcp-elasticsearch
 go 1.20
 
 require (
-	github.com/Trendyol/go-dcp v1.1.29
+	github.com/Trendyol/go-dcp v1.1.30
 	github.com/elastic/go-elasticsearch/v7 v7.17.10
 	github.com/json-iterator/go v1.1.12
 	github.com/prometheus/client_golang v1.19.0
@@ -27,7 +27,7 @@ require (
 	github.com/go-openapi/jsonreference v0.20.4 // indirect
 	github.com/go-openapi/swag v0.22.9 // indirect
 	github.com/gofiber/adaptor/v2 v2.2.1 // indirect
-	github.com/gofiber/fiber/v2 v2.52.1 // indirect
+	github.com/gofiber/fiber/v2 v2.52.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
