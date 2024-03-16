@@ -4,6 +4,9 @@ import (
 	"errors"
 	"os"
 
+	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/document"
+	"github.com/Trendyol/go-dcp/helpers"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/Trendyol/go-dcp/logger"
@@ -65,7 +68,16 @@ func (c *connector) listener(ctx *models.ListenerContext) {
 		return
 	}
 
-	c.bulk.AddActions(ctx, e.EventTime, actions, e.CollectionName)
+	batchSizeLimit := c.config.Elasticsearch.BatchSizeLimit
+	if len(actions) > batchSizeLimit {
+		chunks := helpers.ChunkSliceWithSize[document.ESActionDocument](actions, batchSizeLimit)
+		lastChunkIndex := len(chunks) - 1
+		for idx, chunk := range chunks {
+			c.bulk.AddActions(ctx, e.EventTime, chunk, e.CollectionName, idx == lastChunkIndex)
+		}
+	} else {
+		c.bulk.AddActions(ctx, e.EventTime, actions, e.CollectionName, true)
+	}
 }
 
 func newConnectorConfigFromPath(path string) (*config.Config, error) {
