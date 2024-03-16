@@ -124,6 +124,7 @@ func (b *Bulk) AddActions(
 	eventTime time.Time,
 	actions []document.ESActionDocument,
 	collectionName string,
+	isLastChunk bool,
 ) {
 	b.flushLock.Lock()
 	if b.isDcpRebalancing {
@@ -161,11 +162,15 @@ func (b *Bulk) AddActions(
 			b.batchByteSize += len(value)
 		}
 	}
-	ctx.Ack()
+	if isLastChunk {
+		ctx.Ack()
+	}
 
 	b.flushLock.Unlock()
 
-	b.metric.ProcessLatencyMs = time.Since(eventTime).Milliseconds()
+	if isLastChunk {
+		b.metric.ProcessLatencyMs = time.Since(eventTime).Milliseconds()
+	}
 	if b.batchSize >= b.batchSizeLimit || b.batchByteSize >= b.batchByteSizeLimit {
 		b.flushMessages()
 	}
