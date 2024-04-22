@@ -144,7 +144,7 @@ func (b *Bulk) AddActions(
 			b.typeName,
 		)
 
-		key := getActionKey(action)
+		key := getActionKey(actions[i])
 		if batchIndex, ok := b.batchKeys[key]; ok {
 			b.batchByteSize += len(value) - len(b.batch[batchIndex].Bytes)
 			b.batch[batchIndex] = BatchItem{
@@ -386,6 +386,9 @@ func (b *Bulk) executeSinkResponseHandler(batchActions []*document.ESActionDocum
 }
 
 func getActionKey(action document.ESActionDocument) string {
+	if action.Routing != nil {
+		return fmt.Sprintf("%s:%s:%s", action.ID, action.IndexName, *action.Routing)
+	}
 	return fmt.Sprintf("%s:%s", action.ID, action.IndexName)
 }
 
