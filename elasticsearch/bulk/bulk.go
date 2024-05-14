@@ -29,6 +29,7 @@ type Bulk struct {
 	sinkResponseHandler    dcpElasticsearch.SinkResponseHandler
 	metric                 *Metric
 	collectionIndexMapping map[string]string
+	config                 *config.Config
 	batchKeys              map[string]int
 	dcpCheckpointCommit    func()
 	batchTicker            *time.Ticker
@@ -85,6 +86,7 @@ func NewBulk(
 		esClient:               esClient,
 		metric:                 &Metric{},
 		collectionIndexMapping: config.Elasticsearch.CollectionIndexMapping,
+		config:                 config,
 		typeName:               helper.Byte(config.Elasticsearch.TypeName),
 		readers:                readers,
 		concurrentRequest:      config.Elasticsearch.ConcurrentRequest,
@@ -374,12 +376,16 @@ func (b *Bulk) executeSinkResponseHandler(batchActions []*document.ESActionDocum
 		key := getActionKey(*action)
 		if _, ok := errorData[key]; ok {
 			b.sinkResponseHandler.OnError(&dcpElasticsearch.SinkResponseHandlerContext{
-				Action: action,
-				Err:    fmt.Errorf(errorData[key]),
+				Action:              action,
+				Err:                 fmt.Errorf(errorData[key]),
+				ElasticsearchClient: b.esClient,
+				Config:              b.config,
 			})
 		} else {
 			b.sinkResponseHandler.OnSuccess(&dcpElasticsearch.SinkResponseHandlerContext{
-				Action: action,
+				Action:              action,
+				ElasticsearchClient: b.esClient,
+				Config:              b.config,
 			})
 		}
 	}
