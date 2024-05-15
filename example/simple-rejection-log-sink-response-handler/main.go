@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/Trendyol/go-dcp-elasticsearch"
 	"github.com/Trendyol/go-dcp-elasticsearch/couchbase"
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch"
@@ -20,7 +19,7 @@ func mapper(event couchbase.Event) []document.ESActionDocument {
 func main() {
 	connector, err := dcpelasticsearch.NewConnectorBuilder("config.yml").
 		SetMapper(mapper).
-		SetSinkResponseHandler(&SinkResponseHandler{}).
+		SetSinkResponseHandler(&elasticsearch.RejectionLogSinkResponseHandler{}).
 		Build()
 	if err != nil {
 		panic(err)
@@ -28,19 +27,4 @@ func main() {
 
 	defer connector.Close()
 	connector.Start()
-}
-
-type SinkResponseHandler struct {
-}
-
-func (crh *SinkResponseHandler) OnInit(_ *elasticsearch.SinkResponseHandlerInitContext) {
-	fmt.Printf("OnInit")
-}
-
-func (crh *SinkResponseHandler) OnSuccess(ctx *elasticsearch.SinkResponseHandlerContext) {
-	fmt.Printf("OnSuccess %v\n", string(ctx.Action.ID))
-}
-
-func (crh *SinkResponseHandler) OnError(ctx *elasticsearch.SinkResponseHandlerContext) {
-	fmt.Printf("OnError %v\n", ctx.Err.Error())
 }
