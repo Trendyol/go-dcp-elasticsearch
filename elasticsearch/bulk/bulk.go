@@ -93,10 +93,14 @@ func NewBulk(
 		batchKeys:              make(map[string]int, config.Elasticsearch.BatchSizeLimit),
 		sinkResponseHandler:    sinkResponseHandler,
 	}
-	sinkResponseHandler.OnInit(&dcpElasticsearch.SinkResponseHandlerInitContext{
-		Config:              config,
-		ElasticsearchClient: esClient,
-	})
+
+	if sinkResponseHandler != nil {
+		sinkResponseHandler.OnInit(&dcpElasticsearch.SinkResponseHandlerInitContext{
+			Config:              config,
+			ElasticsearchClient: esClient,
+		})
+	}
+
 	return bulk, nil
 }
 
