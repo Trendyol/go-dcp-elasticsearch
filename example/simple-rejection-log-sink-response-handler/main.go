@@ -19,7 +19,7 @@ func mapper(event couchbase.Event) []document.ESActionDocument {
 func main() {
 	connector, err := dcpelasticsearch.NewConnectorBuilder("config.yml").
 		SetMapper(mapper).
-		SetSinkResponseHandler(&elasticsearch.RejectionLogSinkResponseHandler{}).
+		SetSinkResponseHandler(elasticsearch.NewRejectionLogSinkResponseHandler()).
 		Build()
 	if err != nil {
 		panic(err)
