@@ -93,6 +93,14 @@ func NewBulk(
 		batchKeys:              make(map[string]int, config.Elasticsearch.BatchSizeLimit),
 		sinkResponseHandler:    sinkResponseHandler,
 	}
+
+	if sinkResponseHandler != nil {
+		sinkResponseHandler.OnInit(&dcpElasticsearch.SinkResponseHandlerInitContext{
+			Config:              config,
+			ElasticsearchClient: esClient,
+		})
+	}
+
 	return bulk, nil
 }
 
@@ -376,16 +384,12 @@ func (b *Bulk) executeSinkResponseHandler(batchActions []*document.ESActionDocum
 		key := getActionKey(*action)
 		if _, ok := errorData[key]; ok {
 			b.sinkResponseHandler.OnError(&dcpElasticsearch.SinkResponseHandlerContext{
-				Action:              action,
-				Err:                 fmt.Errorf(errorData[key]),
-				ElasticsearchClient: b.esClient,
-				Config:              b.config,
+				Action: action,
+				Err:    fmt.Errorf(errorData[key]),
 			})
 		} else {
 			b.sinkResponseHandler.OnSuccess(&dcpElasticsearch.SinkResponseHandlerContext{
-				Action:              action,
-				ElasticsearchClient: b.esClient,
-				Config:              b.config,
+				Action: action,
 			})
 		}
 	}

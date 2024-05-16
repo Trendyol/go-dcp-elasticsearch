@@ -7,8 +7,11 @@ import (
 )
 
 type SinkResponseHandlerContext struct {
-	Action              *document.ESActionDocument
-	Err                 error
+	Action *document.ESActionDocument
+	Err    error
+}
+
+type SinkResponseHandlerInitContext struct {
 	Config              *config.Config
 	ElasticsearchClient *elasticsearch.Client
 }
@@ -16,4 +19,5 @@ type SinkResponseHandlerContext struct {
 type SinkResponseHandler interface {
 	OnSuccess(ctx *SinkResponseHandlerContext)
 	OnError(ctx *SinkResponseHandlerContext)
+	OnInit(ctx *SinkResponseHandlerInitContext)
 }

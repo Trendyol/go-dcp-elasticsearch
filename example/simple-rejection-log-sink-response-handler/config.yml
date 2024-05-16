@@ -1,0 +1,24 @@
+hosts:
+  - localhost:8091
+username: user
+password: password
+bucketName: dcp-test
+dcp:
+  group:
+    name: groupName
+    membership:
+      type: static
+metadata:
+  type: couchbase
+  config:
+    bucket: checkpoint-bucket-name
+    scope: _default
+    collection: _default
+elasticsearch:
+  collectionIndexMapping:
+    _default: indexname
+  urls:
+    - "http://localhost:9200"
+  rejectionLog:
+    index: "cbes-rejection-v1"
+    includeSource: true

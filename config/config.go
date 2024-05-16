@@ -16,11 +16,17 @@ type Elasticsearch struct {
 	DiscoverNodesInterval       *time.Duration    `yaml:"discoverNodesInterval"`
 	TypeName                    string            `yaml:"typeName"`
 	Urls                        []string          `yaml:"urls"`
+	RejectionLog                RejectionLog      `yaml:"rejectionLog"`
 	BatchSizeLimit              int               `yaml:"batchSizeLimit"`
 	BatchTickerDuration         time.Duration     `yaml:"batchTickerDuration"`
 	ConcurrentRequest           int               `yaml:"concurrentRequest"`
 	CompressionEnabled          bool              `yaml:"compressionEnabled"`
 	DisableDiscoverNodesOnStart bool              `yaml:"disableDiscoverNodesOnStart"`
+}
+
+type RejectionLog struct {
+	Index         string `yaml:"index"`
+	IncludeSource bool   `yaml:"includeSource"`
 }
 
 type Config struct {
