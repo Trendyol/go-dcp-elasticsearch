@@ -38,53 +38,53 @@ used for both connectors.
 
 ```go
 func mapper(event couchbase.Event) []document.ESActionDocument {
-if event.IsMutated {
-e := document.NewIndexAction(event.Key, event.Value, nil)
-return []document.ESActionDocument{e}
-}
-e := document.NewDeleteAction(event.Key, nil)
-return []document.ESActionDocument{e}
+  if event.IsMutated {
+    e := document.NewIndexAction(event.Key, event.Value, nil)
+    return []document.ESActionDocument{e}
+  }
+  e := document.NewDeleteAction(event.Key, nil)
+  return []document.ESActionDocument{e}
 }
 
 func main() {
-connector, err := dcpelasticsearch.NewConnectorBuilder(config.Config{
-Elasticsearch: config.Elasticsearch{
-CollectionIndexMapping: map[string]string{
-"_default": "indexname",
-},
-Urls: []string{"http://localhost:9200"},
-},
-Dcp: dcpConfig.Dcp{
-Username:   "user",
-Password:   "password",
-BucketName: "dcp-test",
-Hosts:      []string{"localhost:8091"},
-Dcp: dcpConfig.ExternalDcp{
-Group: dcpConfig.DCPGroup{
-Name: "groupName",
-Membership: dcpConfig.DCPGroupMembership{
-Type: "static",
-},
-},
-},
-Metadata: dcpConfig.Metadata{
-Config: map[string]string{
-"bucket":     "checkpoint-bucket-name",
-"scope":      "_default",
-"collection": "_default",
-},
-Type: "couchbase",
-},
-},
-}).
-SetMapper(mapper).
-Build()
-if err != nil {
-panic(err)
-}
+  connector, err := dcpelasticsearch.NewConnectorBuilder(config.Config{
+    Elasticsearch: config.Elasticsearch{
+      CollectionIndexMapping: map[string]string{
+        "_default": "indexname",
+      },
+      Urls: []string{"http://localhost:9200"},
+    },
+    Dcp: dcpConfig.Dcp{
+      Username:   "user",
+      Password:   "password",
+      BucketName: "dcp-test",
+      Hosts:      []string{"localhost:8091"},
+      Dcp: dcpConfig.ExternalDcp{
+        Group: dcpConfig.DCPGroup{
+          Name: "groupName",
+          Membership: dcpConfig.DCPGroupMembership{
+            Type: "static",
+          },
+        },
+      },
+      Metadata: dcpConfig.Metadata{
+        Config: map[string]string{
+          "bucket":     "checkpoint-bucket-name",
+          "scope":      "_default",
+          "collection": "_default",
+        },
+        Type: "couchbase",
+      },
+    },
+  }).
+    SetMapper(mapper).
+    Build()
+  if err != nil {
+    panic(err)
+  }
 
-defer connector.Close()
-connector.Start()
+  defer connector.Close()
+  connector.Start()
 }
 ```
 
@@ -114,8 +114,8 @@ Check out on [go-dcp](https://github.com/Trendyol/go-dcp#configuration)
 | `elasticsearch.concurrentRequest`           | int               | no       | 1            | Concurrent bulk request count                                                                       |
 | `elasticsearch.disableDiscoverNodesOnStart` | boolean           | no       | false        | Disable discover nodes when initializing the client.                                                |
 | `elasticsearch.discoverNodesInterval`       | time.Duration     | no       | 5m           | Discover nodes periodically                                                                         |
-| `elasticsearch.rejectionLog.Index`          | string            | no       | cbes-rejects | Rejection log index name. `cbes-rejects` is default.                                                |
-| `elasticsearch.rejectionLog.IncludeSource`  | boolean           | no       | false        | Includes rejection log source info. `false` is default.                                             |
+| `elasticsearch.rejectionLog.index`          | string            | no       | cbes-rejects | Rejection log index name. `cbes-rejects` is default.                                                |
+| `elasticsearch.rejectionLog.includeSource`  | boolean           | no       | false        | Includes rejection log source info. `false` is default.                                             |
 
 ## Exposed metrics
 
