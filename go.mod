@@ -3,7 +3,7 @@ module github.com/Trendyol/go-dcp-elasticsearch
 go 1.20
 
 require (
-	github.com/Trendyol/go-dcp v1.1.42
+	github.com/Trendyol/go-dcp v1.1.43
 	github.com/elastic/go-elasticsearch/v7 v7.17.10
 	github.com/json-iterator/go v1.1.12
 	github.com/prometheus/client_golang v1.19.1
