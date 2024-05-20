@@ -3,6 +3,8 @@ package dcpelasticsearch
 import (
 	"errors"
 	"os"
+	"regexp"
+	"strings"
 
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/document"
 	"github.com/Trendyol/go-dcp/helpers"
@@ -95,6 +97,19 @@ func newConnectorConfigFromPath(path string) (*config.Config, error) {
 		return nil, err
 	}
 	var c config.Config
+	err = yaml.Unmarshal(file, &c)
+	if err != nil {
+		return nil, err
+	}
+	envPattern := regexp.MustCompile(`\${([^}]+)}`)
+	matches := envPattern.FindAllStringSubmatch(string(file), -1)
+	for _, match := range matches {
+		envVar := match[1]
+		if value, exists := os.LookupEnv(envVar); exists {
+			updatedFile := strings.ReplaceAll(string(file), "${"+envVar+"}", value)
+			file = []byte(updatedFile)
+		}
+	}
 	err = yaml.Unmarshal(file, &c)
 	if err != nil {
 		return nil, err
