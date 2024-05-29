@@ -73,7 +73,6 @@ func (crh *RejectionLogSinkResponseHandler) OnError(ctx *SinkResponseHandlerCont
 	}
 
 	_, err = req.Do(context.Background(), crh.ElasticsearchClient)
-
 	if err != nil {
 		logger.Log.Error("Rejection Log write error, err: %v", err)
 		panic(err)
