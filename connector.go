@@ -6,6 +6,9 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/client"
+	"github.com/elastic/go-elasticsearch/v7"
+
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/document"
 	"github.com/Trendyol/go-dcp/helpers"
 
@@ -15,7 +18,7 @@ import (
 
 	"github.com/Trendyol/go-dcp-elasticsearch/config"
 	"github.com/Trendyol/go-dcp-elasticsearch/couchbase"
-	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch"
+	dcpElasticsearch "github.com/Trendyol/go-dcp-elasticsearch/elasticsearch"
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/bulk"
 	"github.com/Trendyol/go-dcp-elasticsearch/metric"
 	"gopkg.in/yaml.v3"
@@ -34,7 +37,8 @@ type connector struct {
 	mapper              Mapper
 	config              *config.Config
 	bulk                *bulk.Bulk
-	sinkResponseHandler elasticsearch.SinkResponseHandler
+	esClient            *elasticsearch.Client
+	sinkResponseHandler dcpElasticsearch.SinkResponseHandler
 }
 
 func (c *connector) Start() {
@@ -55,16 +59,19 @@ func (c *connector) listener(ctx *models.ListenerContext) {
 	switch event := ctx.Event.(type) {
 	case models.DcpMutation:
 		e = couchbase.NewMutateEvent(
+			c.esClient,
 			event.Key, event.Value,
 			event.CollectionName, event.Cas, event.EventTime, event.VbID, event.SeqNo, event.RevNo,
 		)
 	case models.DcpExpiration:
 		e = couchbase.NewExpireEvent(
+			c.esClient,
 			event.Key, nil,
 			event.CollectionName, event.Cas, event.EventTime, event.VbID, event.SeqNo, event.RevNo,
 		)
 	case models.DcpDeletion:
 		e = couchbase.NewDeleteEvent(
+			c.esClient,
 			event.Key, nil,
 			event.CollectionName, event.Cas, event.EventTime, event.VbID, event.SeqNo, event.RevNo,
 		)
@@ -130,7 +137,7 @@ func newConfig(cf any) (*config.Config, error) {
 	}
 }
 
-func newConnector(cf any, mapper Mapper, sinkResponseHandler elasticsearch.SinkResponseHandler) (Connector, error) {
+func newConnector(cf any, mapper Mapper, sinkResponseHandler dcpElasticsearch.SinkResponseHandler) (Connector, error) {
 	cfg, err := newConfig(cf)
 	if err != nil {
 		return nil, err
@@ -152,10 +159,17 @@ func newConnector(cf any, mapper Mapper, sinkResponseHandler elasticsearch.SinkR
 	dcpConfig := dcp.GetConfig()
 	dcpConfig.Checkpoint.Type = "manual"
 
+	esClient, err := client.NewElasticClient(cfg)
+	if err != nil {
+		return nil, err
+	}
+	connector.esClient = esClient
+
 	connector.dcp = dcp
 	connector.bulk, err = bulk.NewBulk(
 		cfg,
 		dcp.Commit,
+		esClient,
 		sinkResponseHandler,
 	)
 	if err != nil {
@@ -176,7 +190,7 @@ func newConnector(cf any, mapper Mapper, sinkResponseHandler elasticsearch.SinkR
 type ConnectorBuilder struct {
 	mapper              Mapper
 	config              any
-	sinkResponseHandler elasticsearch.SinkResponseHandler
+	sinkResponseHandler dcpElasticsearch.SinkResponseHandler
 }
 
 func NewConnectorBuilder(config any) *ConnectorBuilder {
@@ -202,7 +216,7 @@ func (c *ConnectorBuilder) SetLogger(logrus *logrus.Logger) *ConnectorBuilder {
 	return c
 }
 
-func (c *ConnectorBuilder) SetSinkResponseHandler(sinkResponseHandler elasticsearch.SinkResponseHandler) *ConnectorBuilder {
+func (c *ConnectorBuilder) SetSinkResponseHandler(sinkResponseHandler dcpElasticsearch.SinkResponseHandler) *ConnectorBuilder {
 	c.sinkResponseHandler = sinkResponseHandler
 	return c
 }

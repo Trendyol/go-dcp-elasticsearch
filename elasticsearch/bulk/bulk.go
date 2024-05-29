@@ -17,7 +17,6 @@ import (
 
 	"github.com/Trendyol/go-dcp-elasticsearch/config"
 	dcpElasticsearch "github.com/Trendyol/go-dcp-elasticsearch/elasticsearch"
-	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/client"
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/document"
 	"github.com/Trendyol/go-dcp-elasticsearch/helper"
 	"github.com/Trendyol/go-dcp/models"
@@ -63,13 +62,9 @@ type BatchItem struct {
 func NewBulk(
 	config *config.Config,
 	dcpCheckpointCommit func(),
+	esClient *elasticsearch.Client,
 	sinkResponseHandler dcpElasticsearch.SinkResponseHandler,
 ) (*Bulk, error) {
-	esClient, err := client.NewElasticClient(config)
-	if err != nil {
-		return nil, err
-	}
-
 	readers := make([]*helper.MultiDimByteReader, config.Elasticsearch.ConcurrentRequest)
 	for i := 0; i < config.Elasticsearch.ConcurrentRequest; i++ {
 		readers[i] = helper.NewMultiDimByteReader(nil)
