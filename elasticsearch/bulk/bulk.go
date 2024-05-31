@@ -398,7 +398,7 @@ func getActionKey(action document.ESActionDocument) string {
 }
 
 func getBytes(batchItems []BatchItem) [][]byte {
-	batchBytes := make([][]byte, len(batchItems))
+	batchBytes := make([][]byte, 0, len(batchItems))
 	for _, batchItem := range batchItems {
 		batchBytes = append(batchBytes, batchItem.Bytes)
 	}
@@ -406,7 +406,7 @@ func getBytes(batchItems []BatchItem) [][]byte {
 }
 
 func getActions(batchItems []BatchItem) []*document.ESActionDocument {
-	batchActions := make([]*document.ESActionDocument, len(batchItems))
+	batchActions := make([]*document.ESActionDocument, 0, len(batchItems))
 	for _, batchItem := range batchItems {
 		batchActions = append(batchActions, batchItem.Action)
 	}
