@@ -3,6 +3,8 @@ package client
 import (
 	"math"
 
+	"github.com/Trendyol/go-dcp/logger"
+
 	"github.com/Trendyol/go-dcp-elasticsearch/config"
 
 	"github.com/elastic/go-elasticsearch/v7"
@@ -16,6 +18,7 @@ func NewElasticClient(config *config.Config) (*elasticsearch.Client, error) {
 		CompressRequestBody:   config.Elasticsearch.CompressionEnabled,
 		DiscoverNodesOnStart:  !config.Elasticsearch.DisableDiscoverNodesOnStart,
 		DiscoverNodesInterval: *config.Elasticsearch.DiscoverNodesInterval,
+		Logger:                &LoggerAdapter{Logger: logger.Log},
 	})
 	if err != nil {
 		return nil, err
