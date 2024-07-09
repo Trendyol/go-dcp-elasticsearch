@@ -7,13 +7,13 @@ replace github.com/Trendyol/go-dcp-elasticsearch => ./../..
 require github.com/Trendyol/go-dcp-elasticsearch v0.0.0
 
 require (
-	github.com/Trendyol/go-dcp v1.1.47 // indirect
+	github.com/Trendyol/go-dcp v1.1.48 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/ansrivas/fiberprometheus/v2 v2.6.1 // indirect
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/couchbase/gocbcore/v10 v10.4.1 // indirect
+	github.com/couchbase/gocbcore/v10 v10.5.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/elastic/go-elasticsearch/v7 v7.17.10 // indirect
 	github.com/emicklei/go-restful/v3 v3.11.3 // indirect
@@ -22,7 +22,7 @@ require (
 	github.com/go-openapi/jsonreference v0.20.4 // indirect
 	github.com/go-openapi/swag v0.22.9 // indirect
 	github.com/gofiber/adaptor/v2 v2.2.1 // indirect
-	github.com/gofiber/fiber/v2 v2.52.4 // indirect
+	github.com/gofiber/fiber/v2 v2.52.5 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
