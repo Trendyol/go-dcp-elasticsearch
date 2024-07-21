@@ -11,13 +11,13 @@ require (
 )
 
 require (
-	github.com/Trendyol/go-dcp v1.1.49 // indirect
+	github.com/Trendyol/go-dcp v1.1.50-0.20240721162849-e35fdcbcb94c // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/ansrivas/fiberprometheus/v2 v2.6.1 // indirect
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/couchbase/gocbcore/v10 v10.5.0 // indirect
+	github.com/couchbase/gocbcore/v10 v10.5.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.11.3 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
