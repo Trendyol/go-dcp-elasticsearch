@@ -4,8 +4,8 @@
       {
         "builtIn": 1,
         "datasource": {
-          "type": "datasource",
-          "uid": "grafana"
+          "type": "grafana",
+          "uid": "-- Grafana --"
         },
         "enable": true,
         "hide": true,
@@ -20,7 +20,7 @@
   "fiscalYearStartMonth": 0,
   "gnetId": 6671,
   "graphTooltip": 0,
-  "id": 403595,
+  "id": 1,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -31,7 +31,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P186C511A5A406A99"
+        "uid": "P0184FB73F4441F48"
       },
       "editable": true,
       "error": false,
@@ -64,7 +64,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "10.2.1",
+      "pluginVersion": "10.0.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -76,7 +76,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
           "expr": "cbgo_dcp_latency_ms_current",
@@ -129,7 +129,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P186C511A5A406A99"
+        "uid": "P0184FB73F4441F48"
       },
       "editable": true,
       "error": false,
@@ -162,7 +162,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "10.2.1",
+      "pluginVersion": "10.0.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -174,7 +174,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
           "expr": "cbgo_process_latency_ms_current",
@@ -225,10 +225,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "P186C511A5A406A99"
-      },
+      "datasource": {},
       "editable": true,
       "error": false,
       "fill": 1,
@@ -260,7 +257,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "10.2.1",
+      "pluginVersion": "10.0.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -272,7 +269,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
           "expr": "cbgo_elasticsearch_connector_bulk_request_process_latency_ms_current",
@@ -325,7 +322,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P186C511A5A406A99"
+        "uid": "P0184FB73F4441F48"
       },
       "editable": true,
       "error": false,
@@ -358,7 +355,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "10.2.1",
+      "pluginVersion": "10.0.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -370,7 +367,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
           "expr": "cbgo_lag_current",
@@ -423,7 +420,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P186C511A5A406A99"
+        "uid": "P0184FB73F4441F48"
       },
       "editable": true,
       "error": false,
@@ -456,7 +453,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "10.2.1",
+      "pluginVersion": "10.0.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -468,7 +465,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "P0184FB73F4441F48"
           },
           "editorMode": "code",
           "expr": "cbgo_mutation_total",
@@ -521,7 +518,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P186C511A5A406A99"
+        "uid": "P0184FB73F4441F48"
       },
       "editable": true,
       "error": false,
@@ -554,7 +551,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "10.2.1",
+      "pluginVersion": "10.0.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -566,10 +563,10 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
-          "expr": "cbgo_deletion_total",
+          "expr": "cbgo_deletion_totat",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "__auto",
@@ -619,7 +616,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P186C511A5A406A99"
+        "uid": "P0184FB73F4441F48"
       },
       "editable": true,
       "error": false,
@@ -652,7 +649,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "10.2.1",
+      "pluginVersion": "10.0.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -664,7 +661,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
           "expr": "cbgo_expiration_total",
@@ -717,7 +714,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P186C511A5A406A99"
+        "uid": "P0184FB73F4441F48"
       },
       "editable": true,
       "error": false,
@@ -750,7 +747,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "10.2.1",
+      "pluginVersion": "10.0.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -762,7 +759,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
           "expr": "cbgo_rebalance_current",
@@ -815,7 +812,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P186C511A5A406A99"
+        "uid": "P0184FB73F4441F48"
       },
       "editable": true,
       "error": false,
@@ -849,7 +846,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "10.2.1",
+      "pluginVersion": "10.0.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -861,7 +858,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
           "expr": "cbgo_total_members_current",
@@ -917,7 +914,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P186C511A5A406A99"
+        "uid": "P0184FB73F4441F48"
       },
       "editable": true,
       "error": false,
@@ -950,7 +947,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "10.2.1",
+      "pluginVersion": "10.0.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -962,7 +959,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
           "expr": "cbgo_offset_write_latency_ms_current",
@@ -1015,7 +1012,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P186C511A5A406A99"
+        "uid": "P0184FB73F4441F48"
       },
       "editable": true,
       "error": false,
@@ -1048,7 +1045,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "10.2.1",
+      "pluginVersion": "10.0.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1060,7 +1057,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
           "expr": "cbgo_elasticsearch_connector_latency_ms_current",
@@ -1113,7 +1110,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P186C511A5A406A99"
+        "uid": "P0184FB73F4441F48"
       },
       "editable": true,
       "error": false,
@@ -1147,7 +1144,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "10.2.1",
+      "pluginVersion": "10.0.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1165,7 +1162,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
           "expr": "process_resident_memory_bytes",
@@ -1218,7 +1215,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P186C511A5A406A99"
+        "uid": "P0184FB73F4441F48"
       },
       "editable": true,
       "error": false,
@@ -1251,7 +1248,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "10.2.1",
+      "pluginVersion": "10.0.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1269,10 +1266,10 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
-          "expr": "go_memstats_alloc_bytes",
+          "expr": "go_memstats_alloc_bytet",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "__auto - bytes allocated",
@@ -1284,7 +1281,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
           "expr": "rate(go_memstats_alloc_bytes_total[30s])",
@@ -1299,7 +1296,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
           "expr": "go_memstats_stack_inuse_bytes",
@@ -1314,7 +1311,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
           "expr": "go_memstats_heap_inuse_bytes",
@@ -1366,10 +1363,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "P186C511A5A406A99"
-      },
+      "datasource": {},
       "editable": true,
       "error": false,
       "fill": 1,
@@ -1401,7 +1395,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "10.2.1",
+      "pluginVersion": "10.0.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1419,7 +1413,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
           "expr": "rate(process_resident_memory_bytes[$__range])",
@@ -1434,7 +1428,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
           "expr": "deriv(process_virtual_memory_bytes[$__range])",
@@ -1487,7 +1481,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P186C511A5A406A99"
+        "uid": "P0184FB73F4441F48"
       },
       "editable": true,
       "error": false,
@@ -1501,7 +1495,7 @@
         "y": 56
       },
       "hiddenSeries": false,
-      "id": 3,
+      "id": 7,
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -1520,7 +1514,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "10.2.1",
+      "pluginVersion": "10.0.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1532,20 +1526,22 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
-          "expr": "process_open_fds",
+          "editorMode": "code",
+          "expr": "go_goroutines",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "__auto",
-          "metric": "process_open_fds",
+          "metric": "go_goroutines",
+          "range": true,
           "refId": "A",
           "step": 4
         }
       ],
       "thresholds": [],
       "timeRegions": [],
-      "title": "open fds",
+      "title": "Goroutines",
       "tooltip": {
         "msResolution": false,
         "shared": true,
@@ -1560,13 +1556,13 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:233",
+          "$$hashKey": "object:111",
           "format": "short",
           "logBase": 1,
           "show": true
         },
         {
-          "$$hashKey": "object:234",
+          "$$hashKey": "object:112",
           "format": "short",
           "logBase": 1,
           "show": true
@@ -1583,7 +1579,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P186C511A5A406A99"
+        "uid": "P0184FB73F4441F48"
       },
       "editable": true,
       "error": false,
@@ -1616,7 +1612,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "10.2.1",
+      "pluginVersion": "10.0.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1634,7 +1630,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
           "expr": "deriv(go_memstats_alloc_bytes[$__range])",
@@ -1649,7 +1645,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
           "expr": "rate(go_memstats_alloc_bytes_total[$__range])",
@@ -1664,7 +1660,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
           "expr": "deriv(go_memstats_stack_inuse_bytes[$__range])",
@@ -1679,7 +1675,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
           "expr": "deriv(go_memstats_heap_inuse_bytes[$__range])",
@@ -1733,7 +1729,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P186C511A5A406A99"
+        "uid": "P0184FB73F4441F48"
       },
       "editable": true,
       "error": false,
@@ -1747,7 +1743,7 @@
         "y": 64
       },
       "hiddenSeries": false,
-      "id": 7,
+      "id": 6,
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -1766,7 +1762,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "10.2.1",
+      "pluginVersion": "10.0.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1778,14 +1774,14 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
-          "expr": "go_goroutines",
+          "expr": "deriv(process_open_fds[$__range])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "__auto",
-          "metric": "go_goroutines",
+          "metric": "process_open_fds",
           "range": true,
           "refId": "A",
           "step": 4
@@ -1793,7 +1789,7 @@
       ],
       "thresholds": [],
       "timeRegions": [],
-      "title": "Goroutines",
+      "title": "Open FDS Deriv",
       "tooltip": {
         "msResolution": false,
         "shared": true,
@@ -1808,13 +1804,13 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:111",
+          "$$hashKey": "object:123",
           "format": "short",
           "logBase": 1,
           "show": true
         },
         {
-          "$$hashKey": "object:112",
+          "$$hashKey": "object:124",
           "format": "short",
           "logBase": 1,
           "show": true
@@ -1831,7 +1827,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P186C511A5A406A99"
+        "uid": "P0184FB73F4441F48"
       },
       "editable": true,
       "error": false,
@@ -1864,7 +1860,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "10.2.1",
+      "pluginVersion": "10.0.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1876,13 +1872,15 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P186C511A5A406A99"
+            "uid": "PE4E52330B67298A4"
           },
+          "editorMode": "code",
           "expr": "go_gc_duration_seconds",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "__auto: {{quantile}}",
           "metric": "go_gc_duration_seconds",
+          "range": true,
           "refId": "A",
           "step": 4
         }
@@ -1917,108 +1915,11 @@
       "yaxis": {
         "align": false
       }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "P186C511A5A406A99"
-      },
-      "editable": true,
-      "error": false,
-      "fill": 1,
-      "fillGradient": 0,
-      "grid": {},
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 72
-      },
-      "hiddenSeries": false,
-      "id": 6,
-      "legend": {
-        "alignAsTable": true,
-        "avg": true,
-        "current": true,
-        "max": true,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "links": [],
-      "nullPointMode": "connected",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "10.2.1",
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "P186C511A5A406A99"
-          },
-          "editorMode": "code",
-          "expr": "deriv(process_open_fds[$__range])",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": "__auto",
-          "metric": "process_open_fds",
-          "range": true,
-          "refId": "A",
-          "step": 4
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "open fds deriv",
-      "tooltip": {
-        "msResolution": false,
-        "shared": true,
-        "sort": 0,
-        "value_type": "cumulative"
-      },
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:123",
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:124",
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
     }
   ],
   "refresh": "30s",
   "schemaVersion": 38,
+  "style": "dark",
   "tags": [],
   "templating": {
     "list": []
@@ -2055,6 +1956,6 @@
   "timezone": "browser",
   "title": "Go DCP Elastic Dashboard",
   "uid": "b0d2fcb9-2383-4a78-a57a-8b00dc615902",
-  "version": 12,
+  "version": 3,
   "weekStart": ""
 }
