@@ -66,6 +66,6 @@ func seedCouchbaseBucket() {
 		} else {
 			log.Println("Inserted document:", documentID)
 		}
-		time.Sleep(1 * time.Second) // 1 saniye bekleme
+		time.Sleep(1 * time.Second)
 	}
 }
