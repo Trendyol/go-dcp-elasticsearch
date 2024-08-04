@@ -3,8 +3,6 @@ version: '3.9'
 volumes:
   prometheus_data: { }
   grafana_data: { }
-  elastic_data: { }
-  couchbase_data: { }
 
 services:
   go-dcp-elastic:
@@ -31,8 +29,6 @@ services:
       memlock:
         soft: -1
         hard: -1
-    volumes:
-      - elastic_data:/usr/share/elasticsearch/data
     ports:
       - "9200:9200"
       - "9300:9300"
@@ -40,8 +36,7 @@ services:
       - 9200
 
   couchbase:
-    image: couchbase:7.6.2
-    container_name: couchbase
+    build: ./couchbase
     ports:
       - "8091-8094:8091-8094"
       - "11210:11210"
@@ -50,8 +45,6 @@ services:
     environment:
       - COUCHBASE_ADMINISTRATOR_USERNAME=user
       - COUCHBASE_ADMINISTRATOR_PASSWORD=password
-    volumes:
-      - couchbase_data:/opt/couchbase/var
 
   prometheus:
     image: prom/prometheus:v2.53.1

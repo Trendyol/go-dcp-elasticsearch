@@ -11,7 +11,7 @@ import (
 )
 
 func mapper(event couchbase.Event) []document.ESActionDocument {
-	print("Captured %s", string(event.Key))
+	log.Println("Captured: ", string(event.Key))
 	if event.IsMutated {
 		e := document.NewIndexAction(event.Key, event.Value, nil)
 		return []document.ESActionDocument{e}
@@ -21,6 +21,8 @@ func mapper(event couchbase.Event) []document.ESActionDocument {
 }
 
 func main() {
+	time.Sleep(15 * time.Second) //wait for couchbase container initialize
+
 	go seedCouchbaseBucket()
 
 	connector, err := dcpelasticsearch.NewConnectorBuilder("config.yml").
