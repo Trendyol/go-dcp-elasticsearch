@@ -1,11 +1,12 @@
 module grafana
 
-go 1.21
+go 1.20
 
-require (
-	github.com/Trendyol/go-dcp-elasticsearch v1.1.63
-	github.com/couchbase/gocb/v2 v2.9.1
-)
+replace github.com/Trendyol/go-dcp-elasticsearch => ./../..
+
+require github.com/Trendyol/go-dcp-elasticsearch v0.0.0
+
+require github.com/couchbase/gocb/v2 v2.9.1
 
 require (
 	github.com/Trendyol/go-dcp v1.1.50 // indirect

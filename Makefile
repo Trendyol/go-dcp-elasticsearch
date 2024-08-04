@@ -30,4 +30,5 @@ tidy:
 	cd example/simple-logger && go mod tidy && cd ../..
 	cd example/simple-sink-response-handler && go mod tidy && cd ../..
 	cd example/struct-config && go mod tidy && cd ../..
+	cd example/grafana && go mod tidy && cd ../..
 	cd test/integration && go mod tidy && cd ../..
