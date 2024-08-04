@@ -128,6 +128,7 @@ You can also use all DCP-related metrics explained [here](https://github.com/Tre
 All DCP-related metrics are automatically injected. It means you don't need to do anything.
 
 ## Grafana Metric Dashboard
+
 [Grafana & Prometheus Example](example/grafana)
 
 ## Contributing
