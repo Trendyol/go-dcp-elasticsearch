@@ -12,6 +12,8 @@ import (
 
 func NewElasticClient(config *config.Config) (*elasticsearch.Client, error) {
 	es, err := elasticsearch.NewClient(elasticsearch.Config{
+		Username:              config.Elasticsearch.Username,
+		Password:              config.Elasticsearch.Password,
 		MaxRetries:            math.MaxInt,
 		Addresses:             config.Elasticsearch.Urls,
 		Transport:             newTransport(config.Elasticsearch),
