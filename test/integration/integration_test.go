@@ -24,6 +24,7 @@ func TestElasticsearch(t *testing.T) {
 
 	connector, err := dcpelasticsearch.NewConnectorBuilder("config.yml").SetMapper(Mapper).Build()
 	if err != nil {
+		t.Fatal(err)
 		return
 	}
 
