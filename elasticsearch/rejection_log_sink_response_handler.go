@@ -30,7 +30,8 @@ func (crh *RejectionLogSinkResponseHandler) OnInit(ctx *SinkResponseHandlerInitC
 	if crh.checkNotIndicesExists() {
 		_, err := esapi.IndicesCreateRequest{Index: index}.Do(context.Background(), crh.ElasticsearchClient)
 		if err != nil {
-			panic("Rejection Log Index Create Request Failed.")
+			logger.Log.Error("error while rejection log index create request, err: %v", err)
+			panic(err)
 		}
 	}
 }
@@ -40,7 +41,8 @@ func (crh *RejectionLogSinkResponseHandler) checkNotIndicesExists() bool {
 		Index: []string{crh.Index},
 	}.Do(context.Background(), crh.ElasticsearchClient)
 	if err != nil {
-		panic("Rejection Log Index Exist Request Failed.")
+		logger.Log.Error("error while rejection log index exist request, err: %v", err)
+		panic(err)
 	}
 	return resp.StatusCode == 404
 }
@@ -62,8 +64,8 @@ func (crh *RejectionLogSinkResponseHandler) OnError(ctx *SinkResponseHandlerCont
 
 	rejectionLogBytes, err := jsoniter.Marshal(rejectionLog)
 	if err != nil {
-		logger.Log.Error("Rejection Log marshal error, err: %v", err)
-		return
+		logger.Log.Error("error while rejection log marshal, err: %v", err)
+		panic(err)
 	}
 
 	req := esapi.IndexRequest{
@@ -74,7 +76,7 @@ func (crh *RejectionLogSinkResponseHandler) OnError(ctx *SinkResponseHandlerCont
 
 	_, err = req.Do(context.Background(), crh.ElasticsearchClient)
 	if err != nil {
-		logger.Log.Error("Rejection Log write error, err: %v", err)
+		logger.Log.Error("error while rejection log write, err: %v", err)
 		panic(err)
 	}
 }
