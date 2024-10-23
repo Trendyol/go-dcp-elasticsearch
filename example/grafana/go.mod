@@ -9,7 +9,7 @@ require github.com/Trendyol/go-dcp-elasticsearch v0.0.0
 require github.com/couchbase/gocb/v2 v2.9.1
 
 require (
-	github.com/Trendyol/go-dcp v1.1.55 // indirect
+	github.com/Trendyol/go-dcp v1.1.57-0.20241023075515-0762009134fb // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/ansrivas/fiberprometheus/v2 v2.7.0 // indirect
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef // indirect
@@ -46,7 +46,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/prometheus/client_golang v1.20.4 // indirect
+	github.com/prometheus/client_golang v1.20.5 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.58.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
