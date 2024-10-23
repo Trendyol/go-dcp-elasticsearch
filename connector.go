@@ -1,10 +1,14 @@
 package dcpelasticsearch
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"os"
 	"regexp"
 	"strings"
+
+	jsoniter "github.com/json-iterator/go"
 
 	dcpCouchbase "github.com/Trendyol/go-dcp/couchbase"
 
@@ -163,6 +167,9 @@ func newConnector(cf any, mapper Mapper, sinkResponseHandler dcpElasticsearch.Si
 		return nil, err
 	}
 
+	copyOfConfig := cfg.Elasticsearch
+	printConfiguration(copyOfConfig)
+
 	dcpConfig := dcp.GetConfig()
 	dcpConfig.Checkpoint.Type = "manual"
 
@@ -226,4 +233,17 @@ func (c *ConnectorBuilder) SetLogger(logrus *logrus.Logger) *ConnectorBuilder {
 func (c *ConnectorBuilder) SetSinkResponseHandler(sinkResponseHandler dcpElasticsearch.SinkResponseHandler) *ConnectorBuilder {
 	c.sinkResponseHandler = sinkResponseHandler
 	return c
+}
+
+func printConfiguration(config config.Elasticsearch) {
+	config.Password = "*****"
+	configJSON, _ := jsoniter.Marshal(config)
+
+	dst := &bytes.Buffer{}
+	if err := json.Compact(dst, configJSON); err != nil {
+		logger.Log.Error("error while print elasticsearch configuration, err: %v", err)
+		panic(err)
+	}
+
+	logger.Log.Info("using elasticsearch config: %v", dst.String())
 }

@@ -9,6 +9,8 @@ import (
 )
 
 type Elasticsearch struct {
+	Username                    string            `yaml:"username"`
+	Password                    string            `yaml:"password"`
 	BatchByteSizeLimit          any               `yaml:"batchByteSizeLimit"`
 	CollectionIndexMapping      map[string]string `yaml:"collectionIndexMapping"`
 	MaxConnsPerHost             *int              `yaml:"maxConnsPerHost"`

@@ -239,6 +239,7 @@ func (b *Bulk) flushMessages() {
 	if len(b.batch) > 0 {
 		err := b.bulkRequest()
 		if err != nil && b.sinkResponseHandler == nil {
+			logger.Log.Error("error while bulk request, err: %v", err)
 			panic(err)
 		}
 		b.batchTicker.Reset(b.batchTickerDuration)
