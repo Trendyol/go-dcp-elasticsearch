@@ -50,8 +50,12 @@ type Bulk struct {
 }
 
 type Metric struct {
-	ProcessLatencyMs            int64
-	BulkRequestProcessLatencyMs int64
+	ProcessLatencyMs             int64
+	BulkRequestProcessLatencyMs  int64
+	IndexingSuccessActionCounter map[string]int64
+	IndexingErrorActionCounter   map[string]int64
+	DeletionSuccessActionCounter map[string]int64
+	DeletionErrorActionCounter   map[string]int64
 }
 
 type BatchItem struct {
@@ -71,15 +75,20 @@ func NewBulk(
 	}
 
 	bulk := &Bulk{
-		batchTickerDuration:    config.Elasticsearch.BatchTickerDuration,
-		batchTicker:            time.NewTicker(config.Elasticsearch.BatchTickerDuration),
-		actionCh:               make(chan document.ESActionDocument, config.Elasticsearch.BatchSizeLimit),
-		batchSizeLimit:         config.Elasticsearch.BatchSizeLimit,
-		batchByteSizeLimit:     helpers.ResolveUnionIntOrStringValue(config.Elasticsearch.BatchByteSizeLimit),
-		isClosed:               make(chan bool, 1),
-		dcpCheckpointCommit:    dcpCheckpointCommit,
-		esClient:               esClient,
-		metric:                 &Metric{},
+		batchTickerDuration: config.Elasticsearch.BatchTickerDuration,
+		batchTicker:         time.NewTicker(config.Elasticsearch.BatchTickerDuration),
+		actionCh:            make(chan document.ESActionDocument, config.Elasticsearch.BatchSizeLimit),
+		batchSizeLimit:      config.Elasticsearch.BatchSizeLimit,
+		batchByteSizeLimit:  helpers.ResolveUnionIntOrStringValue(config.Elasticsearch.BatchByteSizeLimit),
+		isClosed:            make(chan bool, 1),
+		dcpCheckpointCommit: dcpCheckpointCommit,
+		esClient:            esClient,
+		metric: &Metric{
+			IndexingSuccessActionCounter: make(map[string]int64),
+			IndexingErrorActionCounter:   make(map[string]int64),
+			DeletionSuccessActionCounter: make(map[string]int64),
+			DeletionErrorActionCounter:   make(map[string]int64),
+		},
 		collectionIndexMapping: config.Elasticsearch.CollectionIndexMapping,
 		config:                 config,
 		typeName:               helper.Byte(config.Elasticsearch.TypeName),
@@ -379,15 +388,33 @@ func (b *Bulk) executeSinkResponseHandler(batchActions []*document.ESActionDocum
 	for _, action := range batchActions {
 		key := getActionKey(*action)
 		if _, ok := errorData[key]; ok {
+			b.countError(action)
 			b.sinkResponseHandler.OnError(&dcpElasticsearch.SinkResponseHandlerContext{
 				Action: action,
 				Err:    fmt.Errorf(errorData[key]),
 			})
 		} else {
+			b.countSuccess(action)
 			b.sinkResponseHandler.OnSuccess(&dcpElasticsearch.SinkResponseHandlerContext{
 				Action: action,
 			})
 		}
+	}
+}
+
+func (b *Bulk) countError(action *document.ESActionDocument) {
+	if action.Type == document.Index {
+		b.metric.IndexingErrorActionCounter[action.IndexName]++
+	} else if action.Type == document.Delete {
+		b.metric.DeletionErrorActionCounter[action.IndexName]++
+	}
+}
+
+func (b *Bulk) countSuccess(action *document.ESActionDocument) {
+	if action.Type == document.Index {
+		b.metric.IndexingSuccessActionCounter[action.IndexName]++
+	} else if action.Type == document.Delete {
+		b.metric.DeletionSuccessActionCounter[action.IndexName]++
 	}
 }
 
