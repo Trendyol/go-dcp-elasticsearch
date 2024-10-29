@@ -11,6 +11,7 @@ type Collector struct {
 
 	processLatency            *prometheus.Desc
 	bulkRequestProcessLatency *prometheus.Desc
+	actionCounter             *prometheus.Desc
 }
 
 func (s *Collector) Describe(ch chan<- *prometheus.Desc) {
@@ -33,6 +34,42 @@ func (s *Collector) Collect(ch chan<- prometheus.Metric) {
 		float64(bulkMetric.BulkRequestProcessLatencyMs),
 		[]string{}...,
 	)
+
+	for indexName, count := range bulkMetric.IndexingSuccessActionCounter {
+		ch <- prometheus.MustNewConstMetric(
+			s.actionCounter,
+			prometheus.CounterValue,
+			float64(count),
+			"index", "success", indexName,
+		)
+	}
+
+	for indexName, count := range bulkMetric.IndexingErrorActionCounter {
+		ch <- prometheus.MustNewConstMetric(
+			s.actionCounter,
+			prometheus.CounterValue,
+			float64(count),
+			"index", "error", indexName,
+		)
+	}
+
+	for indexName, count := range bulkMetric.DeletionSuccessActionCounter {
+		ch <- prometheus.MustNewConstMetric(
+			s.actionCounter,
+			prometheus.CounterValue,
+			float64(count),
+			"delete", "success", indexName,
+		)
+	}
+
+	for indexName, count := range bulkMetric.DeletionErrorActionCounter {
+		ch <- prometheus.MustNewConstMetric(
+			s.actionCounter,
+			prometheus.CounterValue,
+			float64(count),
+			"delete", "error", indexName,
+		)
+	}
 }
 
 func NewMetricCollector(bulk *bulk.Bulk) *Collector {
@@ -50,6 +87,13 @@ func NewMetricCollector(bulk *bulk.Bulk) *Collector {
 			prometheus.BuildFQName(helpers.Name, "elasticsearch_connector_bulk_request_process_latency_ms", "current"),
 			"Elasticsearch connector bulk request process latency ms",
 			[]string{},
+			nil,
+		),
+
+		actionCounter: prometheus.NewDesc(
+			prometheus.BuildFQName(helpers.Name, "elasticsearch_connector_action_total", "current"),
+			"Elasticsearch connector action counter",
+			[]string{"action_type", "result", "index_name"},
 			nil,
 		),
 	}

@@ -29,8 +29,8 @@ used for both connectors.
 
 | Package                                     | Time to Process Events | Elasticsearch Indexing Rate(/s) | Average CPU Usage(Core) | Average Memory Usage |
 |:--------------------------------------------|:----------------------:|:-------------------------------:|:-----------------------:|:--------------------:|
-| **Go Dcp Elasticsearch**(Go 1.20)           |        **50s**         |    ![go](./benchmark/go.png)    |        **0.486**        |      **408MB**       
-| Java Elasticsearch Connect Couchbase(JDK15) |          80s           |   ![go](./benchmark/java.png)   |          0.31           |        1091MB        
+| **Go Dcp Elasticsearch**(Go 1.20)           |        **50s**         |    ![go](./benchmark/go.png)    |        **0.486**        |      **408MB**       |
+| Java Elasticsearch Connect Couchbase(JDK15) |          80s           |   ![go](./benchmark/java.png)   |          0.31           |        1091MB        |
 
 ## Example
 
@@ -121,10 +121,11 @@ Check out on [go-dcp](https://github.com/Trendyol/go-dcp#configuration)
 
 ## Exposed metrics
 
-| Metric Name                                             | Description                   | Labels | Value Type |
-|---------------------------------------------------------|-------------------------------|--------|------------|
-| elasticsearch_connector_latency_ms                      | Time to adding to the batch.  | N/A    | Gauge      |
-| elasticsearch_connector_bulk_request_process_latency_ms | Time to process bulk request. | N/A    | Gauge      |
+| Metric Name                                             | Description                   | Labels                                                                                                                                                                                | Value Type |
+|---------------------------------------------------------|-------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| elasticsearch_connector_latency_ms                      | Time to adding to the batch.  | N/A                                                                                                                                                                                   | Gauge      |
+| elasticsearch_connector_bulk_request_process_latency_ms | Time to process bulk request. | N/A                                                                                                                                                                                   | Gauge      |
+| elasticsearch_connector_action_total                    | Count elasticsearch actions   | `action_type`: Type of action (e.g., `delete`, `index`) `result`: Result of the action (e.g., `success`, `error`)  `index_name`: The name of the index to which the action is applied | Counter    |
 
 You can also use all DCP-related metrics explained [here](https://github.com/Trendyol/go-dcp#exposed-metrics).
 All DCP-related metrics are automatically injected. It means you don't need to do anything.
