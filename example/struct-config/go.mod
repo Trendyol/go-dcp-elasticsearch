@@ -5,7 +5,7 @@ go 1.20
 replace github.com/Trendyol/go-dcp-elasticsearch => ./../..
 
 require (
-	github.com/Trendyol/go-dcp v1.1.57-0.20241023075515-0762009134fb
+	github.com/Trendyol/go-dcp v1.2.0-rc.2
 	github.com/Trendyol/go-dcp-elasticsearch v0.0.0
 )
 
