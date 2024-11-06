@@ -50,12 +50,12 @@ type Bulk struct {
 }
 
 type Metric struct {
-	ProcessLatencyMs             int64
-	BulkRequestProcessLatencyMs  int64
 	IndexingSuccessActionCounter map[string]int64
 	IndexingErrorActionCounter   map[string]int64
 	DeletionSuccessActionCounter map[string]int64
 	DeletionErrorActionCounter   map[string]int64
+	ProcessLatencyMs             int64
+	BulkRequestProcessLatencyMs  int64
 }
 
 type BatchItem struct {
@@ -374,7 +374,12 @@ func (b *Bulk) getIndexName(collectionName, actionIndexName string) string {
 
 	indexName := b.collectionIndexMapping[collectionName]
 	if indexName == "" {
-		panic(fmt.Sprintf("there is no index mapping for collection: %s on your configuration", collectionName))
+		err := fmt.Errorf(
+			"there is no index mapping for collection: %s on your configuration",
+			collectionName,
+		)
+		logger.Log.Error("error while get index name, err: %v", err)
+		panic(err)
 	}
 
 	return indexName
