@@ -1,4 +1,4 @@
-FROM couchbase:community-7.6.1
+FROM couchbase:7.6.3
 
 ADD configure.sh /configure.sh
 RUN chmod +x /configure.sh
