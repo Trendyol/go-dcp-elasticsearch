@@ -3,10 +3,11 @@ package bulk
 import (
 	"errors"
 	"fmt"
-	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch"
-	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/document"
 	"reflect"
 	"testing"
+
+	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch"
+	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/document"
 )
 
 func Test_getActions(t *testing.T) {
@@ -107,6 +108,7 @@ type mockSinkResponseHandler struct {
 func (m *mockSinkResponseHandler) OnSuccess(ctx *elasticsearch.SinkResponseHandlerContext) {
 	m.successResult = fmt.Sprintf("%s:%s", ctx.Action.ID, ctx.Action.IndexName)
 }
+
 func (m *mockSinkResponseHandler) OnError(ctx *elasticsearch.SinkResponseHandlerContext) {
 	m.errorResult = fmt.Sprintf("%s:%s Error=%s", ctx.Action.ID, ctx.Action.IndexName, ctx.Err.Error())
 }
