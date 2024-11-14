@@ -388,12 +388,12 @@ func (b *Bulk) getIndexName(collectionName, actionIndexName string) string {
 }
 
 func fillErrorDataWithBulkRequestError(batchActions []*document.ESActionDocument, err error) map[string]string {
-	result := make(map[string]string, len(batchActions))
+	errorData := make(map[string]string, len(batchActions))
 	for _, action := range batchActions {
 		key := getActionKey(*action)
-		result[key] = err.Error()
+		errorData[key] = err.Error()
 	}
-	return result
+	return errorData
 }
 
 func (b *Bulk) executeSinkResponseHandler(batchActions []*document.ESActionDocument, errorData map[string]string) {
