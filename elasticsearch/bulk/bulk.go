@@ -270,12 +270,14 @@ func (b *Bulk) requestFunc(concurrentRequestIndex int, batchItems []BatchItem) f
 	return func() error {
 		reader := b.readers[concurrentRequestIndex]
 		reader.Reset(getBytes(batchItems))
+		actionsOfBatchItems := getActions(batchItems)
 		r, err := b.esClient.Bulk(reader)
 		if err != nil {
+			b.executeSinkResponseHandler(actionsOfBatchItems, fillErrorDataWithBulkRequestError(actionsOfBatchItems, err))
 			return err
 		}
 		errorData, err := hasResponseError(r)
-		b.executeSinkResponseHandler(getActions(batchItems), errorData)
+		b.executeSinkResponseHandler(actionsOfBatchItems, errorData)
 
 		if err != nil {
 			return err
@@ -385,6 +387,15 @@ func (b *Bulk) getIndexName(collectionName, actionIndexName string) string {
 	return indexName
 }
 
+func fillErrorDataWithBulkRequestError(batchActions []*document.ESActionDocument, err error) map[string]string {
+	result := make(map[string]string, len(batchActions))
+	for _, action := range batchActions {
+		key := getActionKey(*action)
+		result[key] = err.Error()
+	}
+	return result
+}
+
 func (b *Bulk) executeSinkResponseHandler(batchActions []*document.ESActionDocument, errorData map[string]string) {
 	if b.sinkResponseHandler == nil {
 		return
@@ -439,9 +450,9 @@ func getBytes(batchItems []BatchItem) [][]byte {
 }
 
 func getActions(batchItems []BatchItem) []*document.ESActionDocument {
-	batchActions := make([]*document.ESActionDocument, 0, len(batchItems))
-	for _, batchItem := range batchItems {
-		batchActions = append(batchActions, batchItem.Action)
+	result := make([]*document.ESActionDocument, len(batchItems))
+	for i := range batchItems {
+		result[i] = batchItems[i].Action
 	}
-	return batchActions
+	return result
 }
