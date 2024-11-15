@@ -7,7 +7,7 @@ replace github.com/Trendyol/go-dcp-elasticsearch => ./../..
 require github.com/Trendyol/go-dcp-elasticsearch v0.0.0
 
 require (
-	github.com/Trendyol/go-dcp v1.2.0-rc.3 // indirect
+	github.com/Trendyol/go-dcp v1.2.0-rc.4 // indirect
 	github.com/andybalholm/brotli v1.1.1 // indirect
 	github.com/ansrivas/fiberprometheus/v2 v2.7.0 // indirect
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef // indirect
@@ -50,7 +50,7 @@ require (
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/oauth2 v0.22.0 // indirect
-	golang.org/x/sync v0.8.0 // indirect
+	golang.org/x/sync v0.9.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect
 	golang.org/x/term v0.25.0 // indirect
 	golang.org/x/text v0.19.0 // indirect
