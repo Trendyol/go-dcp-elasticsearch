@@ -212,11 +212,12 @@ var metaPool = sync.Pool{
 func getEsActionJSON(docID []byte, action document.EsAction, indexName string, routing *string, source []byte, typeName []byte) []byte {
 	meta := metaPool.Get().([]byte)[:0]
 
-	if action == document.Index {
+	switch action {
+	case document.Index:
 		meta = append(meta, indexPrefix...)
-	} else if action == document.DocUpdate || action == document.ScriptUpdate {
+	case document.DocUpdate, document.ScriptUpdate:
 		meta = append(meta, updatePrefix...)
-	} else {
+	default:
 		meta = append(meta, deletePrefix...)
 	}
 
@@ -233,13 +234,14 @@ func getEsActionJSON(docID []byte, action document.EsAction, indexName string, r
 	}
 	meta = append(meta, postFix...)
 
-	if action == document.Index {
+	switch action {
+	case document.Index:
 		meta = append(meta, '\n')
 		meta = append(meta, source...)
-	} else if action == document.DocUpdate {
+	case document.DocUpdate:
 		meta = append(meta, '\n')
 		meta = append(meta, []byte(fmt.Sprintf(updateDocTemplate, source))...)
-	} else if action == document.ScriptUpdate {
+	case document.ScriptUpdate:
 		meta = append(meta, '\n')
 		meta = append(meta, scriptPrefix...)
 		meta = append(meta, source...)
