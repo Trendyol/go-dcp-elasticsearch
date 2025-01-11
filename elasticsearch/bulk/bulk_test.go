@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch"
@@ -98,6 +99,277 @@ func Test_fillErrorDataWithBulkRequestError(t *testing.T) {
 	if result["2:someIndex"] != "bulk request error, 400" {
 		t.Fatalf("result' key `2:someIndex` must equal to `bulk request error, 400` but has %s", result["2:someIndex"])
 	}
+}
+
+func Test_getEsActionJSON(t *testing.T) {
+	t.Run("Should_Generate_Index_Action_JSON", func(t *testing.T) {
+		// Given
+		docID := []byte("123")
+		action := document.Index
+		indexName := "test-index"
+		source := []byte(`{"name":"test"}`)
+		var routing *string
+		var typeName []byte
+
+		// When
+		actionJSON := getEsActionJSON(docID, action, indexName, routing, source, typeName)
+
+		// Then
+		expectedAction := `{"index":{"_index":"test-index","_id":"123"}}` + "\n" + `{"name":"test"}` + "\n"
+		if string(actionJSON) != expectedAction {
+			t.Errorf("Expected action JSON %s, got %s", expectedAction, string(actionJSON))
+		}
+	})
+
+	t.Run("Should_Generate_Delete_Action_JSON", func(t *testing.T) {
+		// Given
+		docID := []byte("123")
+		action := document.Delete
+		indexName := "test-index"
+		var source []byte
+		var routing *string
+		var typeName []byte
+
+		// When
+		actionJSON := getEsActionJSON(docID, action, indexName, routing, source, typeName)
+
+		// Then
+		expectedAction := `{"delete":{"_index":"test-index","_id":"123"}}` + "\n"
+		if string(actionJSON) != expectedAction {
+			t.Errorf("Expected action JSON %s, got %s", expectedAction, string(actionJSON))
+		}
+	})
+
+	t.Run("Should_Generate_Update_Action_JSON", func(t *testing.T) {
+		// Given
+		docID := []byte("123")
+		action := document.DocUpdate
+		indexName := "test-index"
+		source := []byte(`{"name":"updated"}`)
+		var routing *string
+		var typeName []byte
+
+		// When
+		actionJSON := getEsActionJSON(docID, action, indexName, routing, source, typeName)
+
+		// Then
+		expectedAction := `{"update":{"_index":"test-index","_id":"123"}}` + "\n" + `{"doc":{"name":"updated"}, "doc_as_upsert":true}` + "\n"
+		if string(actionJSON) != expectedAction {
+			t.Errorf("Expected action JSON %s, got %s", expectedAction, string(actionJSON))
+		}
+	})
+
+	t.Run("Should_Include_Routing_When_Provided", func(t *testing.T) {
+		// Given
+		docID := []byte("123")
+		action := document.Index
+		indexName := "test-index"
+		source := []byte(`{"name":"test"}`)
+		routing := "shard-1"
+		var typeName []byte
+
+		// When
+		actionJSON := getEsActionJSON(docID, action, indexName, &routing, source, typeName)
+
+		// Then
+		expectedAction := `{"index":{"_index":"test-index","_id":"123","routing":"shard-1"}}` + "\n" + `{"name":"test"}` + "\n"
+		if string(actionJSON) != expectedAction {
+			t.Errorf("Expected action JSON %s, got %s", expectedAction, string(actionJSON))
+		}
+	})
+
+	t.Run("Should_Include_Type_When_Provided", func(t *testing.T) {
+		// Given
+		docID := []byte("123")
+		action := document.Index
+		indexName := "test-index"
+		source := []byte(`{"name":"test"}`)
+		var routing *string
+		typeName := []byte("_doc")
+
+		// When
+		actionJSON := getEsActionJSON(docID, action, indexName, routing, source, typeName)
+
+		// Then
+		expectedAction := `{"index":{"_index":"test-index","_id":"123","_type":"_doc"}}` + "\n" + `{"name":"test"}` + "\n"
+		if string(actionJSON) != expectedAction {
+			t.Errorf("Expected action JSON %s, got %s", expectedAction, string(actionJSON))
+		}
+	})
+
+	t.Run("Should_Generate_Script_Update_Action_JSON", func(t *testing.T) {
+		// Given
+		docID := []byte("123")
+		action := document.ScriptUpdate
+		indexName := "test-index"
+		script := []byte(`{
+			"source": "ctx._source.counter += params.count",
+			"lang": "painless",
+			"params": {
+				"count": 1
+			}
+		}`)
+		var routing *string
+		var typeName []byte
+
+		// When
+		actionJSON := getEsActionJSON(docID, action, indexName, routing, script, typeName)
+
+		// Then
+		expectedAction := `{"update":{"_index":"test-index","_id":"123"}}` + "\n" +
+			`{"script":{"source":"ctx._source.counter += params.count","lang":"painless","params":{"count":1}},"scripted_upsert":true}` + "\n"
+
+		normalizedActual := strings.Join(strings.Fields(string(actionJSON)), "")
+		normalizedExpected := strings.Join(strings.Fields(expectedAction), "")
+
+		if normalizedActual != normalizedExpected {
+			t.Errorf("Expected action JSON %s, got %s", expectedAction, string(actionJSON))
+		}
+	})
+
+	t.Run("Should_Generate_Script_Update_Action_JSON_With_Routing", func(t *testing.T) {
+		// Given
+		docID := []byte("123")
+		action := document.ScriptUpdate
+		indexName := "test-index"
+		script := []byte(`{
+			"source": "ctx._source.tags.add(params.tag)",
+			"lang": "painless",
+			"params": {
+				"tag": "new-tag"
+			}
+		}`)
+		routing := "shard-1"
+		var typeName []byte
+
+		// When
+		actionJSON := getEsActionJSON(docID, action, indexName, &routing, script, typeName)
+
+		// Then
+		expectedAction := `{"update":{"_index":"test-index","_id":"123","routing":"shard-1"}}` + "\n" +
+			`{"script":{"source":"ctx._source.tags.add(params.tag)","lang":"painless","params":{"tag":"new-tag"}},"scripted_upsert":true}` + "\n"
+
+		normalizedActual := strings.Join(strings.Fields(string(actionJSON)), "")
+		normalizedExpected := strings.Join(strings.Fields(expectedAction), "")
+
+		if normalizedActual != normalizedExpected {
+			t.Errorf("Expected action JSON %s, got %s", expectedAction, string(actionJSON))
+		}
+	})
+
+	t.Run("Should_Generate_Script_Update_Action_JSON_With_Complex_Script", func(t *testing.T) {
+		// Given
+		docID := []byte("123")
+		action := document.ScriptUpdate
+		indexName := "test-index"
+		script := []byte(`{
+			"source": "if (ctx._source.containsKey('items')) { ctx._source.items.add(params.item) } else { ctx._source.items = [params.item] }",
+			"lang": "painless",
+			"params": {
+				"item": {"id": 1, "name": "test"}
+			}
+		}`)
+		var routing *string
+		var typeName []byte
+
+		// When
+		actionJSON := getEsActionJSON(docID, action, indexName, routing, script, typeName)
+
+		// Then
+		expectedAction := `{"update":{"_index":"test-index","_id":"123"}}` + "\n" +
+			`{"script":{"source":"if (ctx._source.containsKey('items')) { ctx._source.items.add(params.item) } else { ctx._source.items = [params.item] }",` +
+			`"lang":"painless","params":{"item":{"id":1,"name":"test"}}},"scripted_upsert":true}` + "\n"
+
+		normalizedActual := strings.Join(strings.Fields(string(actionJSON)), "")
+		normalizedExpected := strings.Join(strings.Fields(expectedAction), "")
+
+		if normalizedActual != normalizedExpected {
+			t.Errorf("Expected action JSON %s, got %s", expectedAction, string(actionJSON))
+		}
+	})
+
+	t.Run("Should_Generate_DocUpdate_Action_JSON_With_Routing", func(t *testing.T) {
+		// Given
+		docID := []byte("123")
+		action := document.DocUpdate
+		indexName := "test-index"
+		source := []byte(`{"name":"updated"}`)
+		routing := "shard-1"
+		var typeName []byte
+
+		// When
+		actionJSON := getEsActionJSON(docID, action, indexName, &routing, source, typeName)
+
+		// Then
+		expectedAction := `{"update":{"_index":"test-index","_id":"123","routing":"shard-1"}}` + "\n" +
+			`{"doc":{"name":"updated"}, "doc_as_upsert":true}` + "\n"
+		if string(actionJSON) != expectedAction {
+			t.Errorf("Expected action JSON %s, got %s", expectedAction, string(actionJSON))
+		}
+	})
+
+	t.Run("Should_Generate_Delete_Action_JSON_With_Routing_And_Type", func(t *testing.T) {
+		// Given
+		docID := []byte("123")
+		action := document.Delete
+		indexName := "test-index"
+		var source []byte
+		routing := "shard-1"
+		typeName := []byte("_doc")
+
+		// When
+		actionJSON := getEsActionJSON(docID, action, indexName, &routing, source, typeName)
+
+		// Then
+		expectedAction := `{"delete":{"_index":"test-index","_id":"123","routing":"shard-1","_type":"_doc"}}` + "\n"
+		if string(actionJSON) != expectedAction {
+			t.Errorf("Expected action JSON %s, got %s", expectedAction, string(actionJSON))
+		}
+	})
+
+	t.Run("Should_Generate_DocUpdate_Action_JSON_With_Routing_And_Type", func(t *testing.T) {
+		// Given
+		docID := []byte("123")
+		action := document.DocUpdate
+		indexName := "test-index"
+		source := []byte(`{"name":"updated"}`)
+		routing := "shard-1"
+		typeName := []byte("_doc")
+
+		// When
+		actionJSON := getEsActionJSON(docID, action, indexName, &routing, source, typeName)
+
+		// Then
+		expectedAction := `{"update":{"_index":"test-index","_id":"123","routing":"shard-1","_type":"_doc"}}` + "\n" +
+			`{"doc":{"name":"updated"}, "doc_as_upsert":true}` + "\n"
+		if string(actionJSON) != expectedAction {
+			t.Errorf("Expected action JSON %s, got %s", expectedAction, string(actionJSON))
+		}
+	})
+
+	t.Run("Should_Generate_ScriptUpdate_Action_JSON_With_Routing_And_Type", func(t *testing.T) {
+		// Given
+		docID := []byte("123")
+		action := document.ScriptUpdate
+		indexName := "test-index"
+		script := []byte(`{"source": "ctx._source.counter += 1","lang": "painless"}`)
+		routing := "shard-1"
+		typeName := []byte("_doc")
+
+		// When
+		actionJSON := getEsActionJSON(docID, action, indexName, &routing, script, typeName)
+
+		// Then
+		expectedAction := `{"update":{"_index":"test-index","_id":"123","routing":"shard-1","_type":"_doc"}}` + "\n" +
+			`{"script":{"source":"ctx._source.counter += 1","lang":"painless"},"scripted_upsert":true}` + "\n"
+
+		normalizedActual := strings.Join(strings.Fields(string(actionJSON)), "")
+		normalizedExpected := strings.Join(strings.Fields(expectedAction), "")
+
+		if normalizedActual != normalizedExpected {
+			t.Errorf("Expected action JSON %s, got %s", expectedAction, string(actionJSON))
+		}
+	})
 }
 
 type mockSinkResponseHandler struct {
