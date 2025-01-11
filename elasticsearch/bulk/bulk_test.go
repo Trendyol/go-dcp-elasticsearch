@@ -48,8 +48,8 @@ func testIndexActions(t *testing.T) {
 		// Given
 		docID := []byte("123")
 		action := document.Index
-		indexName := "test-index"
-		source := []byte(`{"name":"test"}`)
+		indexName := testIndexName
+		source := []byte(testSimpleDoc)
 		var routing *string
 		var typeName []byte
 
@@ -67,8 +67,8 @@ func testIndexActions(t *testing.T) {
 		// Given
 		docID := []byte("123")
 		action := document.Index
-		indexName := "test-index"
-		source := []byte(`{"name":"test"}`)
+		indexName := testIndexName
+		source := []byte(testSimpleDoc)
 		routing := testRouting
 		var typeName []byte
 
@@ -86,8 +86,8 @@ func testIndexActions(t *testing.T) {
 		// Given
 		docID := []byte("123")
 		action := document.Index
-		indexName := "test-index"
-		source := []byte(`{"name":"test"}`)
+		indexName := testIndexName
+		source := []byte(testSimpleDoc)
 		var routing *string
 		typeName := []byte("_doc")
 
@@ -107,7 +107,7 @@ func testDeleteActions(t *testing.T) {
 		// Given
 		docID := []byte("123")
 		action := document.Delete
-		indexName := "test-index"
+		indexName := testIndexName
 		var source []byte
 		var routing *string
 		var typeName []byte
@@ -126,7 +126,7 @@ func testDeleteActions(t *testing.T) {
 		// Given
 		docID := []byte("123")
 		action := document.Delete
-		indexName := "test-index"
+		indexName := testIndexName
 		var source []byte
 		routing := testRouting
 		typeName := []byte("_doc")
@@ -143,11 +143,13 @@ func testDeleteActions(t *testing.T) {
 }
 
 func testUpdateActions(t *testing.T) {
+	updatedDocJson := `{"doc":{"name":"updated"}, "doc_as_upsert":true}`
+
 	t.Run("Should_Generate_Update_Action_JSON", func(t *testing.T) {
 		// Given
 		docID := []byte("123")
 		action := document.DocUpdate
-		indexName := "test-index"
+		indexName := testIndexName
 		source := []byte(testUpdatedDoc)
 		var routing *string
 		var typeName []byte
@@ -156,7 +158,7 @@ func testUpdateActions(t *testing.T) {
 		actionJSON := getEsActionJSON(docID, action, indexName, routing, source, typeName)
 
 		// Then
-		expectedAction := updateActionMeta + "\n" + `{"doc":{"name":"updated"}, "doc_as_upsert":true}` + "\n"
+		expectedAction := updateActionMeta + "\n" + updatedDocJson + "\n"
 		if string(actionJSON) != expectedAction {
 			t.Errorf("Expected action JSON %s, got %s", expectedAction, string(actionJSON))
 		}
@@ -166,7 +168,7 @@ func testUpdateActions(t *testing.T) {
 		// Given
 		docID := []byte("123")
 		action := document.DocUpdate
-		indexName := "test-index"
+		indexName := testIndexName
 		source := []byte(testUpdatedDoc)
 		routing := testRouting
 		var typeName []byte
@@ -176,7 +178,7 @@ func testUpdateActions(t *testing.T) {
 
 		// Then
 		expectedAction := `{"update":{"_index":"test-index","_id":"123","routing":"shard-1"}}` + "\n" +
-			`{"doc":{"name":"updated"}, "doc_as_upsert":true}` + "\n"
+			updatedDocJson + "\n"
 		if string(actionJSON) != expectedAction {
 			t.Errorf("Expected action JSON %s, got %s", expectedAction, string(actionJSON))
 		}
@@ -186,7 +188,7 @@ func testUpdateActions(t *testing.T) {
 		// Given
 		docID := []byte("123")
 		action := document.DocUpdate
-		indexName := "test-index"
+		indexName := testIndexName
 		source := []byte(testUpdatedDoc)
 		routing := testRouting
 		typeName := []byte("_doc")
@@ -196,7 +198,7 @@ func testUpdateActions(t *testing.T) {
 
 		// Then
 		expectedAction := `{"update":{"_index":"test-index","_id":"123","routing":"shard-1","_type":"_doc"}}` + "\n" +
-			`{"doc":{"name":"updated"}, "doc_as_upsert":true}` + "\n"
+			updatedDocJson + "\n"
 		if string(actionJSON) != expectedAction {
 			t.Errorf("Expected action JSON %s, got %s", expectedAction, string(actionJSON))
 		}
@@ -209,7 +211,7 @@ func testScriptUpdateActions(t *testing.T) {
 		// Given
 		docID := []byte("123")
 		action := document.ScriptUpdate
-		indexName := "test-index"
+		indexName := testIndexName
 		script := []byte(`{"source": "ctx._source.counter += 1","lang": "painless"}`)
 		routing := testRouting
 		typeName := []byte("_doc")
@@ -233,7 +235,7 @@ func testScriptUpdateActions(t *testing.T) {
 		// Given
 		docID := []byte("123")
 		action := document.ScriptUpdate
-		indexName := "test-index"
+		indexName := testIndexName
 		script := []byte(`{
 			"source": "ctx._source.counter += params.count",
 			"lang": "painless",
@@ -263,7 +265,7 @@ func testScriptUpdateActions(t *testing.T) {
 		// Given
 		docID := []byte("123")
 		action := document.ScriptUpdate
-		indexName := "test-index"
+		indexName := testIndexName
 		script := []byte(`{
 			"source": "ctx._source.tags.add(params.tag)",
 			"lang": "painless",
@@ -293,7 +295,7 @@ func testScriptUpdateActions(t *testing.T) {
 		// Given
 		docID := []byte("123")
 		action := document.ScriptUpdate
-		indexName := "test-index"
+		indexName := testIndexName
 		script := []byte(`{
 			"source": "if (ctx._source.containsKey('items')) { ctx._source.items.add(params.item) } else { ctx._source.items = [params.item] }",
 			"lang": "painless",
