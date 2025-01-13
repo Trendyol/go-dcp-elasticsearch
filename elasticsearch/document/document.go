@@ -64,7 +64,13 @@ func NewDocUpdateAction(key []byte, source []byte, routing *string, partialIndex
 	}
 }
 
-func NewDocUpdateActionWithIndexName(key []byte, source []byte, routing *string, indexName string, partialIndexObjectName string) ESActionDocument {
+func NewDocUpdateActionWithIndexName(
+	key []byte,
+	source []byte,
+	routing *string,
+	indexName string,
+	partialIndexObjectName string,
+) ESActionDocument {
 	return ESActionDocument{
 		ID:        key,
 		Routing:   routing,
