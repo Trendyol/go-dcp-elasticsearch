@@ -217,7 +217,7 @@ func getEsActionJSON(docID []byte, action document.EsAction, indexName string, r
 		meta = append(meta, indexPrefix...)
 	case document.DocUpdate, document.ScriptUpdate:
 		meta = append(meta, updatePrefix...)
-	default:
+	case document.Delete:
 		meta = append(meta, deletePrefix...)
 	}
 
@@ -246,6 +246,8 @@ func getEsActionJSON(docID []byte, action document.EsAction, indexName string, r
 		meta = append(meta, scriptPrefix...)
 		meta = append(meta, source...)
 		meta = append(meta, scriptPostfix...)
+	case document.Delete:
+		// Delete action doesn't need a body
 	}
 
 	meta = append(meta, '\n')

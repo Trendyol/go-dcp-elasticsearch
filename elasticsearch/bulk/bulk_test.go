@@ -57,7 +57,7 @@ func testIndexActions(t *testing.T) {
 		actionJSON := getEsActionJSON(docID, action, indexName, routing, source, typeName)
 
 		// Then
-		expectedAction := `{"index":{"_index":"test-index","_id":"123"}}` + "\n" + `{"name":"test"}` + "\n"
+		expectedAction := `{"index":{"_index":"test-index","_id":"123"}}` + "\n" + testSimpleDoc + "\n"
 		if string(actionJSON) != expectedAction {
 			t.Errorf("Expected action JSON %s, got %s", expectedAction, string(actionJSON))
 		}
@@ -76,7 +76,7 @@ func testIndexActions(t *testing.T) {
 		actionJSON := getEsActionJSON(docID, action, indexName, &routing, source, typeName)
 
 		// Then
-		expectedAction := `{"index":{"_index":"test-index","_id":"123","routing":"shard-1"}}` + "\n" + `{"name":"test"}` + "\n"
+		expectedAction := `{"index":{"_index":"test-index","_id":"123","routing":"shard-1"}}` + "\n" + testSimpleDoc + "\n"
 		if string(actionJSON) != expectedAction {
 			t.Errorf("Expected action JSON %s, got %s", expectedAction, string(actionJSON))
 		}
@@ -95,7 +95,7 @@ func testIndexActions(t *testing.T) {
 		actionJSON := getEsActionJSON(docID, action, indexName, routing, source, typeName)
 
 		// Then
-		expectedAction := `{"index":{"_index":"test-index","_id":"123","_type":"_doc"}}` + "\n" + `{"name":"test"}` + "\n"
+		expectedAction := `{"index":{"_index":"test-index","_id":"123","_type":"_doc"}}` + "\n" + testSimpleDoc + "\n"
 		if string(actionJSON) != expectedAction {
 			t.Errorf("Expected action JSON %s, got %s", expectedAction, string(actionJSON))
 		}
@@ -143,7 +143,7 @@ func testDeleteActions(t *testing.T) {
 }
 
 func testUpdateActions(t *testing.T) {
-	updatedDocJson := `{"doc":{"name":"updated"}, "doc_as_upsert":true}`
+	updatedDocJSON := `{"doc":{"name":"updated"}, "doc_as_upsert":true}`
 
 	t.Run("Should_Generate_Update_Action_JSON", func(t *testing.T) {
 		// Given
@@ -158,7 +158,7 @@ func testUpdateActions(t *testing.T) {
 		actionJSON := getEsActionJSON(docID, action, indexName, routing, source, typeName)
 
 		// Then
-		expectedAction := updateActionMeta + "\n" + updatedDocJson + "\n"
+		expectedAction := updateActionMeta + "\n" + updatedDocJSON + "\n"
 		if string(actionJSON) != expectedAction {
 			t.Errorf("Expected action JSON %s, got %s", expectedAction, string(actionJSON))
 		}
@@ -178,7 +178,7 @@ func testUpdateActions(t *testing.T) {
 
 		// Then
 		expectedAction := `{"update":{"_index":"test-index","_id":"123","routing":"shard-1"}}` + "\n" +
-			updatedDocJson + "\n"
+		updatedDocJSON + "\n"
 		if string(actionJSON) != expectedAction {
 			t.Errorf("Expected action JSON %s, got %s", expectedAction, string(actionJSON))
 		}
@@ -198,7 +198,7 @@ func testUpdateActions(t *testing.T) {
 
 		// Then
 		expectedAction := `{"update":{"_index":"test-index","_id":"123","routing":"shard-1","_type":"_doc"}}` + "\n" +
-			updatedDocJson + "\n"
+		updatedDocJSON + "\n"
 		if string(actionJSON) != expectedAction {
 			t.Errorf("Expected action JSON %s, got %s", expectedAction, string(actionJSON))
 		}
