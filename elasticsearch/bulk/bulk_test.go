@@ -19,7 +19,10 @@ const (
 	testSimpleDoc    = `{"name":"test"}`
 	testUpdatedDoc   = `{"name":"updated"}`
 	updateActionMeta = `{"update":{"_index":"test-index","_id":"123"}}`
-	scriptTemplate   = `{"source":"if (ctx._source.containsKey('items')) { ctx._source.items.add(params.item) } else { ctx._source.items = [params.item] }","lang":"painless","params":{"item":{"id":1,"name":"test"}}}`
+	scriptTemplate   = `{"source":"if (ctx._source.containsKey('items')) { ` +
+		`ctx._source.items.add(params.item) } else { ` +
+		`ctx._source.items = [params.item] }",` +
+		`"lang":"painless","params":{"item":{"id":1,"name":"test"}}}`
 )
 
 func Test_getEsActionJSON(t *testing.T) {
@@ -53,7 +56,12 @@ func testRoutingIndexActions(t *testing.T) {
 
 	actionJSON := getEsActionJSON(docID, action, testIndexName, &routing, source, typeName)
 
-	expectedAction := fmt.Sprintf(`{"index":{"_index":"%s","_id":"%s","routing":"%s"}}`, testIndexName, testDocID, routing) + "\n" + testSimpleDoc + "\n"
+	expectedAction := fmt.Sprintf(
+		`{"index":{"_index":"%s","_id":"%s","routing":"%s"}}`,
+		testIndexName,
+		testDocID,
+		routing,
+	) + "\n" + testSimpleDoc + "\n"
 	assertJSONEqual(t, expectedAction, string(actionJSON))
 }
 
@@ -66,7 +74,11 @@ func testTypeIndexActions(t *testing.T) {
 
 	actionJSON := getEsActionJSON(docID, action, testIndexName, routing, source, typeName)
 
-	expectedAction := fmt.Sprintf(`{"index":{"_index":"%s","_id":"%s","_type":"_doc"}}`, testIndexName, testDocID) + "\n" + testSimpleDoc + "\n"
+	expectedAction := fmt.Sprintf(
+		`{"index":{"_index":"%s","_id":"%s","_type":"_doc"}}`,
+		testIndexName,
+		testDocID,
+	) + "\n" + testSimpleDoc + "\n"
 	assertJSONEqual(t, expectedAction, string(actionJSON))
 }
 
