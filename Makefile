@@ -27,6 +27,8 @@ tidy:
 	go mod tidy
 	cd example/default-mapper && go mod tidy && cd ../..
 	cd example/simple && go mod tidy && cd ../..
+	cd example/doc-update && go mod tidy && cd ../..
+	cd example/script-update && go mod tidy && cd ../..
 	cd example/simple-logger && go mod tidy && cd ../..
 	cd example/simple-sink-response-handler && go mod tidy && cd ../..
 	cd example/simple-rejection-log-sink-response-handler && go mod tidy && cd ../..

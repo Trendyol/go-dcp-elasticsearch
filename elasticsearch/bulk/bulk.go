@@ -21,7 +21,7 @@ import (
 	"github.com/Trendyol/go-dcp-elasticsearch/helper"
 	"github.com/Trendyol/go-dcp/models"
 	"github.com/elastic/go-elasticsearch/v7"
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
 
 type Bulk struct {
@@ -191,12 +191,16 @@ func (b *Bulk) AddActions(
 }
 
 var (
-	indexPrefix   = helper.Byte(`{"index":{"_index":"`)
-	deletePrefix  = helper.Byte(`{"delete":{"_index":"`)
-	idPrefix      = helper.Byte(`","_id":"`)
-	typePrefix    = helper.Byte(`","_type":"`)
-	routingPrefix = helper.Byte(`","routing":"`)
-	postFix       = helper.Byte(`"}}`)
+	indexPrefix       = helper.Byte(`{"index":{"_index":"`)
+	deletePrefix      = helper.Byte(`{"delete":{"_index":"`)
+	updatePrefix      = helper.Byte(`{"update":{"_index":"`)
+	scriptPrefix      = helper.Byte(`{"script":`)
+	idPrefix          = helper.Byte(`","_id":"`)
+	typePrefix        = helper.Byte(`","_type":"`)
+	routingPrefix     = helper.Byte(`","routing":"`)
+	postFix           = helper.Byte(`"}}`)
+	scriptPostfix     = helper.Byte(`,"scripted_upsert":true}`)
+	updateDocTemplate = `{"doc":%s, "doc_as_upsert":true}`
 )
 
 var metaPool = sync.Pool{
@@ -208,11 +212,15 @@ var metaPool = sync.Pool{
 func getEsActionJSON(docID []byte, action document.EsAction, indexName string, routing *string, source []byte, typeName []byte) []byte {
 	meta := metaPool.Get().([]byte)[:0]
 
-	if action == document.Index {
+	switch action {
+	case document.Index:
 		meta = append(meta, indexPrefix...)
-	} else {
+	case document.DocUpdate, document.ScriptUpdate:
+		meta = append(meta, updatePrefix...)
+	case document.Delete:
 		meta = append(meta, deletePrefix...)
 	}
+
 	meta = append(meta, helper.Byte(indexName)...)
 	meta = append(meta, idPrefix...)
 	meta = append(meta, helper.EscapePredefinedBytes(docID)...)
@@ -225,10 +233,23 @@ func getEsActionJSON(docID []byte, action document.EsAction, indexName string, r
 		meta = append(meta, typeName...)
 	}
 	meta = append(meta, postFix...)
-	if action == document.Index {
+
+	switch action {
+	case document.Index:
 		meta = append(meta, '\n')
 		meta = append(meta, source...)
+	case document.DocUpdate:
+		meta = append(meta, '\n')
+		meta = append(meta, []byte(fmt.Sprintf(updateDocTemplate, source))...)
+	case document.ScriptUpdate:
+		meta = append(meta, '\n')
+		meta = append(meta, scriptPrefix...)
+		meta = append(meta, source...)
+		meta = append(meta, scriptPostfix...)
+	case document.Delete:
+		// Delete action doesn't need a body
 	}
+
 	meta = append(meta, '\n')
 	return meta
 }
@@ -419,7 +440,7 @@ func (b *Bulk) executeSinkResponseHandler(batchActions []*document.ESActionDocum
 }
 
 func (b *Bulk) countError(action *document.ESActionDocument) {
-	if action.Type == document.Index {
+	if action.Type == document.Index || action.Type == document.DocUpdate || action.Type == document.ScriptUpdate {
 		b.metric.IndexingErrorActionCounter[action.IndexName]++
 	} else if action.Type == document.Delete {
 		b.metric.DeletionErrorActionCounter[action.IndexName]++
@@ -427,7 +448,7 @@ func (b *Bulk) countError(action *document.ESActionDocument) {
 }
 
 func (b *Bulk) countSuccess(action *document.ESActionDocument) {
-	if action.Type == document.Index {
+	if action.Type == document.Index || action.Type == document.DocUpdate || action.Type == document.ScriptUpdate {
 		b.metric.IndexingSuccessActionCounter[action.IndexName]++
 	} else if action.Type == document.Delete {
 		b.metric.DeletionSuccessActionCounter[action.IndexName]++
