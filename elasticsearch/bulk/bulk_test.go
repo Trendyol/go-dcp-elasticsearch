@@ -1,34 +1,135 @@
 package bulk
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch"
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/document"
 )
 
-func Test_getActions(t *testing.T) {
-	// Given
-	givenBatchItems := []BatchItem{
-		{Action: &document.ESActionDocument{ID: []byte("1")}},
-		{Action: &document.ESActionDocument{ID: []byte("2")}},
-	}
+const (
+	testIndexName    = "test-index"
+	testDocID        = "123"
+	testRouting      = "shard-1"
+	testSimpleDoc    = `{"name":"test"}`
+	testUpdatedDoc   = `{"name":"updated"}`
+	updateActionMeta = `{"update":{"_index":"test-index","_id":"123"}}`
+	scriptTemplate   = `{"source":"if (ctx._source.containsKey('items')) { ` +
+		`ctx._source.items.add(params.item) } else { ` +
+		`ctx._source.items = [params.item] }",` +
+		`"lang":"painless","params":{"item":{"id":1,"name":"test"}}}`
+)
 
-	expected := []*document.ESActionDocument{
-		{ID: []byte("1")},
-		{ID: []byte("2")},
-	}
+func Test_getEsActionJSON(t *testing.T) {
+	t.Run("basic_index_actions", testBasicIndexActions)
+	t.Run("routing_index_actions", testRoutingIndexActions)
+	t.Run("type_index_actions", testTypeIndexActions)
+	t.Run("delete_actions", testDeleteActions)
+	t.Run("update_actions", testUpdateActions)
+	t.Run("script_update_actions", testScriptUpdateActions)
+}
 
-	// When
-	result := getActions(givenBatchItems)
+func testBasicIndexActions(t *testing.T) {
+	docID := []byte(testDocID)
+	action := document.Index
+	source := []byte(testSimpleDoc)
+	var routing *string
+	var typeName []byte
 
-	// Then
-	if !reflect.DeepEqual(expected, result) {
-		t.Fatal("Must be equal")
-	}
+	actionJSON := getEsActionJSON(docID, action, testIndexName, routing, source, typeName)
+
+	expectedAction := fmt.Sprintf(`{"index":{"_index":"%s","_id":"%s"}}`, testIndexName, testDocID) + "\n" + testSimpleDoc + "\n"
+	assertJSONEqual(t, expectedAction, string(actionJSON))
+}
+
+func testRoutingIndexActions(t *testing.T) {
+	docID := []byte(testDocID)
+	action := document.Index
+	source := []byte(testSimpleDoc)
+	routing := testRouting
+	var typeName []byte
+
+	actionJSON := getEsActionJSON(docID, action, testIndexName, &routing, source, typeName)
+
+	expectedAction := fmt.Sprintf(
+		`{"index":{"_index":"%s","_id":"%s","routing":"%s"}}`,
+		testIndexName,
+		testDocID,
+		routing,
+	) + "\n" + testSimpleDoc + "\n"
+	assertJSONEqual(t, expectedAction, string(actionJSON))
+}
+
+func testTypeIndexActions(t *testing.T) {
+	docID := []byte(testDocID)
+	action := document.Index
+	source := []byte(testSimpleDoc)
+	var routing *string
+	typeName := []byte("_doc")
+
+	actionJSON := getEsActionJSON(docID, action, testIndexName, routing, source, typeName)
+
+	expectedAction := fmt.Sprintf(
+		`{"index":{"_index":"%s","_id":"%s","_type":"_doc"}}`,
+		testIndexName,
+		testDocID,
+	) + "\n" + testSimpleDoc + "\n"
+	assertJSONEqual(t, expectedAction, string(actionJSON))
+}
+
+func testDeleteActions(t *testing.T) {
+	t.Run("basic_delete", func(t *testing.T) {
+		docID := []byte(testDocID)
+		action := document.Delete
+		var source []byte
+		var routing *string
+		var typeName []byte
+
+		actionJSON := getEsActionJSON(docID, action, testIndexName, routing, source, typeName)
+
+		expectedAction := fmt.Sprintf(`{"delete":{"_index":"%s","_id":"%s"}}`, testIndexName, testDocID) + "\n"
+		assertJSONEqual(t, expectedAction, string(actionJSON))
+	})
+}
+
+func testUpdateActions(t *testing.T) {
+	t.Run("basic_update", func(t *testing.T) {
+		docID := []byte(testDocID)
+		action := document.DocUpdate
+		source := []byte(testUpdatedDoc)
+		var routing *string
+		var typeName []byte
+
+		actionJSON := getEsActionJSON(docID, action, testIndexName, routing, source, typeName)
+
+		expectedAction := updateActionMeta + "\n" +
+			fmt.Sprintf(`{"doc":%s, "doc_as_upsert":true}`, testUpdatedDoc) + "\n"
+		assertJSONEqual(t, expectedAction, string(actionJSON))
+	})
+}
+
+func testScriptUpdateActions(t *testing.T) {
+	t.Run("basic_script_update", testBasicScriptUpdate)
+}
+
+func testBasicScriptUpdate(t *testing.T) {
+	docID := []byte(testDocID)
+	action := document.ScriptUpdate
+	script := []byte(scriptTemplate)
+	var routing *string
+	var typeName []byte
+
+	actionJSON := getEsActionJSON(docID, action, testIndexName, routing, script, typeName)
+
+	expectedAction := fmt.Sprintf(`{"update":{"_index":"%s","_id":"%s"}}`, testIndexName, testDocID) + "\n" +
+		fmt.Sprintf(`{"script":%s,"scripted_upsert":true}`, scriptTemplate) + "\n"
+
+	assertJSONEqual(t, expectedAction, string(actionJSON))
 }
 
 func TestBulk_executeSinkResponseHandler(t *testing.T) {
@@ -97,6 +198,55 @@ func Test_fillErrorDataWithBulkRequestError(t *testing.T) {
 	}
 	if result["2:someIndex"] != "bulk request error, 400" {
 		t.Fatalf("result' key `2:someIndex` must equal to `bulk request error, 400` but has %s", result["2:someIndex"])
+	}
+}
+
+func Test_getActions(t *testing.T) {
+	givenBatchItems := []BatchItem{
+		{Action: &document.ESActionDocument{ID: []byte("1")}},
+		{Action: &document.ESActionDocument{ID: []byte("2")}},
+	}
+
+	expected := []*document.ESActionDocument{
+		{ID: []byte("1")},
+		{ID: []byte("2")},
+	}
+
+	result := getActions(givenBatchItems)
+
+	if !reflect.DeepEqual(expected, result) {
+		t.Fatal("Must be equal")
+	}
+}
+
+func assertJSONEqual(t *testing.T, expected, actual string) {
+	t.Helper()
+	expectedParts := strings.Split(strings.TrimSpace(expected), "\n")
+	actualParts := strings.Split(strings.TrimSpace(actual), "\n")
+
+	if len(expectedParts) != len(actualParts) {
+		t.Fatalf("Number of lines differ. Expected %d lines, got %d lines", len(expectedParts), len(actualParts))
+	}
+
+	for i := 0; i < len(expectedParts); i++ {
+		expectedLine := strings.TrimSpace(expectedParts[i])
+		actualLine := strings.TrimSpace(actualParts[i])
+
+		if expectedLine == "" && actualLine == "" {
+			continue
+		}
+
+		var expectedObj, actualObj interface{}
+		if err := json.Unmarshal([]byte(expectedLine), &expectedObj); err != nil {
+			t.Fatalf("Failed to parse expected JSON line %d: %v", i+1, err)
+		}
+		if err := json.Unmarshal([]byte(actualLine), &actualObj); err != nil {
+			t.Fatalf("Failed to parse actual JSON line %d: %v", i+1, err)
+		}
+
+		if !reflect.DeepEqual(expectedObj, actualObj) {
+			t.Errorf("Line %d differs.\nExpected: %s\nGot: %s", i+1, expectedLine, actualLine)
+		}
 	}
 }
 
