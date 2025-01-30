@@ -1,3 +1,5 @@
+
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Trendyol/go-dcp-elasticsearch/badge)](https://scorecard.dev/viewer/?uri=github.com/Trendyol/go-dcp-elasticsearch)
 # Go Dcp Elasticsearch
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/Trendyol/go-dcp-elasticsearch.svg)](https://pkg.go.dev/github.com/Trendyol/go-dcp-elasticsearch) [![Go Report Card](https://goreportcard.com/badge/github.com/Trendyol/go-dcp-elasticsearch)](https://goreportcard.com/report/github.com/Trendyol/go-dcp-elasticsearch)
