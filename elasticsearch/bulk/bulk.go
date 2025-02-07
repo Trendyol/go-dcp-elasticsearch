@@ -46,6 +46,7 @@ type Bulk struct {
 	batchByteSize          int
 	concurrentRequest      int
 	flushLock              sync.Mutex
+	metricCounterMutex     sync.Mutex
 	isDcpRebalancing       bool
 }
 
@@ -440,6 +441,9 @@ func (b *Bulk) executeSinkResponseHandler(batchActions []*document.ESActionDocum
 }
 
 func (b *Bulk) countError(action *document.ESActionDocument) {
+	b.metricCounterMutex.Lock()
+	defer b.metricCounterMutex.Unlock()
+
 	if action.Type == document.Index || action.Type == document.DocUpdate || action.Type == document.ScriptUpdate {
 		b.metric.IndexingErrorActionCounter[action.IndexName]++
 	} else if action.Type == document.Delete {
@@ -448,6 +452,9 @@ func (b *Bulk) countError(action *document.ESActionDocument) {
 }
 
 func (b *Bulk) countSuccess(action *document.ESActionDocument) {
+	b.metricCounterMutex.Lock()
+	defer b.metricCounterMutex.Unlock()
+
 	if action.Type == document.Index || action.Type == document.DocUpdate || action.Type == document.ScriptUpdate {
 		b.metric.IndexingSuccessActionCounter[action.IndexName]++
 	} else if action.Type == document.Delete {
