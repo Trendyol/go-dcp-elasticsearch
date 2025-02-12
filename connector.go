@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	jsoniter "github.com/json-iterator/go"
+	"github.com/bytedance/sonic"
 
 	dcpCouchbase "github.com/Trendyol/go-dcp/couchbase"
 
@@ -237,7 +237,7 @@ func (c *ConnectorBuilder) SetSinkResponseHandler(sinkResponseHandler dcpElastic
 
 func printConfiguration(config config.Elasticsearch) {
 	config.Password = "*****"
-	configJSON, _ := jsoniter.Marshal(config)
+	configJSON, _ := sonic.Marshal(config)
 
 	dst := &bytes.Buffer{}
 	if err := json.Compact(dst, configJSON); err != nil {

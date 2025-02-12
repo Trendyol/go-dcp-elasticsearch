@@ -6,9 +6,9 @@ import (
 
 	"github.com/Trendyol/go-dcp-elasticsearch/config"
 	"github.com/Trendyol/go-dcp/logger"
+	"github.com/bytedance/sonic"
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
-	jsoniter "github.com/json-iterator/go"
 )
 
 type RejectionLogSinkResponseHandler struct {
@@ -62,7 +62,7 @@ func (crh *RejectionLogSinkResponseHandler) OnError(ctx *SinkResponseHandlerCont
 		rejectionLog.Source = string(ctx.Action.Source)
 	}
 
-	rejectionLogBytes, err := jsoniter.Marshal(rejectionLog)
+	rejectionLogBytes, err := sonic.Marshal(rejectionLog)
 	if err != nil {
 		logger.Log.Error("error while rejection log marshal, err: %v", err)
 		panic(err)

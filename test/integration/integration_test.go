@@ -5,8 +5,8 @@ import (
 	dcpelasticsearch "github.com/Trendyol/go-dcp-elasticsearch"
 	"github.com/Trendyol/go-dcp-elasticsearch/couchbase"
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/document"
+	"github.com/bytedance/sonic"
 	"github.com/elastic/go-elasticsearch/v7"
-	jsoniter "github.com/json-iterator/go"
 	"sync"
 	"testing"
 	"time"
@@ -58,7 +58,7 @@ func TestElasticsearch(t *testing.T) {
 					t.Fatalf("could not get count from elasticsearch %s", err)
 				}
 				var countResponse CountResponse
-				err = jsoniter.NewDecoder(response.Body).Decode(&countResponse)
+				err = sonic.ConfigDefault.NewDecoder(response.Body).Decode(&countResponse)
 				if err != nil {
 					t.Fatalf("could not decode response from elasticsearch %s", err)
 				}

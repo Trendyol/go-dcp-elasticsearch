@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bytedance/sonic"
+
 	"github.com/Trendyol/go-dcp/helpers"
 	"golang.org/x/sync/errgroup"
 
@@ -21,7 +23,6 @@ import (
 	"github.com/Trendyol/go-dcp-elasticsearch/helper"
 	"github.com/Trendyol/go-dcp/models"
 	"github.com/elastic/go-elasticsearch/v7"
-	jsoniter "github.com/json-iterator/go"
 )
 
 type Bulk struct {
@@ -347,7 +348,7 @@ func hasResponseError(r *esapi.Response) (map[string]string, error) {
 		return nil, err
 	}
 	b := make(map[string]any)
-	err = jsoniter.Unmarshal(rb.Bytes(), &b)
+	err = sonic.Unmarshal(rb.Bytes(), &b)
 	if err != nil {
 		return nil, err
 	}
