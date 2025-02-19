@@ -22,7 +22,7 @@ metadata:
 elasticsearch:
   batchSizeLimit: 5
   batchTickerDuration: 5s
-#  batchCheckpointCommitTickerDuration: 120s
+  batchCheckpointCommitTickerDuration: 120s
   batchByteSizeLimit: 90614720
   concurrentRequest: 12
   collectionIndexMapping:
