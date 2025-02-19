@@ -20,7 +20,7 @@ metadata:
     scope: _default
     collection: _default
 elasticsearch:
-  batchSizeLimit: 1000
+  batchSizeLimit: 5
   batchTickerDuration: 5s
   batchCheckpointCommitTickerDuration: 120s
   batchByteSizeLimit: 90614720
