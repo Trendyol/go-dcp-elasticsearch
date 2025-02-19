@@ -262,7 +262,9 @@ func getEsActionJSON(docID []byte, action document.EsAction, indexName string, r
 
 func (b *Bulk) Close() {
 	b.batchTicker.Stop()
-	b.batchCheckpointCommitTicker.Stop()
+	if b.batchCheckpointCommitTicker != nil {
+		b.batchCheckpointCommitTicker.Stop()
+	}
 
 	b.flushMessages()
 }
