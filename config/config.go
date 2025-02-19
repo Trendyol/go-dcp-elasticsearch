@@ -9,21 +9,22 @@ import (
 )
 
 type Elasticsearch struct {
-	Username                    string            `yaml:"username"`
-	Password                    string            `yaml:"password"`
-	BatchByteSizeLimit          any               `yaml:"batchByteSizeLimit"`
-	CollectionIndexMapping      map[string]string `yaml:"collectionIndexMapping"`
-	MaxConnsPerHost             *int              `yaml:"maxConnsPerHost"`
-	MaxIdleConnDuration         *time.Duration    `yaml:"maxIdleConnDuration"`
-	DiscoverNodesInterval       *time.Duration    `yaml:"discoverNodesInterval"`
-	TypeName                    string            `yaml:"typeName"`
-	Urls                        []string          `yaml:"urls"`
-	RejectionLog                RejectionLog      `yaml:"rejectionLog"`
-	BatchSizeLimit              int               `yaml:"batchSizeLimit"`
-	BatchTickerDuration         time.Duration     `yaml:"batchTickerDuration"`
-	ConcurrentRequest           int               `yaml:"concurrentRequest"`
-	CompressionEnabled          bool              `yaml:"compressionEnabled"`
-	DisableDiscoverNodesOnStart bool              `yaml:"disableDiscoverNodesOnStart"`
+	Username                            string            `yaml:"username"`
+	Password                            string            `yaml:"password"`
+	BatchByteSizeLimit                  any               `yaml:"batchByteSizeLimit"`
+	CollectionIndexMapping              map[string]string `yaml:"collectionIndexMapping"`
+	MaxConnsPerHost                     *int              `yaml:"maxConnsPerHost"`
+	MaxIdleConnDuration                 *time.Duration    `yaml:"maxIdleConnDuration"`
+	DiscoverNodesInterval               *time.Duration    `yaml:"discoverNodesInterval"`
+	TypeName                            string            `yaml:"typeName"`
+	Urls                                []string          `yaml:"urls"`
+	RejectionLog                        RejectionLog      `yaml:"rejectionLog"`
+	BatchSizeLimit                      int               `yaml:"batchSizeLimit"`
+	BatchTickerDuration                 time.Duration     `yaml:"batchTickerDuration"`
+	BatchCheckpointCommitTickerDuration *time.Duration    `yaml:"batchCheckpointCommitTickerDuration"`
+	ConcurrentRequest                   int               `yaml:"concurrentRequest"`
+	CompressionEnabled                  bool              `yaml:"compressionEnabled"`
+	DisableDiscoverNodesOnStart         bool              `yaml:"disableDiscoverNodesOnStart"`
 }
 
 type RejectionLog struct {
