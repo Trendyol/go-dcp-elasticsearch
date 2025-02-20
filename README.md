@@ -98,24 +98,25 @@ Check out on [go-dcp](https://github.com/Trendyol/go-dcp#configuration)
 
 ### Elasticsearch Specific Configuration
 
-| Variable                                    | Type              | Required   | Default      | Description                                                                                         |                                                           
-|---------------------------------------------|-------------------|------------|--------------|-----------------------------------------------------------------------------------------------------|
-| `elasticsearch.collectionIndexMapping`      | map[string]string | yes        |              | Defines which Couchbase collection events will be written to which index                            |
-| `elasticsearch.urls`                        | []string          | yes        |              | Elasticsearch connection urls                                                                       |
-| `elasticsearch.username`                    | string            | no         |              | The username of Elasticsearch                                                                       |
-| `elasticsearch.password`                    | string            | no         |              | The password of Elasticsearch                                                                       |
-| `elasticsearch.typeName`                    | string            | no         |              | Defines Elasticsearch index type name                                                               |
-| `elasticsearch.batchSizeLimit`              | int               | no         | 1000         | Maximum message count for batch, if exceed flush will be triggered.                                 |
-| `elasticsearch.batchTickerDuration`         | time.Duration     | no         | 10s          | Batch is being flushed automatically at specific time intervals for long waiting messages in batch. |
-| `elasticsearch.batchByteSizeLimit`          | int, string       | no         | 10mb         | Maximum size(byte) for batch, if exceed flush will be triggered. `10mb` is default.                 |
-| `elasticsearch.maxConnsPerHost`             | int               | no         | 512          | Maximum number of connections per each host which may be established                                |
-| `elasticsearch.maxIdleConnDuration`         | time.Duration     | no         | 10s          | Idle keep-alive connections are closed after this duration.                                         | 
-| `elasticsearch.compressionEnabled`          | boolean           | no         | false        | Compression can be used if message size is large, CPU usage may be affected.                        |
-| `elasticsearch.concurrentRequest`           | int               | no         | 1            | Concurrent bulk request count                                                                       |
-| `elasticsearch.disableDiscoverNodesOnStart` | boolean           | no         | false        | Disable discover nodes when initializing the client.                                                |
-| `elasticsearch.discoverNodesInterval`       | time.Duration     | no         | 5m           | Discover nodes periodically                                                                         |
-| `elasticsearch.rejectionLog.index`          | string            | no         | cbes-rejects | Rejection log index name. `cbes-rejects` is default.                                                |
-| `elasticsearch.rejectionLog.includeSource`  | boolean           | no         | false        | Includes rejection log source info. `false` is default.                                             |
+| Variable                                    | Type              | Required | Default      | Description                                                                                                                                                  |                                                           
+|---------------------------------------------|-------------------|----------|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `elasticsearch.collectionIndexMapping`      | map[string]string | yes      |              | Defines which Couchbase collection events will be written to which index                                                                                     |
+| `elasticsearch.urls`                        | []string          | yes      |              | Elasticsearch connection urls                                                                                                                                |
+| `elasticsearch.username`                    | string            | no       |              | The username of Elasticsearch                                                                                                                                |
+| `elasticsearch.password`                    | string            | no       |              | The password of Elasticsearch                                                                                                                                |
+| `elasticsearch.typeName`                    | string            | no       |              | Defines Elasticsearch index type name                                                                                                                        |
+| `elasticsearch.batchSizeLimit`              | int               | no       | 1000         | Maximum message count for batch, if exceed flush will be triggered.                                                                                          |
+| `elasticsearch.batchTickerDuration`         | time.Duration     | no       | 10s          | Batch is being flushed automatically at specific time intervals for long waiting messages in batch.                                                          |
+| `elasticsearch.batchCommitTickerDuration`   | time.Duration     | no       | 0s           | Configures checkpoint offset save time, By default, after batch flushing, the offsets are updated immediately, this period can be increased for performance. |
+| `elasticsearch.batchByteSizeLimit`          | int, string       | no       | 10mb         | Maximum size(byte) for batch, if exceed flush will be triggered. `10mb` is default.                                                                          |
+| `elasticsearch.maxConnsPerHost`             | int               | no       | 512          | Maximum number of connections per each host which may be established                                                                                         |
+| `elasticsearch.maxIdleConnDuration`         | time.Duration     | no       | 10s          | Idle keep-alive connections are closed after this duration.                                                                                                  | 
+| `elasticsearch.compressionEnabled`          | boolean           | no       | false        | Compression can be used if message size is large, CPU usage may be affected.                                                                                 |
+| `elasticsearch.concurrentRequest`           | int               | no       | 1            | Concurrent bulk request count                                                                                                                                |
+| `elasticsearch.disableDiscoverNodesOnStart` | boolean           | no       | false        | Disable discover nodes when initializing the client.                                                                                                         |
+| `elasticsearch.discoverNodesInterval`       | time.Duration     | no       | 5m           | Discover nodes periodically                                                                                                                                  |
+| `elasticsearch.rejectionLog.index`          | string            | no       | cbes-rejects | Rejection log index name. `cbes-rejects` is default.                                                                                                         |
+| `elasticsearch.rejectionLog.includeSource`  | boolean           | no       | false        | Includes rejection log source info. `false` is default.                                                                                                      |
 
 ## Exposed metrics
 

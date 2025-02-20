@@ -32,6 +32,7 @@ type Bulk struct {
 	batchKeys              map[string]int
 	dcpCheckpointCommit    func()
 	batchTicker            *time.Ticker
+	batchCommitTicker      *time.Ticker
 	isClosed               chan bool
 	actionCh               chan document.ESActionDocument
 	esClient               *elasticsearch.Client
@@ -97,6 +98,10 @@ func NewBulk(
 		concurrentRequest:      config.Elasticsearch.ConcurrentRequest,
 		batchKeys:              make(map[string]int, config.Elasticsearch.BatchSizeLimit),
 		sinkResponseHandler:    sinkResponseHandler,
+	}
+
+	if config.Elasticsearch.BatchCommitTickerDuration != nil {
+		bulk.batchCommitTicker = time.NewTicker(*config.Elasticsearch.BatchCommitTickerDuration)
 	}
 
 	if sinkResponseHandler != nil {
@@ -257,6 +262,9 @@ func getEsActionJSON(docID []byte, action document.EsAction, indexName string, r
 
 func (b *Bulk) Close() {
 	b.batchTicker.Stop()
+	if b.batchCommitTicker != nil {
+		b.batchCommitTicker.Stop()
+	}
 
 	b.flushMessages()
 }
@@ -284,8 +292,21 @@ func (b *Bulk) flushMessages() {
 		b.batchSize = 0
 		b.batchByteSize = 0
 	}
+	b.CheckAndCommit()
+}
 
-	b.dcpCheckpointCommit()
+func (b *Bulk) CheckAndCommit() {
+	if b.batchCommitTicker == nil {
+		b.dcpCheckpointCommit()
+		return
+	}
+
+	select {
+	case <-b.batchCommitTicker.C:
+		b.dcpCheckpointCommit()
+	default:
+		return
+	}
 }
 
 func (b *Bulk) requestFunc(concurrentRequestIndex int, batchItems []BatchItem) func() error {

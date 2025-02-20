@@ -21,6 +21,7 @@ type Elasticsearch struct {
 	RejectionLog                RejectionLog      `yaml:"rejectionLog"`
 	BatchSizeLimit              int               `yaml:"batchSizeLimit"`
 	BatchTickerDuration         time.Duration     `yaml:"batchTickerDuration"`
+	BatchCommitTickerDuration   *time.Duration    `yaml:"batchCommitTickerDuration"`
 	ConcurrentRequest           int               `yaml:"concurrentRequest"`
 	CompressionEnabled          bool              `yaml:"compressionEnabled"`
 	DisableDiscoverNodesOnStart bool              `yaml:"disableDiscoverNodesOnStart"`
