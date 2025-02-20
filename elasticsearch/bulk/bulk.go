@@ -25,30 +25,30 @@ import (
 )
 
 type Bulk struct {
-	sinkResponseHandler         dcpElasticsearch.SinkResponseHandler
-	metric                      *Metric
-	collectionIndexMapping      map[string]string
-	config                      *config.Config
-	batchKeys                   map[string]int
-	dcpCheckpointCommit         func()
-	batchTicker                 *time.Ticker
-	batchCheckpointCommitTicker *time.Ticker
-	isClosed                    chan bool
-	actionCh                    chan document.ESActionDocument
-	esClient                    *elasticsearch.Client
-	readers                     []*helper.MultiDimByteReader
-	typeName                    []byte
-	batch                       []BatchItem
-	batchIndex                  int
-	batchSize                   int
-	batchSizeLimit              int
-	batchTickerDuration         time.Duration
-	batchByteSizeLimit          int
-	batchByteSize               int
-	concurrentRequest           int
-	flushLock                   sync.Mutex
-	metricCounterMutex          sync.Mutex
-	isDcpRebalancing            bool
+	sinkResponseHandler    dcpElasticsearch.SinkResponseHandler
+	metric                 *Metric
+	collectionIndexMapping map[string]string
+	config                 *config.Config
+	batchKeys              map[string]int
+	dcpCheckpointCommit    func()
+	batchTicker            *time.Ticker
+	batchCommitTicker      *time.Ticker
+	isClosed               chan bool
+	actionCh               chan document.ESActionDocument
+	esClient               *elasticsearch.Client
+	readers                []*helper.MultiDimByteReader
+	typeName               []byte
+	batch                  []BatchItem
+	batchIndex             int
+	batchSize              int
+	batchSizeLimit         int
+	batchTickerDuration    time.Duration
+	batchByteSizeLimit     int
+	batchByteSize          int
+	concurrentRequest      int
+	flushLock              sync.Mutex
+	metricCounterMutex     sync.Mutex
+	isDcpRebalancing       bool
 }
 
 type Metric struct {
@@ -101,7 +101,7 @@ func NewBulk(
 	}
 
 	if config.Elasticsearch.BatchCheckpointCommitTickerDuration != nil {
-		bulk.batchCheckpointCommitTicker = time.NewTicker(*config.Elasticsearch.BatchCheckpointCommitTickerDuration)
+		bulk.batchCommitTicker = time.NewTicker(*config.Elasticsearch.BatchCheckpointCommitTickerDuration)
 	}
 
 	if sinkResponseHandler != nil {
@@ -262,8 +262,8 @@ func getEsActionJSON(docID []byte, action document.EsAction, indexName string, r
 
 func (b *Bulk) Close() {
 	b.batchTicker.Stop()
-	if b.batchCheckpointCommitTicker != nil {
-		b.batchCheckpointCommitTicker.Stop()
+	if b.batchCommitTicker != nil {
+		b.batchCommitTicker.Stop()
 	}
 
 	b.flushMessages()
@@ -296,13 +296,13 @@ func (b *Bulk) flushMessages() {
 }
 
 func (b *Bulk) CheckAndCommit() {
-	if b.batchCheckpointCommitTicker == nil {
+	if b.batchCommitTicker == nil {
 		b.dcpCheckpointCommit()
 		return
 	}
 
 	select {
-	case <-b.batchCheckpointCommitTicker.C:
+	case <-b.batchCommitTicker.C:
 		b.dcpCheckpointCommit()
 	default:
 		return
