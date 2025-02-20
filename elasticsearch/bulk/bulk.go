@@ -100,8 +100,8 @@ func NewBulk(
 		sinkResponseHandler:    sinkResponseHandler,
 	}
 
-	if config.Elasticsearch.BatchCheckpointCommitTickerDuration != nil {
-		bulk.batchCommitTicker = time.NewTicker(*config.Elasticsearch.BatchCheckpointCommitTickerDuration)
+	if config.Elasticsearch.BatchCommitTickerDuration != nil {
+		bulk.batchCommitTicker = time.NewTicker(*config.Elasticsearch.BatchCommitTickerDuration)
 	}
 
 	if sinkResponseHandler != nil {
