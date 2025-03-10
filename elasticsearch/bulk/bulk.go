@@ -316,11 +316,11 @@ func (b *Bulk) requestFunc(concurrentRequestIndex int, batchItems []BatchItem) f
 		actionsOfBatchItems := getActions(batchItems)
 		r, err := b.esClient.Bulk(reader)
 		if err != nil {
-			b.executeSinkResponseHandler(actionsOfBatchItems, fillErrorDataWithBulkRequestError(actionsOfBatchItems, err))
+			b.finalizeProcess(actionsOfBatchItems, fillErrorDataWithBulkRequestError(actionsOfBatchItems, err))
 			return err
 		}
 		errorData, err := hasResponseError(r)
-		b.executeSinkResponseHandler(actionsOfBatchItems, errorData)
+		b.finalizeProcess(actionsOfBatchItems, errorData)
 
 		if err != nil {
 			return err
@@ -439,7 +439,7 @@ func fillErrorDataWithBulkRequestError(batchActions []*document.ESActionDocument
 	return errorData
 }
 
-func (b *Bulk) executeSinkResponseHandler(batchActions []*document.ESActionDocument, errorData map[string]string) {
+func (b *Bulk) finalizeProcess(batchActions []*document.ESActionDocument, errorData map[string]string) {
 	for _, action := range batchActions {
 		key := getActionKey(*action)
 		if _, ok := errorData[key]; ok {
