@@ -440,23 +440,23 @@ func fillErrorDataWithBulkRequestError(batchActions []*document.ESActionDocument
 }
 
 func (b *Bulk) executeSinkResponseHandler(batchActions []*document.ESActionDocument, errorData map[string]string) {
-	if b.sinkResponseHandler == nil {
-		return
-	}
-
 	for _, action := range batchActions {
 		key := getActionKey(*action)
 		if _, ok := errorData[key]; ok {
 			b.countError(action)
-			b.sinkResponseHandler.OnError(&dcpElasticsearch.SinkResponseHandlerContext{
-				Action: action,
-				Err:    fmt.Errorf(errorData[key]),
-			})
+			if b.sinkResponseHandler != nil {
+				b.sinkResponseHandler.OnError(&dcpElasticsearch.SinkResponseHandlerContext{
+					Action: action,
+					Err:    fmt.Errorf(errorData[key]),
+				})
+			}
 		} else {
 			b.countSuccess(action)
-			b.sinkResponseHandler.OnSuccess(&dcpElasticsearch.SinkResponseHandlerContext{
-				Action: action,
-			})
+			if b.sinkResponseHandler != nil {
+				b.sinkResponseHandler.OnSuccess(&dcpElasticsearch.SinkResponseHandlerContext{
+					Action: action,
+				})
+			}
 		}
 	}
 }
