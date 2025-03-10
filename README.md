@@ -36,53 +36,53 @@ used for both connectors.
 
 ```go
 func mapper(event couchbase.Event) []document.ESActionDocument {
-  if event.IsMutated {
-    e := document.NewIndexAction(event.Key, event.Value, nil)
-    return []document.ESActionDocument{e}
-  }
-  e := document.NewDeleteAction(event.Key, nil)
-  return []document.ESActionDocument{e}
+if event.IsMutated {
+e := document.NewIndexAction(event.Key, event.Value, nil)
+return []document.ESActionDocument{e}
+}
+e := document.NewDeleteAction(event.Key, nil)
+return []document.ESActionDocument{e}
 }
 
 func main() {
-  connector, err := dcpelasticsearch.NewConnectorBuilder(config.Config{
-    Elasticsearch: config.Elasticsearch{
-      CollectionIndexMapping: map[string]string{
-        "_default": "indexname",
-      },
-      Urls: []string{"http://localhost:9200"},
-    },
-    Dcp: dcpConfig.Dcp{
-      Username:   "user",
-      Password:   "password",
-      BucketName: "dcp-test",
-      Hosts:      []string{"localhost:8091"},
-      Dcp: dcpConfig.ExternalDcp{
-        Group: dcpConfig.DCPGroup{
-          Name: "groupName",
-          Membership: dcpConfig.DCPGroupMembership{
-            Type: "static",
-          },
-        },
-      },
-      Metadata: dcpConfig.Metadata{
-        Config: map[string]string{
-          "bucket":     "checkpoint-bucket-name",
-          "scope":      "_default",
-          "collection": "_default",
-        },
-        Type: "couchbase",
-      },
-    },
-  }).
-    SetMapper(mapper).
-    Build()
-  if err != nil {
-    panic(err)
-  }
+connector, err := dcpelasticsearch.NewConnectorBuilder(config.Config{
+Elasticsearch: config.Elasticsearch{
+CollectionIndexMapping: map[string]string{
+"_default": "indexname",
+},
+Urls: []string{"http://localhost:9200"},
+},
+Dcp: dcpConfig.Dcp{
+Username:   "user",
+Password:   "password",
+BucketName: "dcp-test",
+Hosts:      []string{"localhost:8091"},
+Dcp: dcpConfig.ExternalDcp{
+Group: dcpConfig.DCPGroup{
+Name: "groupName",
+Membership: dcpConfig.DCPGroupMembership{
+Type: "static",
+},
+},
+},
+Metadata: dcpConfig.Metadata{
+Config: map[string]string{
+"bucket":     "checkpoint-bucket-name",
+"scope":      "_default",
+"collection": "_default",
+},
+Type: "couchbase",
+},
+},
+}).
+SetMapper(mapper).
+Build()
+if err != nil {
+panic(err)
+}
 
-  defer connector.Close()
-  connector.Start()
+defer connector.Close()
+connector.Start()
 }
 ```
 
@@ -120,11 +120,11 @@ Check out on [go-dcp](https://github.com/Trendyol/go-dcp#configuration)
 
 ## Exposed metrics
 
-| Metric Name                                             | Description                   | Labels                                                                                                                                                                                | Value Type |
-|---------------------------------------------------------|-------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
-| elasticsearch_connector_latency_ms                      | Time to adding to the batch.  | N/A                                                                                                                                                                                   | Gauge      |
-| elasticsearch_connector_bulk_request_process_latency_ms | Time to process bulk request. | N/A                                                                                                                                                                                   | Gauge      |
-| elasticsearch_connector_action_total                    | Count elasticsearch actions   | `action_type`: Type of action (e.g., `delete`, `index`) `result`: Result of the action (e.g., `success`, `error`)  `index_name`: The name of the index to which the action is applied | Counter    |
+| Metric Name                                                          | Description                   | Labels                                                                                                                                                                                | Value Type |
+|----------------------------------------------------------------------|-------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| cbgo_elasticsearch_connector_latency_ms_current                      | Time to adding to the batch.  | N/A                                                                                                                                                                                   | Gauge      |
+| cbgo_elasticsearch_connector_bulk_request_process_latency_ms_current | Time to process bulk request. | N/A                                                                                                                                                                                   | Gauge      |
+| cbgo_elasticsearch_connector_action_total_current                    | Count elasticsearch actions   | `action_type`: Type of action (e.g., `delete`, `index`) `result`: Result of the action (e.g., `success`, `error`)  `index_name`: The name of the index to which the action is applied | Counter    |
 
 You can also use all DCP-related metrics explained [here](https://github.com/Trendyol/go-dcp#exposed-metrics).
 All DCP-related metrics are automatically injected. It means you don't need to do anything.
