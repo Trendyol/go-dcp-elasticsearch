@@ -138,7 +138,7 @@ func TestBulk_executeSinkResponseHandler(t *testing.T) {
 		sut := Bulk{}
 
 		// When
-		sut.executeSinkResponseHandler(nil, nil)
+		sut.finalizeProcess(nil, nil)
 
 		// Then
 	})
@@ -164,7 +164,7 @@ func TestBulk_executeSinkResponseHandler(t *testing.T) {
 		}
 
 		// When
-		sut.executeSinkResponseHandler(batchActions, errorData)
+		sut.finalizeProcess(batchActions, errorData)
 
 		// Then
 		if handler.successResult != "1:someIndex" {
