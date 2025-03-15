@@ -10,9 +10,14 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	_ "github.com/Trendyol/otel-go-dcp"
 )
 
 func Mapper(event couchbase.Event) []document.ESActionDocument {
+	trace := event.ListenerTrace.CreateChildTrace("test", nil)
+	defer trace.Finish()
+
 	if event.IsMutated {
 		return []document.ESActionDocument{document.NewIndexAction(event.Key, event.Value, nil)}
 	}

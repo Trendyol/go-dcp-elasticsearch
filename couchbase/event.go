@@ -1,6 +1,7 @@
 package couchbase
 
 import (
+	"github.com/Trendyol/go-dcp/tracing"
 	"time"
 
 	"github.com/elastic/go-elasticsearch/v7"
@@ -8,6 +9,7 @@ import (
 
 type Event struct {
 	ElasticsearchClient *elasticsearch.Client
+	ListenerTrace       tracing.ListenerTrace
 	EventTime           time.Time
 	CollectionName      string
 	Key                 []byte
