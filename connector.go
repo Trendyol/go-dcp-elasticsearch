@@ -66,6 +66,10 @@ func (c *connector) GetDcpClient() dcpCouchbase.Client {
 }
 
 func (c *connector) listener(ctx *models.ListenerContext) {
+	// Initialize ListenerTrace for current listen operation
+	listenerTrace := ctx.ListenerTracerComponent.InitializeListenerTrace("Listen", nil)
+	defer listenerTrace.Finish()
+
 	var e couchbase.Event
 	switch event := ctx.Event.(type) {
 	case models.DcpMutation:
@@ -90,6 +94,7 @@ func (c *connector) listener(ctx *models.ListenerContext) {
 		return
 	}
 
+	e.ListenerTrace = listenerTrace
 	actions := c.mapper(e)
 
 	if len(actions) == 0 {
