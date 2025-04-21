@@ -439,11 +439,19 @@ func fillErrorDataWithBulkRequestError(batchActions []*document.ESActionDocument
 	return errorData
 }
 
+func (b *Bulk) LockMetrics() {
+	b.metricCounterMutex.Lock()
+}
+
+func (b *Bulk) UnlockMetrics() {
+	b.metricCounterMutex.Unlock()
+}
+
 func (b *Bulk) finalizeProcess(batchActions []*document.ESActionDocument, errorData map[string]string) {
 	for _, action := range batchActions {
 		key := getActionKey(*action)
 		if _, ok := errorData[key]; ok {
-			b.countError(action)
+			go b.countError(action)
 			if b.sinkResponseHandler != nil {
 				b.sinkResponseHandler.OnError(&dcpElasticsearch.SinkResponseHandlerContext{
 					Action: action,
@@ -451,7 +459,7 @@ func (b *Bulk) finalizeProcess(batchActions []*document.ESActionDocument, errorD
 				})
 			}
 		} else {
-			b.countSuccess(action)
+			go b.countSuccess(action)
 			if b.sinkResponseHandler != nil {
 				b.sinkResponseHandler.OnSuccess(&dcpElasticsearch.SinkResponseHandlerContext{
 					Action: action,
@@ -462,8 +470,8 @@ func (b *Bulk) finalizeProcess(batchActions []*document.ESActionDocument, errorD
 }
 
 func (b *Bulk) countError(action *document.ESActionDocument) {
-	b.metricCounterMutex.Lock()
-	defer b.metricCounterMutex.Unlock()
+	b.LockMetrics()
+	defer b.UnlockMetrics()
 
 	if action.Type == document.Index || action.Type == document.DocUpdate || action.Type == document.ScriptUpdate {
 		b.metric.IndexingErrorActionCounter[action.IndexName]++
@@ -473,8 +481,8 @@ func (b *Bulk) countError(action *document.ESActionDocument) {
 }
 
 func (b *Bulk) countSuccess(action *document.ESActionDocument) {
-	b.metricCounterMutex.Lock()
-	defer b.metricCounterMutex.Unlock()
+	b.LockMetrics()
+	defer b.UnlockMetrics()
 
 	if action.Type == document.Index || action.Type == document.DocUpdate || action.Type == document.ScriptUpdate {
 		b.metric.IndexingSuccessActionCounter[action.IndexName]++

@@ -19,6 +19,9 @@ func (s *Collector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (s *Collector) Collect(ch chan<- prometheus.Metric) {
+	s.bulk.LockMetrics()
+	defer s.bulk.UnlockMetrics()
+
 	bulkMetric := s.bulk.GetMetric()
 
 	ch <- prometheus.MustNewConstMetric(

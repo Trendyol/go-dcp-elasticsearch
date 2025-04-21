@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch"
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/document"
@@ -165,6 +166,7 @@ func TestBulk_executeSinkResponseHandler(t *testing.T) {
 
 		// When
 		sut.finalizeProcess(batchActions, errorData)
+		time.Sleep(1 * time.Second)
 
 		// Then
 		if handler.successResult != "1:someIndex" {

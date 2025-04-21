@@ -9,19 +9,19 @@ import (
 )
 
 type Elasticsearch struct {
-	Username                    string            `yaml:"username"`
-	Password                    string            `yaml:"password"`
 	BatchByteSizeLimit          any               `yaml:"batchByteSizeLimit"`
+	BatchCommitTickerDuration   *time.Duration    `yaml:"batchCommitTickerDuration"`
 	CollectionIndexMapping      map[string]string `yaml:"collectionIndexMapping"`
 	MaxConnsPerHost             *int              `yaml:"maxConnsPerHost"`
 	MaxIdleConnDuration         *time.Duration    `yaml:"maxIdleConnDuration"`
 	DiscoverNodesInterval       *time.Duration    `yaml:"discoverNodesInterval"`
 	TypeName                    string            `yaml:"typeName"`
-	Urls                        []string          `yaml:"urls"`
+	Password                    string            `yaml:"password"`
+	Username                    string            `yaml:"username"`
 	RejectionLog                RejectionLog      `yaml:"rejectionLog"`
+	Urls                        []string          `yaml:"urls"`
 	BatchSizeLimit              int               `yaml:"batchSizeLimit"`
 	BatchTickerDuration         time.Duration     `yaml:"batchTickerDuration"`
-	BatchCommitTickerDuration   *time.Duration    `yaml:"batchCommitTickerDuration"`
 	ConcurrentRequest           int               `yaml:"concurrentRequest"`
 	CompressionEnabled          bool              `yaml:"compressionEnabled"`
 	DisableDiscoverNodesOnStart bool              `yaml:"disableDiscoverNodesOnStart"`
