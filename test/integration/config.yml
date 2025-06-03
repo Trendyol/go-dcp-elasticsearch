@@ -10,8 +10,6 @@ checkpoint:
 dcp:
   group:
     name: groupName
-    membership:
-      type: static
 metadata:
   type: couchbase
   readOnly: true
