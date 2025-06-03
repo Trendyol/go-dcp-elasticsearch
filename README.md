@@ -60,9 +60,6 @@ func main() {
       Dcp: dcpConfig.ExternalDcp{
         Group: dcpConfig.DCPGroup{
           Name: "groupName",
-          Membership: dcpConfig.DCPGroupMembership{
-            Type: "static",
-          },
         },
       },
       Metadata: dcpConfig.Metadata{
