@@ -4,7 +4,7 @@ Go implementation of
 the [Elasticsearch Connect Couchbase](https://github.com/couchbase/couchbase-elasticsearch-connector).
 
 **Go Dcp Elasticsearch** streams documents from Couchbase Database Change Protocol (DCP) and writes to
-Elasticsearch index in near real-time.
+Elasticsearch index in near real-time. You can find more information by looking at our [docs](docs/index.md).
 
 ## Features
 
