@@ -31,7 +31,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P0184FB73F4441F48"
+        "uid": "PE4E52330B67298A4"
       },
       "editable": true,
       "error": false,
@@ -129,7 +129,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P0184FB73F4441F48"
+        "uid": "PE4E52330B67298A4"
       },
       "editable": true,
       "error": false,
@@ -284,7 +284,7 @@
       ],
       "thresholds": [],
       "timeRegions": [],
-      "title": "Bulk Proess Latency",
+      "title": "Bulk Process Latency",
       "tooltip": {
         "msResolution": false,
         "shared": true,
@@ -322,7 +322,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P0184FB73F4441F48"
+        "uid": "PE4E52330B67298A4"
       },
       "editable": true,
       "error": false,
@@ -420,7 +420,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P0184FB73F4441F48"
+        "uid": "PE4E52330B67298A4"
       },
       "editable": true,
       "error": false,
@@ -465,7 +465,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P0184FB73F4441F48"
+            "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
           "expr": "cbgo_mutation_total",
@@ -518,7 +518,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P0184FB73F4441F48"
+        "uid": "PE4E52330B67298A4"
       },
       "editable": true,
       "error": false,
@@ -566,7 +566,7 @@
             "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
-          "expr": "cbgo_deletion_totat",
+          "expr": "sum(increase(cbgo_deletion_total[5m]))",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "__auto",
@@ -616,7 +616,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P0184FB73F4441F48"
+        "uid": "PE4E52330B67298A4"
       },
       "editable": true,
       "error": false,
@@ -714,7 +714,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P0184FB73F4441F48"
+        "uid": "PE4E52330B67298A4"
       },
       "editable": true,
       "error": false,
@@ -812,7 +812,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P0184FB73F4441F48"
+        "uid": "PE4E52330B67298A4"
       },
       "editable": true,
       "error": false,
@@ -914,7 +914,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P0184FB73F4441F48"
+        "uid": "PE4E52330B67298A4"
       },
       "editable": true,
       "error": false,
@@ -1012,7 +1012,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P0184FB73F4441F48"
+        "uid": "PE4E52330B67298A4"
       },
       "editable": true,
       "error": false,
@@ -1110,7 +1110,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P0184FB73F4441F48"
+        "uid": "PE4E52330B67298A4"
       },
       "editable": true,
       "error": false,
@@ -1215,7 +1215,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P0184FB73F4441F48"
+        "uid": "PE4E52330B67298A4"
       },
       "editable": true,
       "error": false,
@@ -1269,7 +1269,7 @@
             "uid": "PE4E52330B67298A4"
           },
           "editorMode": "code",
-          "expr": "go_memstats_alloc_bytet",
+          "expr": "go_memstats_alloc_bytes",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "__auto - bytes allocated",
@@ -1481,7 +1481,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P0184FB73F4441F48"
+        "uid": "PE4E52330B67298A4"
       },
       "editable": true,
       "error": false,
@@ -1579,7 +1579,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P0184FB73F4441F48"
+        "uid": "PE4E52330B67298A4"
       },
       "editable": true,
       "error": false,
@@ -1729,7 +1729,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P0184FB73F4441F48"
+        "uid": "PE4E52330B67298A4"
       },
       "editable": true,
       "error": false,
@@ -1827,7 +1827,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "P0184FB73F4441F48"
+        "uid": "PE4E52330B67298A4"
       },
       "editable": true,
       "error": false,
@@ -1956,6 +1956,6 @@
   "timezone": "browser",
   "title": "Go DCP Elastic Dashboard",
   "uid": "b0d2fcb9-2383-4a78-a57a-8b00dc615902",
-  "version": 3,
+  "version": 4,
   "weekStart": ""
 }

@@ -1,6 +1,6 @@
 module example
 
-go 1.20
+go 1.21
 
 replace github.com/Trendyol/go-dcp-elasticsearch => ./../..
 
