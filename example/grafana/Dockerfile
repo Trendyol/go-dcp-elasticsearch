@@ -1,4 +1,4 @@
-FROM golang:1.24-alpine AS builder
+FROM golang:1.20-alpine AS builder
 
 WORKDIR /project
 
@@ -9,7 +9,7 @@ WORKDIR /project/example/grafana
 RUN go mod download
 RUN CGO_ENABLED=0 go build -a -o example main.go
 
-FROM alpine:3.17.1
+FROM alpine:3.17.0
 
 WORKDIR /app
 
