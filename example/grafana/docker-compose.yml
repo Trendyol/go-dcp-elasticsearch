@@ -1,12 +1,12 @@
-version: '3.9'
-
 volumes:
   prometheus_data: { }
   grafana_data: { }
 
 services:
   go-dcp-elastic:
-    build: .
+    build:
+      context: ../../
+      dockerfile: example/grafana/Dockerfile
     ports:
       - "8080:8080"
     expose:
