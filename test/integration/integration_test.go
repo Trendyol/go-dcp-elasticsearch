@@ -13,6 +13,9 @@ import (
 )
 
 func Mapper(event couchbase.Event) []document.ESActionDocument {
+	trace := event.ListenerTrace.CreateChildTrace("test", nil)
+	defer trace.Finish()
+
 	if event.IsMutated {
 		return []document.ESActionDocument{document.NewIndexAction(event.Key, event.Value, nil)}
 	}
