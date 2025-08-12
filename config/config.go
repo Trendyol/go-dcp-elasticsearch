@@ -1,6 +1,7 @@
 package config
 
 import (
+	"math"
 	"time"
 
 	"github.com/Trendyol/go-dcp/helpers"
@@ -25,6 +26,7 @@ type Elasticsearch struct {
 	ConcurrentRequest           int               `yaml:"concurrentRequest"`
 	CompressionEnabled          bool              `yaml:"compressionEnabled"`
 	DisableDiscoverNodesOnStart bool              `yaml:"disableDiscoverNodesOnStart"`
+	MaxRetries                  int               `yaml:"maxRetries"`
 }
 
 type RejectionLog struct {
@@ -57,5 +59,9 @@ func (c *Config) ApplyDefaults() {
 	if c.Elasticsearch.DiscoverNodesInterval == nil {
 		duration := 5 * time.Minute
 		c.Elasticsearch.DiscoverNodesInterval = &duration
+	}
+
+	if c.Elasticsearch.MaxRetries == 0 {
+		c.Elasticsearch.MaxRetries = math.MaxInt
 	}
 }

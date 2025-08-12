@@ -1,8 +1,6 @@
 package client
 
 import (
-	"math"
-
 	"github.com/Trendyol/go-dcp/logger"
 
 	"github.com/Trendyol/go-dcp-elasticsearch/config"
@@ -14,7 +12,7 @@ func NewElasticClient(config *config.Config) (*elasticsearch.Client, error) {
 	es, err := elasticsearch.NewClient(elasticsearch.Config{
 		Username:              config.Elasticsearch.Username,
 		Password:              config.Elasticsearch.Password,
-		MaxRetries:            math.MaxInt,
+		MaxRetries:            config.Elasticsearch.MaxRetries,
 		Addresses:             config.Elasticsearch.Urls,
 		Transport:             newTransport(config.Elasticsearch),
 		CompressRequestBody:   config.Elasticsearch.CompressionEnabled,

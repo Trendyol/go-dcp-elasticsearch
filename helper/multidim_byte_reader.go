@@ -46,6 +46,12 @@ func (r *MultiDimByteReader) Reset(b [][]byte) {
 	*r = MultiDimByteReader{b, 0, 0, getLen(b, 0), len(b)}
 }
 
+func (r *MultiDimByteReader) ResetPositions() {
+	r.currentSliceLen = getLen(r.s, 0)
+	r.currentSliceIndex = 0
+	r.currentIndexInCurrentSlice = 0
+}
+
 func NewMultiDimByteReader(b [][]byte) *MultiDimByteReader {
 	return &MultiDimByteReader{b, 0, 0, getLen(b, 0), len(b)}
 }

@@ -3,7 +3,9 @@ package bulk
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"strings"
 	"sync"
 	"time"
@@ -312,20 +314,34 @@ func (b *Bulk) CheckAndCommit() {
 func (b *Bulk) requestFunc(concurrentRequestIndex int, batchItems []BatchItem) func() error {
 	return func() error {
 		reader := b.readers[concurrentRequestIndex]
-		reader.Reset(getBytes(batchItems))
 		actionsOfBatchItems := getActions(batchItems)
-		r, err := b.esClient.Bulk(reader)
-		if err != nil {
-			b.finalizeProcess(actionsOfBatchItems, fillErrorDataWithBulkRequestError(actionsOfBatchItems, err))
-			return err
-		}
-		errorData, err := hasResponseError(r)
-		b.finalizeProcess(actionsOfBatchItems, errorData)
+		batchItemBytes := getBytes(batchItems)
+		reader.Reset(batchItemBytes)
 
-		if err != nil {
-			return err
+		for attempt := 1; attempt <= b.config.Elasticsearch.MaxRetries; attempt++ {
+			r, err := b.esClient.Bulk(reader)
+			if err != nil {
+				if errors.Is(err, io.ErrUnexpectedEOF) {
+					logger.Log.Warn(fmt.Sprintf("unexpected eof error in attempt: %d", attempt))
+					if attempt != b.config.Elasticsearch.MaxRetries {
+						reader.ResetPositions()
+						continue
+					}
+				}
+
+				b.finalizeProcess(actionsOfBatchItems, fillErrorDataWithBulkRequestError(actionsOfBatchItems, err))
+				return err
+			}
+
+			errorData, err := hasResponseError(r)
+			b.finalizeProcess(actionsOfBatchItems, errorData)
+			if err != nil {
+				return err
+			}
+			return nil
 		}
-		return nil
+
+		return fmt.Errorf("max retry cannot be 0")
 	}
 }
 
