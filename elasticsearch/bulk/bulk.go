@@ -425,7 +425,7 @@ func joinErrors(body map[string]any) (map[string]string, error) {
 			}
 		}
 	}
-	return ivd, fmt.Errorf(sb.String())
+	return ivd, fmt.Errorf("%s", sb.String())
 }
 
 func (b *Bulk) getIndexName(collectionName, actionIndexName string) string {
@@ -471,7 +471,7 @@ func (b *Bulk) finalizeProcess(batchActions []*document.ESActionDocument, errorD
 			if b.sinkResponseHandler != nil {
 				b.sinkResponseHandler.OnError(&dcpElasticsearch.SinkResponseHandlerContext{
 					Action: action,
-					Err:    fmt.Errorf(errorData[key]),
+					Err:    fmt.Errorf("%s", errorData[key]),
 				})
 			}
 		} else {
@@ -489,9 +489,10 @@ func (b *Bulk) countError(action *document.ESActionDocument) {
 	b.LockMetrics()
 	defer b.UnlockMetrics()
 
-	if action.Type == document.Index || action.Type == document.DocUpdate || action.Type == document.ScriptUpdate {
+	switch action.Type {
+	case document.Index, document.DocUpdate, document.ScriptUpdate:
 		b.metric.IndexingErrorActionCounter[action.IndexName]++
-	} else if action.Type == document.Delete {
+	case document.Delete:
 		b.metric.DeletionErrorActionCounter[action.IndexName]++
 	}
 }
@@ -500,9 +501,10 @@ func (b *Bulk) countSuccess(action *document.ESActionDocument) {
 	b.LockMetrics()
 	defer b.UnlockMetrics()
 
-	if action.Type == document.Index || action.Type == document.DocUpdate || action.Type == document.ScriptUpdate {
+	switch action.Type {
+	case document.Index, document.DocUpdate, document.ScriptUpdate:
 		b.metric.IndexingSuccessActionCounter[action.IndexName]++
-	} else if action.Type == document.Delete {
+	case document.Delete:
 		b.metric.DeletionSuccessActionCounter[action.IndexName]++
 	}
 }

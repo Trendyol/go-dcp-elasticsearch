@@ -81,9 +81,9 @@ func (t *transport) copyRequest(dst *fasthttp.Request, src *http.Request) *fasth
 func (t *transport) copyResponse(dst *http.Response, src *fasthttp.Response) *http.Response {
 	dst.StatusCode = src.StatusCode()
 
-	src.Header.VisitAll(func(k, v []byte) {
+	for k, v := range src.Header.All() {
 		dst.Header.Set(string(k), string(v))
-	})
+	}
 
 	// Cast to a string to make a copy seeing as src.Body() won't
 	// be valid after the response is released back to the pool (fasthttp.ReleaseResponse).
