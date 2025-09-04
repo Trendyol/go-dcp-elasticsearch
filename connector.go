@@ -240,8 +240,9 @@ func (c *ConnectorBuilder) SetLogger(logrus *logrus.Logger) *ConnectorBuilder {
 	return c
 }
 
-func (c *ConnectorBuilder) SetMetricCollectors(collectors ...prometheus.Collector) {
+func (c *ConnectorBuilder) SetMetricCollectors(collectors ...prometheus.Collector) *ConnectorBuilder {
 	c.metricCollectors = append(c.metricCollectors, collectors...)
+	return c
 }
 
 func (c *ConnectorBuilder) SetSinkResponseHandler(sinkResponseHandler dcpElasticsearch.SinkResponseHandler) *ConnectorBuilder {
