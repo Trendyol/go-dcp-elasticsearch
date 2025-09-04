@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/prometheus/client_golang/prometheus"
 	"os"
 	"regexp"
 	"strings"
@@ -153,7 +154,7 @@ func newConfig(cf any) (*config.Config, error) {
 	}
 }
 
-func newConnector(cf any, mapper Mapper, sinkResponseHandler dcpElasticsearch.SinkResponseHandler) (Connector, error) {
+func newConnector(cf any, mapper Mapper, sinkResponseHandler dcpElasticsearch.SinkResponseHandler, metricCollectors ...prometheus.Collector) (Connector, error) {
 	cfg, err := newConfig(cf)
 	if err != nil {
 		return nil, err
@@ -171,6 +172,8 @@ func newConnector(cf any, mapper Mapper, sinkResponseHandler dcpElasticsearch.Si
 		logger.Log.Error("Dcp error: %v", err)
 		return nil, err
 	}
+
+	dcp.SetMetricCollectors(metricCollectors...)
 
 	copyOfConfig := cfg.Elasticsearch
 	printConfiguration(copyOfConfig)
@@ -211,6 +214,7 @@ type ConnectorBuilder struct {
 	mapper              Mapper
 	config              any
 	sinkResponseHandler dcpElasticsearch.SinkResponseHandler
+	metricCollectors    []prometheus.Collector
 }
 
 func NewConnectorBuilder(config any) *ConnectorBuilder {
@@ -221,7 +225,7 @@ func NewConnectorBuilder(config any) *ConnectorBuilder {
 }
 
 func (c *ConnectorBuilder) Build() (Connector, error) {
-	return newConnector(c.config, c.mapper, c.sinkResponseHandler)
+	return newConnector(c.config, c.mapper, c.sinkResponseHandler, c.metricCollectors...)
 }
 
 func (c *ConnectorBuilder) SetMapper(mapper Mapper) *ConnectorBuilder {
@@ -234,6 +238,10 @@ func (c *ConnectorBuilder) SetLogger(logrus *logrus.Logger) *ConnectorBuilder {
 		Logrus: logrus,
 	}
 	return c
+}
+
+func (c *ConnectorBuilder) SetMetricCollectors(collectors ...prometheus.Collector) {
+	c.metricCollectors = append(c.metricCollectors, collectors...)
 }
 
 func (c *ConnectorBuilder) SetSinkResponseHandler(sinkResponseHandler dcpElasticsearch.SinkResponseHandler) *ConnectorBuilder {
