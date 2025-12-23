@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/prometheus/client_golang/prometheus"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/prometheus/client_golang/prometheus"
 
 	jsoniter "github.com/json-iterator/go"
 
@@ -154,7 +155,7 @@ func newConfig(cf any) (*config.Config, error) {
 	}
 }
 
-func newConnector(cf any, mapper Mapper, sinkResponseHandler dcpElasticsearch.SinkResponseHandler, metricCollectors ...prometheus.Collector) (Connector, error) {
+func newConnector(cf any, mapper Mapper, sinkResponseHandler dcpElasticsearch.SinkResponseHandler, metricCollectors ...prometheus.Collector) (Connector, error) { //nolint:lll
 	cfg, err := newConfig(cf)
 	if err != nil {
 		return nil, err

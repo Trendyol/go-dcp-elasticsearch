@@ -81,6 +81,10 @@ func (crh *RejectionLogSinkResponseHandler) OnError(ctx *SinkResponseHandlerCont
 	}
 }
 
+func (crh *RejectionLogSinkResponseHandler) OnBeforeBulk(_ *SinkResponseHandlerBulkContext) {}
+
+func (crh *RejectionLogSinkResponseHandler) OnAfterBulk(_ *SinkResponseHandlerBulkContext) {}
+
 func NewRejectionLogSinkResponseHandler() SinkResponseHandler {
 	return &RejectionLogSinkResponseHandler{}
 }

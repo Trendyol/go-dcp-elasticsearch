@@ -40,7 +40,7 @@ type Bulk struct {
 	esClient               *elasticsearch.Client
 	readers                []*helper.MultiDimByteReader
 	typeName               []byte
-	batch                  []BatchItem
+	batch                  []*dcpElasticsearch.BatchItem
 	batchIndex             int
 	batchSize              int
 	batchSizeLimit         int
@@ -60,11 +60,6 @@ type Metric struct {
 	DeletionErrorActionCounter   map[string]int64
 	ProcessLatencyMs             int64
 	BulkRequestProcessLatencyMs  int64
-}
-
-type BatchItem struct {
-	Action *document.ESActionDocument
-	Bytes  []byte
 }
 
 func NewBulk(
@@ -169,12 +164,12 @@ func (b *Bulk) AddActions(
 		key := getActionKey(actions[i])
 		if batchIndex, ok := b.batchKeys[key]; ok {
 			b.batchByteSize += len(value) - len(b.batch[batchIndex].Bytes)
-			b.batch[batchIndex] = BatchItem{
+			b.batch[batchIndex] = &dcpElasticsearch.BatchItem{
 				Action: &actions[i],
 				Bytes:  value,
 			}
 		} else {
-			b.batch = append(b.batch, BatchItem{
+			b.batch = append(b.batch, &dcpElasticsearch.BatchItem{
 				Action: &actions[i],
 				Bytes:  value,
 			})
@@ -278,10 +273,20 @@ func (b *Bulk) flushMessages() {
 		return
 	}
 	if len(b.batch) > 0 {
+		if b.sinkResponseHandler != nil {
+			b.sinkResponseHandler.OnBeforeBulk(&dcpElasticsearch.SinkResponseHandlerBulkContext{
+				BatchItems: b.batch,
+			})
+		}
 		err := b.bulkRequest()
 		if err != nil && b.sinkResponseHandler == nil {
 			logger.Log.Error("error while bulk request, err: %v", err)
 			panic(err)
+		}
+		if b.sinkResponseHandler != nil {
+			b.sinkResponseHandler.OnAfterBulk(&dcpElasticsearch.SinkResponseHandlerBulkContext{
+				BatchItems: b.batch,
+			})
 		}
 		b.batchTicker.Reset(b.batchTickerDuration)
 		for _, batch := range b.batch {
@@ -311,7 +316,7 @@ func (b *Bulk) CheckAndCommit() {
 	}
 }
 
-func (b *Bulk) requestFunc(concurrentRequestIndex int, batchItems []BatchItem) func() error {
+func (b *Bulk) requestFunc(concurrentRequestIndex int, batchItems []*dcpElasticsearch.BatchItem) func() error {
 	return func() error {
 		reader := b.readers[concurrentRequestIndex]
 		actionsOfBatchItems := getActions(batchItems)
@@ -516,7 +521,7 @@ func getActionKey(action document.ESActionDocument) string {
 	return fmt.Sprintf("%s:%s", action.ID, action.IndexName)
 }
 
-func getBytes(batchItems []BatchItem) [][]byte {
+func getBytes(batchItems []*dcpElasticsearch.BatchItem) [][]byte {
 	batchBytes := make([][]byte, 0, len(batchItems))
 	for _, batchItem := range batchItems {
 		batchBytes = append(batchBytes, batchItem.Bytes)
@@ -524,7 +529,7 @@ func getBytes(batchItems []BatchItem) [][]byte {
 	return batchBytes
 }
 
-func getActions(batchItems []BatchItem) []*document.ESActionDocument {
+func getActions(batchItems []*dcpElasticsearch.BatchItem) []*document.ESActionDocument {
 	result := make([]*document.ESActionDocument, len(batchItems))
 	for i := range batchItems {
 		result[i] = batchItems[i].Action
