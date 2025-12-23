@@ -11,6 +11,10 @@ type SinkResponseHandlerContext struct {
 	Err    error
 }
 
+type SinkResponseHandlerBulkContext struct {
+	BatchItems []*BatchItem
+}
+
 type SinkResponseHandlerInitContext struct {
 	Config              *config.Config
 	ElasticsearchClient *elasticsearch.Client
@@ -20,4 +24,6 @@ type SinkResponseHandler interface {
 	OnSuccess(ctx *SinkResponseHandlerContext)
 	OnError(ctx *SinkResponseHandlerContext)
 	OnInit(ctx *SinkResponseHandlerInitContext)
+	OnBeforeBulk(ctx *SinkResponseHandlerBulkContext)
+	OnAfterBulk(ctx *SinkResponseHandlerBulkContext)
 }

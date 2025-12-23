@@ -204,7 +204,7 @@ func Test_fillErrorDataWithBulkRequestError(t *testing.T) {
 }
 
 func Test_getActions(t *testing.T) {
-	givenBatchItems := []BatchItem{
+	givenBatchItems := []*elasticsearch.BatchItem{
 		{Action: &document.ESActionDocument{ID: []byte("1")}},
 		{Action: &document.ESActionDocument{ID: []byte("2")}},
 	}
@@ -266,3 +266,7 @@ func (m *mockSinkResponseHandler) OnError(ctx *elasticsearch.SinkResponseHandler
 }
 
 func (m *mockSinkResponseHandler) OnInit(ctx *elasticsearch.SinkResponseHandlerInitContext) {}
+
+func (m *mockSinkResponseHandler) OnBeforeBulk(_ *elasticsearch.SinkResponseHandlerBulkContext) {}
+
+func (m *mockSinkResponseHandler) OnAfterBulk(_ *elasticsearch.SinkResponseHandlerBulkContext) {}
