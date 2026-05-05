@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -272,6 +273,7 @@ func (b *Bulk) flushMessages() {
 	if b.isDcpRebalancing {
 		return
 	}
+	b.removeSkippedFromBatch()
 	if len(b.batch) > 0 {
 		if b.sinkResponseHandler != nil {
 			b.sinkResponseHandler.OnBeforeBulk(&dcpElasticsearch.SinkResponseHandlerBulkContext{
@@ -300,6 +302,16 @@ func (b *Bulk) flushMessages() {
 		b.batchByteSize = 0
 	}
 	b.CheckAndCommit()
+}
+
+func (b *Bulk) removeSkippedFromBatch() {
+	b.batch = slices.DeleteFunc(b.batch, func(item *dcpElasticsearch.BatchItem) bool {
+		if item.IsSkipped {
+			metaPool.Put(item.Bytes)
+			return true
+		}
+		return false
+	})
 }
 
 func (b *Bulk) CheckAndCommit() {
