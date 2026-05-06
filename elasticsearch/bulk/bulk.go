@@ -377,10 +377,7 @@ func (b *Bulk) GetMetric() *Metric {
 
 func removeSkippedFromBatch(batchItems []*dcpElasticsearch.BatchItem) []*dcpElasticsearch.BatchItem {
 	batchItems = slices.DeleteFunc(batchItems, func(item *dcpElasticsearch.BatchItem) bool {
-		if item.IsSkipped {
-			return true
-		}
-		return false
+		return item.IsSkipped
 	})
 
 	return batchItems
