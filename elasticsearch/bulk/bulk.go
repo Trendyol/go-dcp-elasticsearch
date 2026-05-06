@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -375,14 +374,6 @@ func (b *Bulk) GetMetric() *Metric {
 	return b.metric
 }
 
-func removeSkippedFromBatch(batchItems []*dcpElasticsearch.BatchItem) []*dcpElasticsearch.BatchItem {
-	batchItems = slices.DeleteFunc(batchItems, func(item *dcpElasticsearch.BatchItem) bool {
-		return item.IsSkipped
-	})
-
-	return batchItems
-}
-
 func hasResponseError(r *esapi.Response) (map[string]string, error) {
 	if r == nil {
 		return nil, fmt.Errorf("esapi response is nil")
@@ -531,19 +522,25 @@ func getActionKey(action document.ESActionDocument) string {
 }
 
 func getBytes(batchItems []*dcpElasticsearch.BatchItem) [][]byte {
-	batchItems = removeSkippedFromBatch(batchItems)
-
 	batchBytes := make([][]byte, 0, len(batchItems))
 	for _, batchItem := range batchItems {
+		if batchItem.IsSkipped {
+			continue
+		}
+
 		batchBytes = append(batchBytes, batchItem.Bytes)
 	}
 	return batchBytes
 }
 
 func getActions(batchItems []*dcpElasticsearch.BatchItem) []*document.ESActionDocument {
-	result := make([]*document.ESActionDocument, len(batchItems))
-	for i := range batchItems {
-		result[i] = batchItems[i].Action
+	result := make([]*document.ESActionDocument, 0, len(batchItems))
+	for _, batchItem := range batchItems {
+		if batchItem.IsSkipped {
+			continue
+		}
+
+		result = append(result, batchItem.Action)
 	}
 	return result
 }
