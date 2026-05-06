@@ -204,21 +204,92 @@ func Test_fillErrorDataWithBulkRequestError(t *testing.T) {
 }
 
 func Test_getActions(t *testing.T) {
-	givenBatchItems := []*elasticsearch.BatchItem{
-		{Action: &document.ESActionDocument{ID: []byte("1")}},
-		{Action: &document.ESActionDocument{ID: []byte("2")}},
-	}
+	t.Run("returns_all_when_none_skipped", func(t *testing.T) {
+		given := []*elasticsearch.BatchItem{
+			{Action: &document.ESActionDocument{ID: []byte("1")}},
+			{Action: &document.ESActionDocument{ID: []byte("2")}},
+		}
 
-	expected := []*document.ESActionDocument{
-		{ID: []byte("1")},
-		{ID: []byte("2")},
-	}
+		result := getActions(given)
 
-	result := getActions(givenBatchItems)
+		if len(result) != 2 {
+			t.Fatalf("expected 2 items but got %d", len(result))
+		}
+		if string(result[0].ID) != "1" || string(result[1].ID) != "2" {
+			t.Fatal("actions must be preserved in order")
+		}
+	})
+	t.Run("skips_skipped_items", func(t *testing.T) {
+		given := []*elasticsearch.BatchItem{
+			{Action: &document.ESActionDocument{ID: []byte("1")}, IsSkipped: false},
+			{Action: &document.ESActionDocument{ID: []byte("2")}, IsSkipped: true},
+			{Action: &document.ESActionDocument{ID: []byte("3")}, IsSkipped: false},
+		}
 
-	if !reflect.DeepEqual(expected, result) {
-		t.Fatal("Must be equal")
-	}
+		result := getActions(given)
+
+		if len(result) != 2 {
+			t.Fatalf("expected 2 actions but got %d", len(result))
+		}
+		if string(result[0].ID) != "1" || string(result[1].ID) != "3" {
+			t.Fatal("non-skipped actions must be preserved in order")
+		}
+	})
+	t.Run("returns_empty_when_all_skipped", func(t *testing.T) {
+		given := []*elasticsearch.BatchItem{
+			{Action: &document.ESActionDocument{ID: []byte("1")}, IsSkipped: true},
+			{Action: &document.ESActionDocument{ID: []byte("2")}, IsSkipped: true},
+		}
+
+		result := getActions(given)
+
+		if len(result) != 0 {
+			t.Fatalf("expected 0 actions but got %d", len(result))
+		}
+	})
+}
+
+func Test_getBytes(t *testing.T) {
+	t.Run("returns_all_when_none_skipped", func(t *testing.T) {
+		given := []*elasticsearch.BatchItem{
+			{Action: &document.ESActionDocument{ID: []byte("1")}, Bytes: []byte("a")},
+			{Action: &document.ESActionDocument{ID: []byte("2")}, Bytes: []byte("b")},
+		}
+
+		result := getBytes(given)
+
+		if len(result) != 2 {
+			t.Fatalf("expected 2 byte slices but got %d", len(result))
+		}
+	})
+	t.Run("skips_skipped_items", func(t *testing.T) {
+		given := []*elasticsearch.BatchItem{
+			{Action: &document.ESActionDocument{ID: []byte("1")}, Bytes: []byte("a"), IsSkipped: false},
+			{Action: &document.ESActionDocument{ID: []byte("2")}, Bytes: []byte("b"), IsSkipped: true},
+			{Action: &document.ESActionDocument{ID: []byte("3")}, Bytes: []byte("c"), IsSkipped: false},
+		}
+
+		result := getBytes(given)
+
+		if len(result) != 2 {
+			t.Fatalf("expected 2 byte slices but got %d", len(result))
+		}
+		if string(result[0]) != "a" || string(result[1]) != "c" {
+			t.Fatal("non-skipped bytes must be preserved in order")
+		}
+	})
+	t.Run("returns_empty_when_all_skipped", func(t *testing.T) {
+		given := []*elasticsearch.BatchItem{
+			{Bytes: []byte("a"), IsSkipped: true},
+			{Bytes: []byte("b"), IsSkipped: true},
+		}
+
+		result := getBytes(given)
+
+		if len(result) != 0 {
+			t.Fatalf("expected 0 byte slices but got %d", len(result))
+		}
+	})
 }
 
 func assertJSONEqual(t *testing.T, expected, actual string) {

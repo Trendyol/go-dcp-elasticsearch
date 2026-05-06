@@ -5,6 +5,11 @@ import (
 )
 
 type BatchItem struct {
-	Action *document.ESActionDocument
-	Bytes  []byte
+	Action    *document.ESActionDocument
+	Bytes     []byte
+	IsSkipped bool
+}
+
+func (b *BatchItem) MarkSkipped() {
+	b.IsSkipped = true
 }

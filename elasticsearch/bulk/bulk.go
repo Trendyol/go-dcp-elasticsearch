@@ -524,15 +524,23 @@ func getActionKey(action document.ESActionDocument) string {
 func getBytes(batchItems []*dcpElasticsearch.BatchItem) [][]byte {
 	batchBytes := make([][]byte, 0, len(batchItems))
 	for _, batchItem := range batchItems {
+		if batchItem.IsSkipped {
+			continue
+		}
+
 		batchBytes = append(batchBytes, batchItem.Bytes)
 	}
 	return batchBytes
 }
 
 func getActions(batchItems []*dcpElasticsearch.BatchItem) []*document.ESActionDocument {
-	result := make([]*document.ESActionDocument, len(batchItems))
-	for i := range batchItems {
-		result[i] = batchItems[i].Action
+	result := make([]*document.ESActionDocument, 0, len(batchItems))
+	for _, batchItem := range batchItems {
+		if batchItem.IsSkipped {
+			continue
+		}
+
+		result = append(result, batchItem.Action)
 	}
 	return result
 }
