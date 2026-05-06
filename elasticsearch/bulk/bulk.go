@@ -273,7 +273,6 @@ func (b *Bulk) flushMessages() {
 	if b.isDcpRebalancing {
 		return
 	}
-	b.removeSkippedFromBatch()
 	if len(b.batch) > 0 {
 		if b.sinkResponseHandler != nil {
 			b.sinkResponseHandler.OnBeforeBulk(&dcpElasticsearch.SinkResponseHandlerBulkContext{
@@ -302,16 +301,6 @@ func (b *Bulk) flushMessages() {
 		b.batchByteSize = 0
 	}
 	b.CheckAndCommit()
-}
-
-func (b *Bulk) removeSkippedFromBatch() {
-	b.batch = slices.DeleteFunc(b.batch, func(item *dcpElasticsearch.BatchItem) bool {
-		if item.IsSkipped {
-			metaPool.Put(item.Bytes)
-			return true
-		}
-		return false
-	})
 }
 
 func (b *Bulk) CheckAndCommit() {
@@ -384,6 +373,17 @@ func (b *Bulk) bulkRequest() error {
 
 func (b *Bulk) GetMetric() *Metric {
 	return b.metric
+}
+
+func removeSkippedFromBatch(batchItems []*dcpElasticsearch.BatchItem) []*dcpElasticsearch.BatchItem {
+	batchItems = slices.DeleteFunc(batchItems, func(item *dcpElasticsearch.BatchItem) bool {
+		if item.IsSkipped {
+			return true
+		}
+		return false
+	})
+
+	return batchItems
 }
 
 func hasResponseError(r *esapi.Response) (map[string]string, error) {
@@ -534,6 +534,8 @@ func getActionKey(action document.ESActionDocument) string {
 }
 
 func getBytes(batchItems []*dcpElasticsearch.BatchItem) [][]byte {
+	batchItems = removeSkippedFromBatch(batchItems)
+
 	batchBytes := make([][]byte, 0, len(batchItems))
 	for _, batchItem := range batchItems {
 		batchBytes = append(batchBytes, batchItem.Bytes)

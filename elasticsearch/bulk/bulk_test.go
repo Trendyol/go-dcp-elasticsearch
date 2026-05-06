@@ -221,74 +221,52 @@ func Test_getActions(t *testing.T) {
 	}
 }
 
-func TestBulk_removeSkippedFromBatch(t *testing.T) {
-	t.Run("drops_IsSkipped_items_keeps_order_of_rest", func(t *testing.T) {
-		keepA := &document.ESActionDocument{ID: []byte("keepA"), IndexName: testIndexName}
-		skip := &document.ESActionDocument{ID: []byte("skip"), IndexName: testIndexName}
-		keepC := &document.ESActionDocument{ID: []byte("keepC"), IndexName: testIndexName}
-
-		sut := &Bulk{}
-		sut.batch = []*elasticsearch.BatchItem{
-			{Action: keepA, IsSkipped: false},
-			{Action: skip, IsSkipped: true, Bytes: []byte("skipBytes")},
-			{Action: keepC, IsSkipped: false},
+func Test_removeSkippedFromBatch(t *testing.T) {
+	t.Run("removes_skipped_items", func(t *testing.T) {
+		given := []*elasticsearch.BatchItem{
+			{Action: &document.ESActionDocument{ID: []byte("1")}, IsSkipped: false},
+			{Action: &document.ESActionDocument{ID: []byte("2")}, IsSkipped: true},
+			{Action: &document.ESActionDocument{ID: []byte("3")}, IsSkipped: false},
 		}
 
-		sut.removeSkippedFromBatch()
+		result := removeSkippedFromBatch(given)
 
-		if len(sut.batch) != 2 {
-			t.Fatalf("Expected batch length to be 2 but got %d", len(sut.batch))
+		if len(result) != 2 {
+			t.Fatalf("expected 2 items but got %d", len(result))
 		}
-		if sut.batch[0].Action != keepA {
-			t.Fatal("Expected first action to be keepA")
-		}
-		if sut.batch[1].Action != keepC {
-			t.Fatal("Expected second action to be keepC")
+		if string(result[0].Action.ID) != "1" || string(result[1].Action.ID) != "3" {
+			t.Fatal("non-skipped items must be preserved in order")
 		}
 	})
+	t.Run("returns_all_when_none_skipped", func(t *testing.T) {
+		given := []*elasticsearch.BatchItem{
+			{Action: &document.ESActionDocument{ID: []byte("1")}, IsSkipped: false},
+			{Action: &document.ESActionDocument{ID: []byte("2")}, IsSkipped: false},
+		}
 
-	t.Run("empty_batch", func(t *testing.T) {
-		sut := &Bulk{}
-		sut.removeSkippedFromBatch()
-		if len(sut.batch) != 0 {
-			t.Fatalf("Expected batch length to be 0 but got %d", len(sut.batch))
+		result := removeSkippedFromBatch(given)
+
+		if len(result) != 2 {
+			t.Fatalf("expected 2 items but got %d", len(result))
 		}
 	})
-
-	t.Run("all_skipped", func(t *testing.T) {
-		sut := &Bulk{}
-		sut.batch = []*elasticsearch.BatchItem{
-			{Action: &document.ESActionDocument{ID: []byte("1")}, IsSkipped: true, Bytes: []byte("bytes1")},
-			{Action: &document.ESActionDocument{ID: []byte("2")}, IsSkipped: true, Bytes: []byte("bytes2")},
+	t.Run("returns_empty_when_all_skipped", func(t *testing.T) {
+		given := []*elasticsearch.BatchItem{
+			{Action: &document.ESActionDocument{ID: []byte("1")}, IsSkipped: true},
+			{Action: &document.ESActionDocument{ID: []byte("2")}, IsSkipped: true},
 		}
 
-		sut.removeSkippedFromBatch()
+		result := removeSkippedFromBatch(given)
 
-		if len(sut.batch) != 0 {
-			t.Fatalf("Expected batch length to be 0 but got %d", len(sut.batch))
+		if len(result) != 0 {
+			t.Fatalf("expected 0 items but got %d", len(result))
 		}
 	})
+	t.Run("returns_empty_when_input_is_empty", func(t *testing.T) {
+		result := removeSkippedFromBatch([]*elasticsearch.BatchItem{})
 
-	t.Run("none_skipped_unchanged", func(t *testing.T) {
-		actionA := &document.ESActionDocument{ID: []byte("1")}
-		actionB := &document.ESActionDocument{ID: []byte("2")}
-
-		sut := &Bulk{}
-		sut.batch = []*elasticsearch.BatchItem{
-			{Action: actionA, IsSkipped: false},
-			{Action: actionB, IsSkipped: false},
-		}
-
-		sut.removeSkippedFromBatch()
-
-		if len(sut.batch) != 2 {
-			t.Fatalf("Expected batch length to be 2 but got %d", len(sut.batch))
-		}
-		if sut.batch[0].Action != actionA {
-			t.Fatal("Expected first action to be actionA")
-		}
-		if sut.batch[1].Action != actionB {
-			t.Fatal("Expected second action to be actionB")
+		if len(result) != 0 {
+			t.Fatalf("expected 0 items but got %d", len(result))
 		}
 	})
 }

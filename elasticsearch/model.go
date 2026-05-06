@@ -9,3 +9,7 @@ type BatchItem struct {
 	Bytes     []byte
 	IsSkipped bool
 }
+
+func (b *BatchItem) MarkSkipped() {
+	b.IsSkipped = true
+}
