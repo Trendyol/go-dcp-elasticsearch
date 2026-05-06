@@ -292,7 +292,6 @@ func Test_getBytes(t *testing.T) {
 	})
 }
 
-
 func assertJSONEqual(t *testing.T, expected, actual string) {
 	t.Helper()
 	expectedParts := strings.Split(strings.TrimSpace(expected), "\n")
