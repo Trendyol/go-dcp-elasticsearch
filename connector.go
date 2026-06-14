@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"regexp"
 	"strings"
@@ -161,6 +162,9 @@ func newConnector(cf any, mapper Mapper, sinkResponseHandler dcpElasticsearch.Si
 		return nil, err
 	}
 	cfg.ApplyDefaults()
+	if err := cfg.NormalizeElasticsearchClusterKeys(); err != nil {
+		return nil, err
+	}
 
 	connector := &connector{
 		mapper:              mapper,
@@ -176,23 +180,22 @@ func newConnector(cf any, mapper Mapper, sinkResponseHandler dcpElasticsearch.Si
 
 	dcp.SetMetricCollectors(metricCollectors...)
 
-	copyOfConfig := cfg.Elasticsearch
-	printConfiguration(copyOfConfig)
+	printElasticsearchConfiguration(cfg)
 
 	dcpConfig := dcp.GetConfig()
 	dcpConfig.Checkpoint.Type = "manual"
 
-	esClient, err := client.NewElasticClient(cfg)
+	esClients, err := buildElasticsearchClients(cfg)
 	if err != nil {
 		return nil, err
 	}
-	connector.esClient = esClient
+	connector.esClient = esClients[""]
 
 	connector.dcp = dcp
 	connector.bulk, err = bulk.NewBulk(
 		cfg,
 		dcp.Commit,
-		esClient,
+		esClients,
 		sinkResponseHandler,
 	)
 	if err != nil {
@@ -251,9 +254,39 @@ func (c *ConnectorBuilder) SetSinkResponseHandler(sinkResponseHandler dcpElastic
 	return c
 }
 
-func printConfiguration(config config.Elasticsearch) {
-	config.Password = "*****"
-	configJSON, _ := jsoniter.Marshal(config)
+func buildElasticsearchClients(cfg *config.Config) (map[string]*elasticsearch.Client, error) {
+	clients := make(map[string]*elasticsearch.Client)
+
+	defaultClient, err := client.NewElasticClientFromElasticsearch(&cfg.Elasticsearch)
+	if err != nil {
+		return nil, fmt.Errorf("elasticsearch default cluster: %w", err)
+	}
+	clients[""] = defaultClient
+
+	for name, block := range cfg.Elasticsearch.Clusters {
+		es := block
+		c, err := client.NewElasticClientFromElasticsearch(&es)
+		if err != nil {
+			return nil, fmt.Errorf("elasticsearch cluster %q: %w", name, err)
+		}
+		clients[name] = c
+	}
+
+	return clients, nil
+}
+
+func printElasticsearchConfiguration(cfg *config.Config) {
+	printElasticsearchClusterBlock("default", cfg.Elasticsearch)
+	for name, block := range cfg.Elasticsearch.Clusters {
+		printElasticsearchClusterBlock(name, block)
+	}
+}
+
+func printElasticsearchClusterBlock(label string, es config.Elasticsearch) {
+	copyES := es
+	copyES.Password = "*****"
+	copyES.Clusters = nil
+	configJSON, _ := jsoniter.Marshal(copyES)
 
 	dst := &bytes.Buffer{}
 	if err := json.Compact(dst, configJSON); err != nil {
@@ -261,5 +294,5 @@ func printConfiguration(config config.Elasticsearch) {
 		panic(err)
 	}
 
-	logger.Log.Info("using elasticsearch config: %v", dst.String())
+	logger.Log.Info("using elasticsearch cluster %q config: %v", label, dst.String())
 }

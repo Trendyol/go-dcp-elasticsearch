@@ -18,8 +18,11 @@ type RejectionLogSinkResponseHandler struct {
 }
 
 func (crh *RejectionLogSinkResponseHandler) OnInit(ctx *SinkResponseHandlerInitContext) {
-	crh.ElasticsearchClient = ctx.ElasticsearchClient
 	crh.Config = ctx.Config
+	crh.ElasticsearchClient = resolveElasticsearchClientForCluster(
+		ctx,
+		ctx.Config.Elasticsearch.RejectionLog.TargetCluster,
+	)
 
 	index := ctx.Config.Elasticsearch.RejectionLog.Index
 	if index == "" {
@@ -84,6 +87,16 @@ func (crh *RejectionLogSinkResponseHandler) OnError(ctx *SinkResponseHandlerCont
 func (crh *RejectionLogSinkResponseHandler) OnBeforeBulk(_ *SinkResponseHandlerBulkContext) {}
 
 func (crh *RejectionLogSinkResponseHandler) OnAfterBulk(_ *SinkResponseHandlerBulkContext) {}
+
+func resolveElasticsearchClientForCluster(ctx *SinkResponseHandlerInitContext, clusterKey string) *elasticsearch.Client {
+	ck := config.NormalizeClusterKey(clusterKey)
+	if ctx.ElasticsearchClients != nil {
+		if c, ok := ctx.ElasticsearchClients[ck]; ok && c != nil {
+			return c
+		}
+	}
+	return ctx.ElasticsearchClient
+}
 
 func NewRejectionLogSinkResponseHandler() SinkResponseHandler {
 	return &RejectionLogSinkResponseHandler{}
