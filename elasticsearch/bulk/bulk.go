@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -27,30 +28,29 @@ import (
 )
 
 type Bulk struct {
-	sinkResponseHandler    dcpElasticsearch.SinkResponseHandler
-	metric                 *Metric
-	collectionIndexMapping map[string]string
-	config                 *config.Config
-	batchKeys              map[string]int
-	dcpCheckpointCommit    func()
-	batchTicker            *time.Ticker
-	batchCommitTicker      *time.Ticker
-	isClosed               chan bool
-	actionCh               chan document.ESActionDocument
-	esClient               *elasticsearch.Client
-	readers                []*helper.MultiDimByteReader
-	typeName               []byte
-	batch                  []*dcpElasticsearch.BatchItem
-	batchIndex             int
-	batchSize              int
-	batchSizeLimit         int
-	batchTickerDuration    time.Duration
-	batchByteSizeLimit     int
-	batchByteSize          int
-	concurrentRequest      int
-	flushLock              sync.Mutex
-	metricCounterMutex     sync.Mutex
-	isDcpRebalancing       bool
+	sinkResponseHandler dcpElasticsearch.SinkResponseHandler
+	metric              *Metric
+	config              *config.Config
+	batchKeys           map[string]int
+	dcpCheckpointCommit func()
+	batchTicker         *time.Ticker
+	batchCommitTicker   *time.Ticker
+	isClosed            chan bool
+	actionCh            chan document.ESActionDocument
+	esClients           map[string]*elasticsearch.Client
+	readers             []*helper.MultiDimByteReader
+	typeName            []byte
+	batch               []*dcpElasticsearch.BatchItem
+	batchIndex          int
+	batchSize           int
+	batchSizeLimit      int
+	batchTickerDuration time.Duration
+	batchByteSizeLimit  int
+	batchByteSize       int
+	concurrentRequest   int
+	flushLock           sync.Mutex
+	metricCounterMutex  sync.Mutex
+	isDcpRebalancing    bool
 }
 
 type Metric struct {
@@ -65,9 +65,13 @@ type Metric struct {
 func NewBulk(
 	config *config.Config,
 	dcpCheckpointCommit func(),
-	esClient *elasticsearch.Client,
+	esClients map[string]*elasticsearch.Client,
 	sinkResponseHandler dcpElasticsearch.SinkResponseHandler,
 ) (*Bulk, error) {
+	if esClients == nil || esClients[""] == nil {
+		return nil, fmt.Errorf("bulk: elasticsearch clients map must include default cluster (empty key)")
+	}
+
 	readers := make([]*helper.MultiDimByteReader, config.Elasticsearch.ConcurrentRequest)
 	for i := 0; i < config.Elasticsearch.ConcurrentRequest; i++ {
 		readers[i] = helper.NewMultiDimByteReader(nil)
@@ -81,20 +85,19 @@ func NewBulk(
 		batchByteSizeLimit:  helpers.ResolveUnionIntOrStringValue(config.Elasticsearch.BatchByteSizeLimit),
 		isClosed:            make(chan bool, 1),
 		dcpCheckpointCommit: dcpCheckpointCommit,
-		esClient:            esClient,
+		esClients:           esClients,
 		metric: &Metric{
 			IndexingSuccessActionCounter: make(map[string]int64),
 			IndexingErrorActionCounter:   make(map[string]int64),
 			DeletionSuccessActionCounter: make(map[string]int64),
 			DeletionErrorActionCounter:   make(map[string]int64),
 		},
-		collectionIndexMapping: config.Elasticsearch.CollectionIndexMapping,
-		config:                 config,
-		typeName:               helper.Byte(config.Elasticsearch.TypeName),
-		readers:                readers,
-		concurrentRequest:      config.Elasticsearch.ConcurrentRequest,
-		batchKeys:              make(map[string]int, config.Elasticsearch.BatchSizeLimit),
-		sinkResponseHandler:    sinkResponseHandler,
+		config:              config,
+		typeName:            helper.Byte(config.Elasticsearch.TypeName),
+		readers:             readers,
+		concurrentRequest:   config.Elasticsearch.ConcurrentRequest,
+		batchKeys:           make(map[string]int, config.Elasticsearch.BatchSizeLimit),
+		sinkResponseHandler: sinkResponseHandler,
 	}
 
 	if config.Elasticsearch.BatchCommitTickerDuration != nil {
@@ -103,8 +106,9 @@ func NewBulk(
 
 	if sinkResponseHandler != nil {
 		sinkResponseHandler.OnInit(&dcpElasticsearch.SinkResponseHandlerInitContext{
-			Config:              config,
-			ElasticsearchClient: esClient,
+			Config:               config,
+			ElasticsearchClient:  esClients[""],
+			ElasticsearchClients: esClients,
 		})
 	}
 
@@ -149,15 +153,26 @@ func (b *Bulk) AddActions(
 		b.flushLock.Unlock()
 		return
 	}
-	for i, action := range actions {
-		indexName := b.getIndexName(collectionName, action.IndexName)
+	for i := range actions {
+		clusterKey := config.NormalizeClusterKey(actions[i].ClusterKey)
+		actions[i].ClusterKey = clusterKey
+
+		if clusterKey != "" {
+			if _, ok := b.esClients[clusterKey]; !ok {
+				err := fmt.Errorf("unknown elasticsearch cluster key %q", clusterKey)
+				logger.Log.Error("error while validating cluster key, err: %v", err)
+				panic(err)
+			}
+		}
+
+		indexName := b.getIndexName(collectionName, actions[i].IndexName, clusterKey)
 		actions[i].IndexName = indexName
 		value := getEsActionJSON(
-			action.ID,
-			action.Type,
+			actions[i].ID,
+			actions[i].Type,
 			actions[i].IndexName,
-			action.Routing,
-			action.Source,
+			actions[i].Routing,
+			actions[i].Source,
 			b.typeName,
 		)
 
@@ -316,19 +331,24 @@ func (b *Bulk) CheckAndCommit() {
 	}
 }
 
-func (b *Bulk) requestFunc(concurrentRequestIndex int, batchItems []*dcpElasticsearch.BatchItem) func() error {
+func (b *Bulk) requestFunc(
+	concurrentRequestIndex int,
+	batchItems []*dcpElasticsearch.BatchItem,
+	esClient *elasticsearch.Client,
+	maxRetries int,
+) func() error {
 	return func() error {
 		reader := b.readers[concurrentRequestIndex]
 		actionsOfBatchItems := getActions(batchItems)
 		batchItemBytes := getBytes(batchItems)
 		reader.Reset(batchItemBytes)
 
-		for attempt := 1; attempt <= b.config.Elasticsearch.MaxRetries; attempt++ {
-			r, err := b.esClient.Bulk(reader)
+		for attempt := 1; attempt <= maxRetries; attempt++ {
+			r, err := esClient.Bulk(reader)
 			if err != nil {
 				if errors.Is(err, io.ErrUnexpectedEOF) {
 					logger.Log.Warn(fmt.Sprintf("unexpected eof error in attempt: %d", attempt))
-					if attempt != b.config.Elasticsearch.MaxRetries {
+					if attempt != maxRetries {
 						reader.ResetPositions()
 						continue
 					}
@@ -338,7 +358,7 @@ func (b *Bulk) requestFunc(concurrentRequestIndex int, batchItems []*dcpElastics
 				return err
 			}
 
-			errorData, err := hasResponseError(r)
+			errorData, err := hasResponseError(r, actionsOfBatchItems)
 			b.finalizeProcess(actionsOfBatchItems, errorData)
 			if err != nil {
 				return err
@@ -351,16 +371,33 @@ func (b *Bulk) requestFunc(concurrentRequestIndex int, batchItems []*dcpElastics
 }
 
 func (b *Bulk) bulkRequest() error {
+	byCluster := make(map[string][]*dcpElasticsearch.BatchItem)
+	for _, item := range b.batch {
+		if item.Action == nil {
+			continue
+		}
+		ck := config.NormalizeClusterKey(item.Action.ClusterKey)
+		byCluster[ck] = append(byCluster[ck], item)
+	}
+
+	clusterKeys := make([]string, 0, len(byCluster))
+	for k := range byCluster {
+		clusterKeys = append(clusterKeys, k)
+	}
+	sort.Strings(clusterKeys)
+
 	eg, _ := errgroup.WithContext(context.Background())
-
-	chunks := helpers.ChunkSlice(b.batch, b.concurrentRequest)
-
 	startedTime := time.Now()
 
-	for i, chunk := range chunks {
-		if len(chunk) > 0 {
-			eg.Go(b.requestFunc(i, chunk))
-		}
+	for _, ck := range clusterKeys {
+		ck := ck
+		partition := byCluster[ck]
+		esClient := b.esClients[ck]
+		esSettings := b.elasticsearchSettingsForCluster(ck)
+
+		eg.Go(func() error {
+			return b.bulkRequestPartition(partition, esClient, esSettings.MaxRetries)
+		})
 	}
 
 	err := eg.Wait()
@@ -370,11 +407,28 @@ func (b *Bulk) bulkRequest() error {
 	return err
 }
 
+func (b *Bulk) bulkRequestPartition(partition []*dcpElasticsearch.BatchItem, esClient *elasticsearch.Client, maxRetries int) error {
+	if len(partition) == 0 {
+		return nil
+	}
+
+	eg, _ := errgroup.WithContext(context.Background())
+	chunks := helpers.ChunkSlice(partition, b.concurrentRequest)
+
+	for i, chunk := range chunks {
+		if len(chunk) > 0 {
+			eg.Go(b.requestFunc(i, chunk, esClient, maxRetries))
+		}
+	}
+
+	return eg.Wait()
+}
+
 func (b *Bulk) GetMetric() *Metric {
 	return b.metric
 }
 
-func hasResponseError(r *esapi.Response) (map[string]string, error) {
+func hasResponseError(r *esapi.Response, batchActions []*document.ESActionDocument) (map[string]string, error) {
 	if r == nil {
 		return nil, fmt.Errorf("esapi response is nil")
 	}
@@ -388,19 +442,19 @@ func hasResponseError(r *esapi.Response) (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	b := make(map[string]any)
-	err = jsoniter.Unmarshal(rb.Bytes(), &b)
+	body := make(map[string]any)
+	err = jsoniter.Unmarshal(rb.Bytes(), &body)
 	if err != nil {
 		return nil, err
 	}
-	hasError, ok := b["errors"].(bool)
+	hasError, ok := body["errors"].(bool)
 	if !ok || !hasError {
 		return nil, nil
 	}
-	return joinErrors(b)
+	return joinErrors(body, batchActions)
 }
 
-func joinErrors(body map[string]any) (map[string]string, error) {
+func joinErrors(body map[string]any, batchActions []*document.ESActionDocument) (map[string]string, error) {
 	var sb strings.Builder
 	ivd := make(map[string]string)
 	sb.WriteString("bulk request has error. Errors will be listed below:\n")
@@ -410,7 +464,7 @@ func joinErrors(body map[string]any) (map[string]string, error) {
 		return nil, nil
 	}
 
-	for _, i := range items {
+	for idx, i := range items {
 		item, ok := i.(map[string]any)
 		if !ok {
 			continue
@@ -425,24 +479,49 @@ func joinErrors(body map[string]any) (map[string]string, error) {
 			if iv["error"] != nil {
 				itemValue := fmt.Sprintf("%v\n", i)
 				sb.WriteString(itemValue)
-				itemValueDataKey := fmt.Sprintf("%s:%s", iv["_id"].(string), iv["_index"].(string))
-				ivd[itemValueDataKey] = itemValue
+				actionKey := bulkErrorItemKey(batchActions, idx, iv)
+				ivd[actionKey] = itemValue
 			}
 		}
 	}
 	return ivd, fmt.Errorf("%s", sb.String())
 }
 
-func (b *Bulk) getIndexName(collectionName, actionIndexName string) string {
+func bulkErrorItemKey(batchActions []*document.ESActionDocument, itemIdx int, iv map[string]any) string {
+	if itemIdx < len(batchActions) && batchActions[itemIdx] != nil {
+		return getActionKey(*batchActions[itemIdx])
+	}
+	id, _ := iv["_id"].(string)
+	index, _ := iv["_index"].(string)
+	return fmt.Sprintf("%s:%s", id, index)
+}
+
+func (b *Bulk) elasticsearchSettingsForCluster(clusterKey string) config.Elasticsearch {
+	if clusterKey == "" {
+		return b.config.Elasticsearch
+	}
+	return b.config.Elasticsearch.Clusters[clusterKey]
+}
+
+func (b *Bulk) collectionMappingForCluster(clusterKey string) map[string]string {
+	if clusterKey == "" {
+		return b.config.Elasticsearch.CollectionIndexMapping
+	}
+	return b.config.Elasticsearch.Clusters[clusterKey].CollectionIndexMapping
+}
+
+func (b *Bulk) getIndexName(collectionName, actionIndexName, clusterKey string) string {
 	if actionIndexName != "" {
 		return actionIndexName
 	}
 
-	indexName := b.collectionIndexMapping[collectionName]
+	mapping := b.collectionMappingForCluster(clusterKey)
+	indexName := mapping[collectionName]
 	if indexName == "" {
 		err := fmt.Errorf(
-			"there is no index mapping for collection: %s on your configuration",
+			"there is no index mapping for collection: %s on your elasticsearch cluster configuration (clusterKey=%q)",
 			collectionName,
+			clusterKey,
 		)
 		logger.Log.Error("error while get index name, err: %v", err)
 		panic(err)
@@ -515,10 +594,17 @@ func (b *Bulk) countSuccess(action *document.ESActionDocument) {
 }
 
 func getActionKey(action document.ESActionDocument) string {
+	clusterKey := config.NormalizeClusterKey(action.ClusterKey)
+	var base string
 	if action.Routing != nil {
-		return fmt.Sprintf("%s:%s:%s", action.ID, action.IndexName, *action.Routing)
+		base = fmt.Sprintf("%s:%s:%s", action.ID, action.IndexName, *action.Routing)
+	} else {
+		base = fmt.Sprintf("%s:%s", action.ID, action.IndexName)
 	}
-	return fmt.Sprintf("%s:%s", action.ID, action.IndexName)
+	if clusterKey != "" {
+		return clusterKey + "::" + base
+	}
+	return base
 }
 
 func getBytes(batchItems []*dcpElasticsearch.BatchItem) [][]byte {

@@ -16,8 +16,9 @@ type SinkResponseHandlerBulkContext struct {
 }
 
 type SinkResponseHandlerInitContext struct {
-	Config              *config.Config
-	ElasticsearchClient *elasticsearch.Client
+	Config               *config.Config
+	ElasticsearchClient  *elasticsearch.Client
+	ElasticsearchClients map[string]*elasticsearch.Client
 }
 
 type SinkResponseHandler interface {

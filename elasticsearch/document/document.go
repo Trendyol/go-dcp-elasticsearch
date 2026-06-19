@@ -12,11 +12,12 @@ const (
 )
 
 type ESActionDocument struct {
-	Routing   *string
-	Type      EsAction
-	IndexName string
-	Source    []byte
-	ID        []byte
+	ClusterKey string
+	Routing    *string
+	Type       EsAction
+	IndexName  string
+	Source     []byte
+	ID         []byte
 }
 
 func NewDeleteAction(key []byte, routing *string) ESActionDocument {

@@ -16,6 +16,7 @@ Elasticsearch index in near real-time. You can find more information by looking 
 * **Managing batch configurations** such as maximum batch size, batch bytes, batch ticker durations.
 * **Scale up and down** by custom membership algorithms(Couchbase, KubernetesHa, Kubernetes StatefulSet or
   Static, see [examples](https://github.com/Trendyol/go-dcp#examples)).
+* **Multiple Elasticsearch clusters** — route actions via `ClusterKey` (see [Multiple Elasticsearch clusters](#multiple-elasticsearch-clusters)).
 * **Easily manageable configurations**.
 
 ## Benchmarks
@@ -87,6 +88,8 @@ func main() {
 
 [Default Mapper](example/default-mapper/main.go)
 
+[Multiple Elasticsearch clusters](example/multi-cluster/main.go)
+
 ## Configuration
 
 ### Dcp Configuration
@@ -114,7 +117,17 @@ Check out on [go-dcp](https://github.com/Trendyol/go-dcp#configuration)
 | `elasticsearch.discoverNodesInterval`       | time.Duration     | no       | 5m           | Discover nodes periodically                                                                                                                                 |
 | `elasticsearch.rejectionLog.index`          | string            | no       | cbes-rejects | Rejection log index name. `cbes-rejects` is default.                                                                                                        |
 | `elasticsearch.rejectionLog.includeSource`  | boolean           | no       | false        | Includes rejection log source info. `false` is default.                                                                                                     |
-| `elasticsearch.maxRetries`                  | int               | no       | math.MaxInt  | Maximum retry count for the Elasticsearch client.                                                                                                           |
+| `elasticsearch.maxRetries`                  | int               | no       | math.MaxInt  | Maximum retry count for the Elasticsearch client (per bulk sub-request).                                                                                    |
+| `elasticsearch.clusters`                   | map[string]object | no       |              | Optional named Elasticsearch clusters. Each entry mirrors `elasticsearch` connection fields (`urls`, auth, `collectionIndexMapping`, …). Use `document.ESActionDocument.ClusterKey` to route an action to a name defined here. |
+| `elasticsearch.rejectionLog.targetCluster`   | string            | no       |              | When using `RejectionLogSinkResponseHandler`, writes rejection documents via the client for this cluster key (empty = default cluster).                      |
+
+## Multiple Elasticsearch clusters
+
+The primary block under `elasticsearch` is the **default** cluster (empty `ClusterKey`). Optional `elasticsearch.clusters` defines named clusters with the same shape as the root block (at minimum `urls`; use `collectionIndexMapping` per cluster when resolving index names from Couchbase collections).
+
+In your mapper, set **`ClusterKey`** on each `document.ESActionDocument` to a name from `elasticsearch.clusters`. Leave it empty to use the default cluster. The reserved name `default` is normalized to the primary cluster.
+
+Example: [example/multi-cluster/main.go](example/multi-cluster/main.go)
 
 ## Exposed metrics
 

@@ -184,6 +184,30 @@ func TestBulk_executeSinkResponseHandler(t *testing.T) {
 	})
 }
 
+func Test_getActionKey_clusterKey(t *testing.T) {
+	a := document.ESActionDocument{
+		ID:         []byte("1"),
+		IndexName:  "idx",
+		Type:       document.Index,
+		ClusterKey: "eu",
+	}
+	if got := getActionKey(a); got != "eu::1:idx" {
+		t.Fatalf("getActionKey = %q, want eu::1:idx", got)
+	}
+
+	r := "r"
+	ar := document.ESActionDocument{
+		ID:         []byte("1"),
+		IndexName:  "idx",
+		Type:       document.Index,
+		ClusterKey: "eu",
+		Routing:    &r,
+	}
+	if got := getActionKey(ar); got != "eu::1:idx:r" {
+		t.Fatalf("getActionKey with routing = %q, want eu::1:idx:r", got)
+	}
+}
+
 func Test_fillErrorDataWithBulkRequestError(t *testing.T) {
 	// Given
 	batchActions := []*document.ESActionDocument{
