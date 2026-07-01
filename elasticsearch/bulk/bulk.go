@@ -508,6 +508,19 @@ func (b *Bulk) attemptBulk(
 		return nil
 	}
 
+	return b.classifyItemErrors(attempt, pending, allActions, retry, itemErrors, finalErrorData)
+}
+
+// classifyItemErrors splits per-item bulk failures into the retryable set
+// (returned as global indexes) and terminal ones (written to finalErrorData).
+func (b *Bulk) classifyItemErrors(
+	attempt int,
+	pending []int,
+	allActions []*document.ESActionDocument,
+	retry *config.Retry,
+	itemErrors []bulkItemError,
+	finalErrorData map[string]string,
+) []int {
 	var nextPending []int
 	for _, ie := range itemErrors {
 		// Defend against a malformed response reporting more items (or an
