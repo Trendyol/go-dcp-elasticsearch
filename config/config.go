@@ -26,6 +26,7 @@ type Elasticsearch struct {
 	MaxConnsPerHost             *int                     `yaml:"maxConnsPerHost"`
 	MaxIdleConnDuration         *time.Duration           `yaml:"maxIdleConnDuration"`
 	DiscoverNodesInterval       *time.Duration           `yaml:"discoverNodesInterval"`
+	Retry                       *Retry                   `yaml:"retry"`
 	TypeName                    string                   `yaml:"typeName"`
 	Password                    string                   `yaml:"password"`
 	Username                    string                   `yaml:"username"`
@@ -38,6 +39,23 @@ type Elasticsearch struct {
 	DisableDiscoverNodesOnStart bool                     `yaml:"disableDiscoverNodesOnStart"`
 	MaxRetries                  int                      `yaml:"maxRetries"`
 	Clusters                    map[string]Elasticsearch `yaml:"clusters"`
+}
+
+// Retry configures an optional layer that re-submits only the retryable items
+// of a failed bulk request (transient statuses / connection errors) with
+// exponential backoff before falling through to OnError / panic. Disabled by
+// default. Each cluster may define its own block; named clusters that omit it
+// inherit the default cluster's retry settings.
+//
+// Backoff sleeps happen while the flush lock is held, so a single flush can be
+// delayed by up to MaxInterval*MaxRetries when a cluster is unhealthy; size
+// these values with that latency ceiling in mind.
+type Retry struct {
+	RetryOnStatus   []int         `yaml:"retryOnStatus"`
+	MaxRetries      int           `yaml:"maxRetries"`
+	InitialInterval time.Duration `yaml:"initialInterval"`
+	MaxInterval     time.Duration `yaml:"maxInterval"`
+	Enabled         bool          `yaml:"enabled"`
 }
 
 type RejectionLog struct {
@@ -76,6 +94,28 @@ func ApplyElasticsearchDefaults(es *Elasticsearch) {
 	if es.MaxRetries == 0 {
 		es.MaxRetries = math.MaxInt
 	}
+
+	if es.Retry != nil && es.Retry.Enabled {
+		ApplyRetryDefaults(es.Retry)
+	}
+}
+
+func ApplyRetryDefaults(r *Retry) {
+	if r.MaxRetries == 0 {
+		r.MaxRetries = 3
+	}
+
+	if len(r.RetryOnStatus) == 0 {
+		r.RetryOnStatus = []int{429, 502, 503, 504}
+	}
+
+	if r.InitialInterval == 0 {
+		r.InitialInterval = 200 * time.Millisecond
+	}
+
+	if r.MaxInterval == 0 {
+		r.MaxInterval = 5 * time.Second
+	}
 }
 
 func (c *Config) NormalizeElasticsearchClusterKeys() error {
@@ -102,6 +142,13 @@ func (c *Config) ApplyDefaults() {
 
 	for name := range c.Elasticsearch.Clusters {
 		block := c.Elasticsearch.Clusters[name]
+		// Named clusters that omit a retry block inherit the default cluster's
+		// resolved retry settings. Copy the struct (not the pointer) so the two
+		// clusters don't share one *Retry instance.
+		if block.Retry == nil && c.Elasticsearch.Retry != nil {
+			inherited := *c.Elasticsearch.Retry
+			block.Retry = &inherited
+		}
 		ApplyElasticsearchDefaults(&block)
 		c.Elasticsearch.Clusters[name] = block
 	}

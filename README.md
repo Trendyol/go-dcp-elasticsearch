@@ -118,7 +118,12 @@ Check out on [go-dcp](https://github.com/Trendyol/go-dcp#configuration)
 | `elasticsearch.rejectionLog.index`          | string            | no       | cbes-rejects | Rejection log index name. `cbes-rejects` is default.                                                                                                        |
 | `elasticsearch.rejectionLog.includeSource`  | boolean           | no       | false        | Includes rejection log source info. `false` is default.                                                                                                     |
 | `elasticsearch.maxRetries`                  | int               | no       | math.MaxInt  | Maximum retry count for the Elasticsearch client (per bulk sub-request).                                                                                    |
-| `elasticsearch.clusters`                   | map[string]object | no       |              | Optional named Elasticsearch clusters. Each entry mirrors `elasticsearch` connection fields (`urls`, auth, `collectionIndexMapping`, …). Use `document.ESActionDocument.ClusterKey` to route an action to a name defined here. |
+| `elasticsearch.retry.enabled`               | boolean           | no       | false        | Enables the built-in retry layer that re-submits only the retryable items of a failed bulk request. Disabled by default.                                    |
+| `elasticsearch.retry.maxRetries`            | int               | no       | 3            | Maximum retry attempts for retryable failures before falling through to `OnError`/panic.                                                                    |
+| `elasticsearch.retry.retryOnStatus`         | []int             | no       | [429,502,503,504] | HTTP status codes treated as retryable (both per-item and whole-response). Everything else is terminal.                                                |
+| `elasticsearch.retry.initialInterval`       | time.Duration     | no       | 200ms        | Starting backoff before the first retry; grows exponentially with full jitter.                                                                              |
+| `elasticsearch.retry.maxInterval`           | time.Duration     | no       | 5s           | Upper bound on the backoff between retries.                                                                                                                 |
+| `elasticsearch.clusters`                   | map[string]object | no       |              | Optional named Elasticsearch clusters. Each entry mirrors `elasticsearch` connection fields (`urls`, auth, `collectionIndexMapping`, `retry`, …). Use `document.ESActionDocument.ClusterKey` to route an action to a name defined here. |
 | `elasticsearch.rejectionLog.targetCluster`   | string            | no       |              | When using `RejectionLogSinkResponseHandler`, writes rejection documents via the client for this cluster key (empty = default cluster).                      |
 
 ## Multiple Elasticsearch clusters
@@ -128,6 +133,27 @@ The primary block under `elasticsearch` is the **default** cluster (empty `Clust
 In your mapper, set **`ClusterKey`** on each `document.ESActionDocument` to a name from `elasticsearch.clusters`. Leave it empty to use the default cluster. The reserved name `default` is normalized to the primary cluster.
 
 Example: [example/multi-cluster/main.go](example/multi-cluster/main.go)
+
+## Retryable bulk failures
+
+By default a failing bulk request is surfaced to the registered `SinkResponseHandler`, or — when none is registered — the connector panics. Enabling `elasticsearch.retry` adds an optional layer that first re-submits **only the retryable items** of a failed bulk (both transport/connection errors and configurable per-item / whole-response statuses such as `429`, `503`) with exponential backoff and jitter. Terminal failures (e.g. `4xx` validation errors) are never retried. After `maxRetries` is exhausted the remaining failures fall through to `OnError`/panic exactly as before, so DCP replay semantics are preserved.
+
+Retry is configured **per cluster**: the block under `elasticsearch` applies to the default cluster, and each named cluster under `elasticsearch.clusters` may declare its own `retry` block. A named cluster that omits `retry` **inherits the default cluster's** retry settings. A transient failure is retried only against the cluster that produced it, so one unhealthy cluster does not restart the whole fleet.
+
+```yaml
+elasticsearch:
+  urls: [ "http://localhost:9200" ]
+  retry:
+    enabled: true
+    maxRetries: 3
+    retryOnStatus: [429, 502, 503, 504]
+    initialInterval: 200ms
+    maxInterval: 5s
+  clusters:
+    analytics:
+      urls: [ "http://localhost:9201" ]
+      # no retry block -> inherits the default cluster's retry settings
+```
 
 ## Exposed metrics
 

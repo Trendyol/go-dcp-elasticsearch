@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/Trendyol/go-dcp-elasticsearch"
 	"github.com/Trendyol/go-dcp-elasticsearch/config"
 	"github.com/Trendyol/go-dcp-elasticsearch/couchbase"
@@ -32,6 +34,17 @@ func main() {
 				"orders":   "primary-index",
 			},
 			Urls: []string{"http://localhost:9200"},
+			// Built-in retry on the default cluster. Retryable items (e.g. 429/503)
+			// are re-submitted with exponential backoff before falling through to
+			// OnError/panic. The named "analytics" cluster omits its own retry block
+			// and therefore inherits these settings.
+			Retry: &config.Retry{
+				Enabled:         true,
+				MaxRetries:      3,
+				RetryOnStatus:   []int{429, 502, 503, 504},
+				InitialInterval: 200 * time.Millisecond,
+				MaxInterval:     5 * time.Second,
+			},
 			Clusters: map[string]config.Elasticsearch{
 				"analytics": {
 					Urls: []string{"http://localhost:9201"},
