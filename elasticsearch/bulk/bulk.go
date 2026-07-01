@@ -502,6 +502,12 @@ func (b *Bulk) attemptBulk(
 
 	var nextPending []int
 	for _, ie := range itemErrors {
+		// Defend against a malformed response reporting more items (or an
+		// out-of-range position) than we submitted: pending[ie.position] would
+		// otherwise panic inside the errgroup goroutine and crash the process.
+		if ie.position < 0 || ie.position >= len(pending) {
+			continue
+		}
 		globalIdx := pending[ie.position]
 		if attempt < retry.MaxRetries && isRetryableStatus(ie.status, retry.RetryOnStatus) {
 			nextPending = append(nextPending, globalIdx)

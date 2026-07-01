@@ -163,6 +163,35 @@ func Test_requestFuncWithRetry_TerminalNotRetried(t *testing.T) {
 	}
 }
 
+// A malformed response reporting more item errors than were submitted must not
+// panic on pending[ie.position]; the out-of-range item is ignored and the real
+// one is still finalized.
+func Test_requestFuncWithRetry_MoreItemsThanSubmitted(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		elasticProduct(w)
+		if !strings.Contains(r.URL.Path, "_bulk") {
+			_, _ = w.Write([]byte(`{}`))
+			return
+		}
+		// One item submitted, two item errors returned (position 1 is phantom).
+		_, _ = w.Write([]byte(`{"errors":true,"items":[` +
+			`{"index":{"_index":"idx","_id":"1","status":400,"error":{"reason":"bad"}}},` +
+			`{"index":{"_index":"idx","_id":"x","status":400,"error":{"reason":"phantom"}}}]}`))
+	}))
+	defer srv.Close()
+
+	handler := &recordingHandler{}
+	b := buildBulk(esClientForServer(t, srv.URL), handler)
+
+	err := b.requestFuncWithRetry(0, []*elasticsearch.BatchItem{indexItem("1")}, b.esClients[""], fastRetry())()
+	if err == nil {
+		t.Fatal("expected error for the terminal item")
+	}
+	if len(handler.errored) != 1 || handler.errored[0] != "1" {
+		t.Fatalf("expected only submitted item 1 errored, got %v", handler.errored)
+	}
+}
+
 func Test_requestFuncWithRetry_ExhaustsRetries(t *testing.T) {
 	var calls int32
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
