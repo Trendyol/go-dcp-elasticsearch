@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -15,8 +16,16 @@ import (
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/client"
 	"github.com/Trendyol/go-dcp-elasticsearch/elasticsearch/document"
 	"github.com/Trendyol/go-dcp-elasticsearch/helper"
+	"github.com/Trendyol/go-dcp/logger"
 	esv7 "github.com/elastic/go-elasticsearch/v7"
 )
+
+// TestMain initializes the shared logger so retry paths that emit warn logs
+// don't nil-panic on logger.Log during tests.
+func TestMain(m *testing.M) {
+	logger.InitDefaultLogger("error")
+	os.Exit(m.Run())
+}
 
 // recordingHandler captures per-item outcomes. finalizeProcess invokes the
 // handler synchronously, so slices are fully populated once requestFuncWithRetry

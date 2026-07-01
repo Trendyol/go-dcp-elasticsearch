@@ -474,6 +474,10 @@ func (b *Bulk) attemptBulk(
 	r, err := esClient.Bulk(reader)
 	if err != nil {
 		if attempt < retry.MaxRetries && isRetryableTransportErr(err) {
+			logger.Log.Warn(
+				"retrying bulk request after transport error (attempt %d/%d, %d items): %v",
+				attempt+1, retry.MaxRetries, len(pending), err,
+			)
 			return pending
 		}
 		markErrors(err.Error())
@@ -485,6 +489,10 @@ func (b *Bulk) attemptBulk(
 		msg := fmt.Sprintf("bulk request has error %v", r.String())
 		r.Body.Close()
 		if attempt < retry.MaxRetries && isRetryableStatus(status, retry.RetryOnStatus) {
+			logger.Log.Warn(
+				"retrying bulk request after retryable status %d (attempt %d/%d, %d items)",
+				status, attempt+1, retry.MaxRetries, len(pending),
+			)
 			return pending
 		}
 		markErrors(msg)
@@ -514,6 +522,13 @@ func (b *Bulk) attemptBulk(
 		} else {
 			finalErrorData[getActionKey(*allActions[globalIdx])] = ie.msg
 		}
+	}
+
+	if len(nextPending) > 0 {
+		logger.Log.Warn(
+			"retrying %d bulk item(s) with retryable status (attempt %d/%d)",
+			len(nextPending), attempt+1, retry.MaxRetries,
+		)
 	}
 	return nextPending
 }
