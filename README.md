@@ -140,6 +140,8 @@ By default a failing bulk request is surfaced to the registered `SinkResponseHan
 
 Retry is configured **per cluster**: the block under `elasticsearch` applies to the default cluster, and each named cluster under `elasticsearch.clusters` may declare its own `retry` block. A named cluster that omits `retry` **inherits the default cluster's** retry settings. A transient failure is retried only against the cluster that produced it, so one unhealthy cluster does not restart the whole fleet.
 
+When retry is enabled the Elasticsearch client's own transport-level retry is disabled for that cluster, so all retry/backoff is governed by this layer. Otherwise the client would retry `5xx`/transport failures itself with no backoff and a near-infinite retry count, shadowing the configured `maxRetries`/backoff. When retry is disabled, the client's default retry behavior is unchanged.
+
 ```yaml
 elasticsearch:
   urls: [ "http://localhost:9200" ]
