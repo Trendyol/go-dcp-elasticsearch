@@ -6,6 +6,8 @@ import (
 	"math/rand"
 	"net"
 	"time"
+
+	"github.com/valyala/fasthttp"
 )
 
 // isRetryableStatus reports whether an HTTP status code is configured as
@@ -28,6 +30,14 @@ func isRetryableTransportErr(err error) bool {
 	}
 
 	if errors.Is(err, io.ErrUnexpectedEOF) || errors.Is(err, io.EOF) {
+		return true
+	}
+
+	// fasthttp returns this sentinel (not a net.Error) when the server accepts
+	// the TCP connection but closes it before sending the first response byte —
+	// e.g. an Elasticsearch node that is up but has no discovered master. The
+	// request never reached the server, so a bulk write is safe to retry.
+	if errors.Is(err, fasthttp.ErrConnectionClosed) {
 		return true
 	}
 

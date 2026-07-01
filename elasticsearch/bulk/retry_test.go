@@ -1,12 +1,14 @@
 package bulk
 
 import (
+	"fmt"
 	"io"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/elastic/go-elasticsearch/v7/esapi"
+	"github.com/valyala/fasthttp"
 )
 
 func Test_isRetryableStatus(t *testing.T) {
@@ -40,6 +42,16 @@ func Test_isRetryableTransportErr(t *testing.T) {
 	}
 	if isRetryableTransportErr(io.ErrNoProgress) {
 		t.Fatal("unknown error must not be retryable")
+	}
+	// fasthttp closes the connection with this sentinel when the server accepts
+	// the TCP connection but never sends a response (e.g. ES node up, no master);
+	// it is not a net.Error, so it must be matched explicitly.
+	if !isRetryableTransportErr(fasthttp.ErrConnectionClosed) {
+		t.Fatal("fasthttp ErrConnectionClosed must be retryable")
+	}
+	// Wrapped variant must still be caught via errors.Is.
+	if !isRetryableTransportErr(fmt.Errorf("bulk failed: %w", fasthttp.ErrConnectionClosed)) {
+		t.Fatal("wrapped ErrConnectionClosed must be retryable")
 	}
 }
 
