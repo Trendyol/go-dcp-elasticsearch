@@ -32,11 +32,7 @@ func isRetryableTransportErr(err error) bool {
 	}
 
 	var netErr net.Error
-	if errors.As(err, &netErr) {
-		return true
-	}
-
-	return false
+	return errors.As(err, &netErr)
 }
 
 // backoffDuration returns the wait before the given retry attempt (1-based)
