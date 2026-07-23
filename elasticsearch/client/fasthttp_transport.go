@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Trendyol/go-dcp-elasticsearch/config"
-
 	"github.com/valyala/fasthttp"
+
+	"github.com/Trendyol/go-dcp-elasticsearch/config"
 )
 
 // transport implements the elastictransport interface with
@@ -16,7 +16,7 @@ type transport struct {
 	client *fasthttp.Client
 }
 
-func newTransport(cfg config.Elasticsearch) *transport {
+func newTransport(cfg config.Elasticsearch) (*transport, error) {
 	client := &fasthttp.Client{
 		MaxConnsPerHost:     fasthttp.DefaultMaxConnsPerHost,
 		MaxIdleConnDuration: fasthttp.DefaultMaxIdleConnDuration,
@@ -30,7 +30,15 @@ func newTransport(cfg config.Elasticsearch) *transport {
 		client.MaxIdleConnDuration = *cfg.MaxIdleConnDuration
 	}
 
-	return &transport{client: client}
+	if !isZeroTLS(cfg.TLS) {
+		tlsConfig, err := buildTLSConfig(cfg.TLS)
+		if err != nil {
+			return nil, err
+		}
+		client.TLSConfig = tlsConfig
+	}
+
+	return &transport{client: client}, nil
 }
 
 // RoundTrip performs the request and returns a response or error
