@@ -17,7 +17,7 @@ func NewElasticClientFromElasticsearch(es *config.Elasticsearch) (*elasticsearch
 		return nil, err
 	}
 
-	client, err := elasticsearch.NewClient(elasticsearch.Config{
+	cfg := elasticsearch.Config{
 		Username:              es.Username,
 		Password:              es.Password,
 		MaxRetries:            es.MaxRetries,
