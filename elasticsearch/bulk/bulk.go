@@ -370,6 +370,238 @@ func (b *Bulk) requestFunc(
 	}
 }
 
+// bulkItemError describes a single failed item inside an HTTP 200 bulk
+// response: its position in the submitted body, its per-item HTTP status and
+// the raw item value used as the error message.
+type bulkItemError struct {
+	msg      string
+	position int
+	status   int
+}
+
+// requestFuncWithRetry re-submits only the retryable items of a failing bulk
+// request with exponential backoff. Terminal failures (and retryables that
+// outlast maxRetries) are finalized as errors; on exhaustion it returns a
+// non-nil error so the caller's panic path still triggers when no
+// SinkResponseHandler is registered. Success/error are finalized exactly once
+// per item.
+func (b *Bulk) requestFuncWithRetry(
+	_ int,
+	batchItems []*dcpElasticsearch.BatchItem,
+	esClient *elasticsearch.Client,
+	retry *config.Retry,
+) func() error {
+	return func() error {
+		allActions := getActions(batchItems)
+		allBytes := getBytes(batchItems)
+
+		finalErrorData := b.retryBulk(allActions, allBytes, esClient, retry)
+
+		b.finalizeProcess(allActions, finalErrorData)
+
+		if len(finalErrorData) > 0 {
+			var sb strings.Builder
+			sb.WriteString("bulk request has error after retries. Errors will be listed below:\n")
+			for _, msg := range finalErrorData {
+				sb.WriteString(msg)
+			}
+			return errors.New(sb.String())
+		}
+		return nil
+	}
+}
+
+// retryBulk re-submits the retryable items of a bulk request with exponential
+// backoff until nothing retryable remains or maxRetries is exhausted, and
+// returns the terminal per-item errors keyed by action key.
+func (b *Bulk) retryBulk(
+	allActions []*document.ESActionDocument,
+	allBytes [][]byte,
+	esClient *elasticsearch.Client,
+	retry *config.Retry,
+) map[string]string {
+	// Use a dedicated reader instead of the shared b.readers[i] slot: the
+	// per-cluster fan-out in bulkRequest runs partitions concurrently and
+	// each enumerates chunk indexes from 0, so sharing a slot across
+	// clusters would race — the multi-attempt retry loop widens that window.
+	reader := helper.NewMultiDimByteReader(nil)
+
+	finalErrorData := make(map[string]string)
+
+	// pending holds indexes into allActions/allBytes still to be tried.
+	pending := make([]int, len(allActions))
+	for i := range pending {
+		pending[i] = i
+	}
+
+	for attempt := 0; len(pending) > 0; attempt++ {
+		pending = b.attemptBulk(attempt, pending, allActions, allBytes, esClient, retry, reader, finalErrorData)
+		if len(pending) > 0 {
+			time.Sleep(backoffDuration(attempt+1, retry.InitialInterval, retry.MaxInterval))
+		}
+	}
+
+	return finalErrorData
+}
+
+// attemptBulk submits the pending items once and classifies the outcome. It
+// returns the indexes that should be retried on the next attempt: the same
+// pending set for a retryable transport/whole-response failure, the subset of
+// retryable per-item failures, or nil when nothing remains. Terminal failures
+// are written to finalErrorData before returning.
+func (b *Bulk) attemptBulk(
+	attempt int,
+	pending []int,
+	allActions []*document.ESActionDocument,
+	allBytes [][]byte,
+	esClient *elasticsearch.Client,
+	retry *config.Retry,
+	reader *helper.MultiDimByteReader,
+	finalErrorData map[string]string,
+) []int {
+	reqBytes := make([][]byte, 0, len(pending))
+	for _, idx := range pending {
+		reqBytes = append(reqBytes, allBytes[idx])
+	}
+	reader.Reset(reqBytes)
+
+	markErrors := func(msg string) {
+		for _, idx := range pending {
+			finalErrorData[getActionKey(*allActions[idx])] = msg
+		}
+	}
+
+	r, err := esClient.Bulk(reader)
+	if err != nil {
+		if attempt < retry.MaxRetries && isRetryableTransportErr(err) {
+			logger.Log.Warn(
+				"retrying bulk request after transport error (attempt %d/%d, %d items): %v",
+				attempt+1, retry.MaxRetries, len(pending), err,
+			)
+			return pending
+		}
+		markErrors(err.Error())
+		return nil
+	}
+
+	if r.IsError() {
+		status := r.StatusCode
+		msg := fmt.Sprintf("bulk request has error %v", r.String())
+		r.Body.Close()
+		if attempt < retry.MaxRetries && isRetryableStatus(status, retry.RetryOnStatus) {
+			logger.Log.Warn(
+				"retrying bulk request after retryable status %d (attempt %d/%d, %d items)",
+				status, attempt+1, retry.MaxRetries, len(pending),
+			)
+			return pending
+		}
+		markErrors(msg)
+		return nil
+	}
+
+	itemErrors, parseErr := parseBulkItemErrors(r)
+	if parseErr != nil {
+		markErrors(parseErr.Error())
+		return nil
+	}
+	if len(itemErrors) == 0 {
+		return nil
+	}
+
+	return b.classifyItemErrors(attempt, pending, allActions, retry, itemErrors, finalErrorData)
+}
+
+// classifyItemErrors splits per-item bulk failures into the retryable set
+// (returned as global indexes) and terminal ones (written to finalErrorData).
+func (b *Bulk) classifyItemErrors(
+	attempt int,
+	pending []int,
+	allActions []*document.ESActionDocument,
+	retry *config.Retry,
+	itemErrors []bulkItemError,
+	finalErrorData map[string]string,
+) []int {
+	var nextPending []int
+	for _, ie := range itemErrors {
+		// Defend against a malformed response reporting more items (or an
+		// out-of-range position) than we submitted: pending[ie.position] would
+		// otherwise panic inside the errgroup goroutine and crash the process.
+		if ie.position < 0 || ie.position >= len(pending) {
+			continue
+		}
+		globalIdx := pending[ie.position]
+		if attempt < retry.MaxRetries && isRetryableStatus(ie.status, retry.RetryOnStatus) {
+			nextPending = append(nextPending, globalIdx)
+		} else {
+			finalErrorData[getActionKey(*allActions[globalIdx])] = ie.msg
+		}
+	}
+
+	if len(nextPending) > 0 {
+		logger.Log.Warn(
+			"retrying %d bulk item(s) with retryable status (attempt %d/%d)",
+			len(nextPending), attempt+1, retry.MaxRetries,
+		)
+	}
+	return nextPending
+}
+
+// parseBulkItemErrors extracts the failed items (with per-item HTTP status)
+// from an HTTP 200 bulk response whose top-level "errors" flag is true. It
+// returns a nil slice when the response reports no item-level errors.
+func parseBulkItemErrors(r *esapi.Response) ([]bulkItemError, error) {
+	if r == nil {
+		return nil, fmt.Errorf("esapi response is nil")
+	}
+
+	rb := new(bytes.Buffer)
+	defer r.Body.Close()
+	if _, err := rb.ReadFrom(r.Body); err != nil {
+		return nil, err
+	}
+
+	body := make(map[string]any)
+	if err := jsoniter.Unmarshal(rb.Bytes(), &body); err != nil {
+		return nil, err
+	}
+
+	hasError, ok := body["errors"].(bool)
+	if !ok || !hasError {
+		return nil, nil
+	}
+
+	items, ok := body["items"].([]any)
+	if !ok {
+		return nil, nil
+	}
+
+	var result []bulkItemError
+	for idx, i := range items {
+		item, ok := i.(map[string]any)
+		if !ok {
+			continue
+		}
+		for _, v := range item {
+			iv, ok := v.(map[string]any)
+			if !ok {
+				continue
+			}
+			if iv["error"] != nil {
+				status := 0
+				if s, ok := iv["status"].(float64); ok {
+					status = int(s)
+				}
+				result = append(result, bulkItemError{
+					position: idx,
+					status:   status,
+					msg:      fmt.Sprintf("%v\n", i),
+				})
+			}
+		}
+	}
+	return result, nil
+}
+
 func (b *Bulk) bulkRequest() error {
 	byCluster := make(map[string][]*dcpElasticsearch.BatchItem)
 	for _, item := range b.batch {
@@ -396,7 +628,7 @@ func (b *Bulk) bulkRequest() error {
 		esSettings := b.elasticsearchSettingsForCluster(ck)
 
 		eg.Go(func() error {
-			return b.bulkRequestPartition(partition, esClient, esSettings.MaxRetries)
+			return b.bulkRequestPartition(partition, esClient, esSettings)
 		})
 	}
 
@@ -407,7 +639,11 @@ func (b *Bulk) bulkRequest() error {
 	return err
 }
 
-func (b *Bulk) bulkRequestPartition(partition []*dcpElasticsearch.BatchItem, esClient *elasticsearch.Client, maxRetries int) error {
+func (b *Bulk) bulkRequestPartition(
+	partition []*dcpElasticsearch.BatchItem,
+	esClient *elasticsearch.Client,
+	esSettings config.Elasticsearch,
+) error {
 	if len(partition) == 0 {
 		return nil
 	}
@@ -415,9 +651,14 @@ func (b *Bulk) bulkRequestPartition(partition []*dcpElasticsearch.BatchItem, esC
 	eg, _ := errgroup.WithContext(context.Background())
 	chunks := helpers.ChunkSlice(partition, b.concurrentRequest)
 
+	retry := esSettings.Retry
 	for i, chunk := range chunks {
 		if len(chunk) > 0 {
-			eg.Go(b.requestFunc(i, chunk, esClient, maxRetries))
+			if retry != nil && retry.Enabled {
+				eg.Go(b.requestFuncWithRetry(i, chunk, esClient, retry))
+			} else {
+				eg.Go(b.requestFunc(i, chunk, esClient, esSettings.MaxRetries))
+			}
 		}
 	}
 
