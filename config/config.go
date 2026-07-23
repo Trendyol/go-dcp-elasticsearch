@@ -6,9 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Trendyol/go-dcp/helpers"
-
 	"github.com/Trendyol/go-dcp/config"
+	"github.com/Trendyol/go-dcp/helpers"
 )
 
 func NormalizeClusterKey(clusterKey string) string {
@@ -39,6 +38,7 @@ type Elasticsearch struct {
 	DisableDiscoverNodesOnStart bool                     `yaml:"disableDiscoverNodesOnStart"`
 	MaxRetries                  int                      `yaml:"maxRetries"`
 	Clusters                    map[string]Elasticsearch `yaml:"clusters"`
+	TLS                         *TLS                     `yaml:"tls"`
 }
 
 // Retry configures an optional layer that re-submits only the retryable items
@@ -62,6 +62,13 @@ type RejectionLog struct {
 	Index         string `yaml:"index"`
 	IncludeSource bool   `yaml:"includeSource"`
 	TargetCluster string `yaml:"targetCluster"`
+}
+
+type TLS struct {
+	SkipVerify bool   `yaml:"skipVerify"`
+	CaCert     []byte `yaml:"-"`
+	Cert       []byte `yaml:"-"`
+	Key        []byte `yaml:"-"`
 }
 
 type Config struct {
