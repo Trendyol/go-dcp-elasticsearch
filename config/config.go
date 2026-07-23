@@ -48,9 +48,9 @@ type RejectionLog struct {
 
 type TLS struct {
 	SkipVerify bool   `yaml:"skipVerify"`
-	CaCertPath string `yaml:"caCertPath"`
-	CertPath   string `yaml:"certPath"`
-	KeyPath    string `yaml:"keyPath"`
+	CaCert     []byte `yaml:"-"`
+	Cert       []byte `yaml:"-"`
+	Key        []byte `yaml:"-"`
 }
 
 type Config struct {

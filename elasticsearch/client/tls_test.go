@@ -50,13 +50,13 @@ func TestBuildTLSConfig(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		cfg     *resolvedTLSConfig
+		cfg     *config.TLS
 		wantErr bool
 		check   func(t *testing.T, c *tls.Config)
 	}{
 		{
 			name: "skip verify only",
-			cfg:  &resolvedTLSConfig{skipVerify: true},
+			cfg:  &config.TLS{SkipVerify: true},
 			check: func(t *testing.T, c *tls.Config) {
 				if !c.InsecureSkipVerify {
 					t.Error("expected InsecureSkipVerify=true")
@@ -65,7 +65,7 @@ func TestBuildTLSConfig(t *testing.T) {
 		},
 		{
 			name: "ca cert only",
-			cfg:  &resolvedTLSConfig{caCert: certPEM},
+			cfg:  &config.TLS{CaCert: certPEM},
 			check: func(t *testing.T, c *tls.Config) {
 				if c.RootCAs == nil {
 					t.Error("expected non-nil RootCAs")
@@ -74,7 +74,7 @@ func TestBuildTLSConfig(t *testing.T) {
 		},
 		{
 			name: "client cert and key",
-			cfg:  &resolvedTLSConfig{cert: certPEM, key: keyPEM},
+			cfg:  &config.TLS{Cert: certPEM, Key: keyPEM},
 			check: func(t *testing.T, c *tls.Config) {
 				if len(c.Certificates) != 1 {
 					t.Errorf("expected 1 certificate, got %d", len(c.Certificates))
@@ -82,13 +82,33 @@ func TestBuildTLSConfig(t *testing.T) {
 			},
 		},
 		{
+			name: "full config",
+			cfg: &config.TLS{
+				SkipVerify: false,
+				CaCert:     certPEM,
+				Cert:       certPEM,
+				Key:        keyPEM,
+			},
+			check: func(t *testing.T, c *tls.Config) {
+				if c.InsecureSkipVerify {
+					t.Error("expected InsecureSkipVerify=true")
+				}
+				if c.RootCAs == nil {
+					t.Error("expected non-nil RootCAs")
+				}
+				if len(c.Certificates) != 1 {
+					t.Errorf("expected 1 certificate, got %d", len(c.Certificates))
+				}
+			},
+		},
+		{
 			name:    "invalid ca cert bytes",
-			cfg:     &resolvedTLSConfig{caCert: []byte("not a valid pem")},
+			cfg:     &config.TLS{CaCert: []byte("not a valid pem")},
 			wantErr: true,
 		},
 		{
 			name:    "invalid cert key pair",
-			cfg:     &resolvedTLSConfig{cert: []byte("invalid"), key: []byte("invalid")},
+			cfg:     &config.TLS{Cert: []byte("invalid"), Key: []byte("invalid")},
 			wantErr: true,
 		},
 	}
@@ -114,6 +134,7 @@ func TestBuildTLSConfig(t *testing.T) {
 }
 
 func TestIsZeroTLS(t *testing.T) {
+	certPEM, keyPEM := generateTestCert(t)
 	tests := []struct {
 		name string
 		cfg  *config.TLS
@@ -122,16 +143,17 @@ func TestIsZeroTLS(t *testing.T) {
 		{"nil config", nil, true},
 		{"empty config", &config.TLS{}, true},
 		{"skip verify only", &config.TLS{SkipVerify: true}, false},
-		{"ca cert path only", &config.TLS{CaCertPath: "/path/ca.crt"}, false},
-		{"cert path only", &config.TLS{CertPath: "/path/client.crt"}, false},
-		{"key path only", &config.TLS{KeyPath: "/path/client.key"}, false},
+		{"ca cert only", &config.TLS{CaCert: certPEM}, false},
+		{"cert only", &config.TLS{Cert: certPEM}, false},
+		{"key only", &config.TLS{Key: keyPEM}, false},
+		{"cert and key", &config.TLS{Cert: certPEM, Key: keyPEM}, false},
 		{
 			name: "all fields set",
 			cfg: &config.TLS{
 				SkipVerify: true,
-				CaCertPath: "/path/ca.crt",
-				CertPath:   "/path/client.crt",
-				KeyPath:    "/path/client.key",
+				CaCert:     certPEM,
+				Cert:       certPEM,
+				Key:        certPEM,
 			},
 			want: false,
 		},

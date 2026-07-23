@@ -31,11 +31,7 @@ func newTransport(cfg config.Elasticsearch) (*transport, error) {
 	}
 
 	if !isZeroTLS(cfg.TLS) {
-		resolvedTLS, err := resolveTLS(cfg.TLS)
-		if err != nil {
-			return nil, err
-		}
-		tlsConfig, err := buildTLSConfig(resolvedTLS)
+		tlsConfig, err := buildTLSConfig(cfg.TLS)
 		if err != nil {
 			return nil, err
 		}
