@@ -1,6 +1,9 @@
 package document
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type EsAction string
 
@@ -12,6 +15,7 @@ const (
 )
 
 type ESActionDocument struct {
+	EventTime  time.Time
 	ClusterKey string
 	Routing    *string
 	Type       EsAction

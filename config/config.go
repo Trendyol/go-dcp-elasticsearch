@@ -26,19 +26,19 @@ type Elasticsearch struct {
 	MaxIdleConnDuration         *time.Duration           `yaml:"maxIdleConnDuration"`
 	DiscoverNodesInterval       *time.Duration           `yaml:"discoverNodesInterval"`
 	Retry                       *Retry                   `yaml:"retry"`
-	TypeName                    string                   `yaml:"typeName"`
-	Password                    string                   `yaml:"password"`
-	Username                    string                   `yaml:"username"`
+	TLS                         *TLS                     `yaml:"tls"`
+	Clusters                    map[string]Elasticsearch `yaml:"clusters"`
 	RejectionLog                RejectionLog             `yaml:"rejectionLog"`
+	Username                    string                   `yaml:"username"`
+	Password                    string                   `yaml:"password"`
+	TypeName                    string                   `yaml:"typeName"`
 	Urls                        []string                 `yaml:"urls"`
 	BatchSizeLimit              int                      `yaml:"batchSizeLimit"`
 	BatchTickerDuration         time.Duration            `yaml:"batchTickerDuration"`
 	ConcurrentRequest           int                      `yaml:"concurrentRequest"`
+	MaxRetries                  int                      `yaml:"maxRetries"`
 	CompressionEnabled          bool                     `yaml:"compressionEnabled"`
 	DisableDiscoverNodesOnStart bool                     `yaml:"disableDiscoverNodesOnStart"`
-	MaxRetries                  int                      `yaml:"maxRetries"`
-	Clusters                    map[string]Elasticsearch `yaml:"clusters"`
-	TLS                         *TLS                     `yaml:"tls"`
 }
 
 // Retry configures an optional layer that re-submits only the retryable items
@@ -60,15 +60,15 @@ type Retry struct {
 
 type RejectionLog struct {
 	Index         string `yaml:"index"`
-	IncludeSource bool   `yaml:"includeSource"`
 	TargetCluster string `yaml:"targetCluster"`
+	IncludeSource bool   `yaml:"includeSource"`
 }
 
 type TLS struct {
-	SkipVerify bool   `yaml:"skipVerify"`
 	CaCert     []byte `yaml:"-"`
 	Cert       []byte `yaml:"-"`
 	Key        []byte `yaml:"-"`
+	SkipVerify bool   `yaml:"skipVerify"`
 }
 
 type Config struct {
