@@ -31,9 +31,9 @@ func TestMain(m *testing.M) {
 // handler synchronously, so slices are fully populated once requestFuncWithRetry
 // returns.
 type recordingHandler struct {
-	mu      sync.Mutex
 	success []string
 	errored []string
+	mu      sync.Mutex
 }
 
 func (h *recordingHandler) OnSuccess(ctx *elasticsearch.SinkResponseHandlerContext) {

@@ -49,10 +49,10 @@ func TestBuildTLSConfig(t *testing.T) {
 	certPEM, keyPEM := generateTestCert(t)
 
 	tests := []struct {
-		name    string
 		cfg     *config.TLS
-		wantErr bool
 		check   func(t *testing.T, c *tls.Config)
+		name    string
+		wantErr bool
 	}{
 		{
 			name: "skip verify only",
@@ -136,17 +136,17 @@ func TestBuildTLSConfig(t *testing.T) {
 func TestIsZeroTLS(t *testing.T) {
 	certPEM, keyPEM := generateTestCert(t)
 	tests := []struct {
-		name string
 		cfg  *config.TLS
+		name string
 		want bool
 	}{
-		{"nil config", nil, true},
-		{"empty config", &config.TLS{}, true},
-		{"skip verify only", &config.TLS{SkipVerify: true}, false},
-		{"ca cert only", &config.TLS{CaCert: certPEM}, false},
-		{"cert only", &config.TLS{Cert: certPEM}, false},
-		{"key only", &config.TLS{Key: keyPEM}, false},
-		{"cert and key", &config.TLS{Cert: certPEM, Key: keyPEM}, false},
+		{nil, "nil config", true},
+		{&config.TLS{}, "empty config", true},
+		{&config.TLS{SkipVerify: true}, "skip verify only", false},
+		{&config.TLS{CaCert: certPEM}, "ca cert only", false},
+		{&config.TLS{Cert: certPEM}, "cert only", false},
+		{&config.TLS{Key: keyPEM}, "key only", false},
+		{&config.TLS{Cert: certPEM, Key: keyPEM}, "cert and key", false},
 		{
 			name: "all fields set",
 			cfg: &config.TLS{
