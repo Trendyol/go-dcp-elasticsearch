@@ -156,6 +156,7 @@ func (b *Bulk) AddActions(
 	for i := range actions {
 		clusterKey := config.NormalizeClusterKey(actions[i].ClusterKey)
 		actions[i].ClusterKey = clusterKey
+		actions[i].EventTime = eventTime
 
 		if clusterKey != "" {
 			if _, ok := b.esClients[clusterKey]; !ok {
