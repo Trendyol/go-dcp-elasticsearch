@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"sort"
 	"strings"
 	"sync"
@@ -486,6 +487,7 @@ func (b *Bulk) attemptBulk(
 	}
 
 	if r.IsError() {
+		panicOnUnauthorized(r)
 		status := r.StatusCode
 		msg := fmt.Sprintf("bulk request has error %v", r.String())
 		r.Body.Close()
@@ -670,10 +672,21 @@ func (b *Bulk) GetMetric() *Metric {
 	return b.metric
 }
 
+func panicOnUnauthorized(r *esapi.Response) {
+	if r.StatusCode != http.StatusUnauthorized {
+		return
+	}
+
+	err := fmt.Errorf("bulk request is unauthorized %v", r.String())
+	logger.Log.Error("error while bulk request, err: %v", err)
+	panic(err)
+}
+
 func hasResponseError(r *esapi.Response, batchActions []*document.ESActionDocument) (map[string]string, error) {
 	if r == nil {
 		return nil, fmt.Errorf("esapi response is nil")
 	}
+	panicOnUnauthorized(r)
 	if r.IsError() {
 		return nil, fmt.Errorf("bulk request has error %v", r.String())
 	}

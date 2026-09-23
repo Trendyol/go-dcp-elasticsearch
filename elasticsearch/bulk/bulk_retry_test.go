@@ -330,6 +330,52 @@ func Test_bulkRequestPartition_UsesLegacyWhenDisabled(t *testing.T) {
 	}
 }
 
+// A whole-response 401 used to leave errorData nil, so finalizeProcess reported
+// every action as success. Wrong credentials are process-wide and never
+// transient, so both bulk paths must log and panic instead of continuing.
+func unauthorizedResponder(_ int) (*http.Response, error) {
+	return jsonResp(401, `{"error":{"type":"security_exception","reason":"unable to authenticate user"},"status":401}`), nil
+}
+
+func assertUnauthorizedPanic(t *testing.T, st *stubTransport, handler *recordingHandler) {
+	t.Helper()
+
+	r := recover()
+	if r == nil {
+		t.Fatal("401 must panic")
+	}
+	err, ok := r.(error)
+	if !ok || !strings.Contains(err.Error(), "unauthorized") {
+		t.Fatalf("panic value must be an unauthorized error, got %v", r)
+	}
+	if st.calls() != 1 {
+		t.Fatalf("401 must not be retried: got %d calls", st.calls())
+	}
+	if len(handler.success) != 0 {
+		t.Fatalf("401 must not report success, got %v", handler.success)
+	}
+}
+
+func Test_requestFunc_UnauthorizedPanics(t *testing.T) {
+	st := &stubTransport{responder: unauthorizedResponder}
+	handler := &recordingHandler{}
+	b := buildBulk(esClientWithTransport(t, st), handler)
+
+	defer assertUnauthorizedPanic(t, st, handler)
+
+	_ = b.requestFunc(0, []*elasticsearch.BatchItem{indexItem("1")}, b.esClients[""], 1)()
+}
+
+func Test_requestFuncWithRetry_UnauthorizedPanics(t *testing.T) {
+	st := &stubTransport{responder: unauthorizedResponder}
+	handler := &recordingHandler{}
+	b := buildBulk(esClientWithTransport(t, st), handler)
+
+	defer assertUnauthorizedPanic(t, st, handler)
+
+	_ = b.requestFuncWithRetry(0, []*elasticsearch.BatchItem{indexItem("1")}, b.esClients[""], fastRetry())()
+}
+
 func Test_requestFuncWithRetry_WholeResponseRetryableStatus(t *testing.T) {
 	st := &stubTransport{responder: func(call int) (*http.Response, error) {
 		if call == 1 {
