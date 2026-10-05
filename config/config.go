@@ -37,6 +37,7 @@ type Elasticsearch struct {
 	BatchTickerDuration         time.Duration            `yaml:"batchTickerDuration"`
 	ConcurrentRequest           int                      `yaml:"concurrentRequest"`
 	MaxRetries                  int                      `yaml:"maxRetries"`
+	MaxIdemponentCallAttempts   int                      `yaml:"maxIdemponentCallAttempts"`
 	CompressionEnabled          bool                     `yaml:"compressionEnabled"`
 	DisableDiscoverNodesOnStart bool                     `yaml:"disableDiscoverNodesOnStart"`
 }

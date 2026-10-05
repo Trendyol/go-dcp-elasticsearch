@@ -17,9 +17,15 @@ type transport struct {
 }
 
 func newTransport(cfg config.Elasticsearch) (*transport, error) {
+	maxAttempts := cfg.MaxIdemponentCallAttempts
+	if maxAttempts == 0 {
+		maxAttempts = 1
+	}
+
 	client := &fasthttp.Client{
-		MaxConnsPerHost:     fasthttp.DefaultMaxConnsPerHost,
-		MaxIdleConnDuration: fasthttp.DefaultMaxIdleConnDuration,
+		MaxConnsPerHost:           fasthttp.DefaultMaxConnsPerHost,
+		MaxIdleConnDuration:       fasthttp.DefaultMaxIdleConnDuration,
+		MaxIdemponentCallAttempts: maxAttempts,
 	}
 
 	if cfg.MaxConnsPerHost != nil {
