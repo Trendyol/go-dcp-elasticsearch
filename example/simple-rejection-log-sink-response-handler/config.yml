@@ -17,6 +17,7 @@ elasticsearch:
     _default: indexname
   urls:
     - "http://localhost:9200"
+  maxIdemponentCallAttempts: 1
   rejectionLog:
     index: "cbes-rejection-v1"
     includeSource: true

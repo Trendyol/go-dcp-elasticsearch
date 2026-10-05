@@ -17,3 +17,4 @@ elasticsearch:
     _default: indexname
   urls:
     - "http://localhost:9200"
+  maxIdemponentCallAttempts: 1
