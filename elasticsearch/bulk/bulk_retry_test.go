@@ -492,6 +492,57 @@ func newMetric() *Metric {
 	}
 }
 
+func Test_flushMessages_BulkSizeMetrics(t *testing.T) {
+	for _, fail := range []bool{false, true} {
+		name := "success"
+		if fail {
+			name = "error"
+		}
+		t.Run(name, func(t *testing.T) {
+			st := &stubTransport{responder: func(_ int) (*http.Response, error) {
+				if fail {
+					return jsonResp(500, `{"error":"unavailable"}`), nil
+				}
+				return jsonResp(200, `{"errors":false}`), nil
+			}}
+			b := buildBulk(esClientWithTransport(t, st), &recordingHandler{})
+			b.config = &config.Config{Elasticsearch: config.Elasticsearch{MaxRetries: 1}}
+			b.batchTickerDuration = time.Hour
+			b.batchTicker = time.NewTicker(b.batchTickerDuration)
+			defer b.batchTicker.Stop()
+			b.dcpCheckpointCommit = func() {}
+
+			for _, count := range []int{2, 1} {
+				for i := 0; i < count; i++ {
+					item := indexItem(string(rune('1' + i)))
+					b.batch = append(b.batch, item)
+					b.batchSize++
+					b.batchByteSize += len(item.Bytes)
+				}
+				byteSize := b.batchByteSize
+				b.flushMessages()
+
+				b.LockMetrics()
+				metric := *b.GetMetric()
+				b.UnlockMetrics()
+				if metric.BulkRequestSize != int64(count) || metric.BulkRequestByteSize != int64(byteSize) {
+					t.Fatalf("expected size %d and bytes %d, got size %d and bytes %d",
+						count, byteSize, metric.BulkRequestSize, metric.BulkRequestByteSize)
+				}
+				if len(b.batch) != 0 || b.batchSize != 0 || b.batchByteSize != 0 {
+					t.Fatal("batch must be reset after flush")
+				}
+			}
+			b.flushMessages()
+			b.LockMetrics()
+			defer b.UnlockMetrics()
+			if b.GetMetric().BulkRequestSize != 1 {
+				t.Fatal("empty flush must preserve the latest batch metrics")
+			}
+		})
+	}
+}
+
 // Test_bulkRequest_PerClusterRetryIsolation covers the multi-cluster fan-out:
 // an unhealthy default cluster exhausts its retries and fails, while the
 // analytics cluster (routed via ClusterKey) is unaffected and succeeds on the

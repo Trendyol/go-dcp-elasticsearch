@@ -61,6 +61,8 @@ type Metric struct {
 	DeletionErrorActionCounter   map[string]int64
 	ProcessLatencyMs             int64
 	BulkRequestProcessLatencyMs  int64
+	BulkRequestSize              int64
+	BulkRequestByteSize          int64
 }
 
 func NewBulk(
@@ -637,7 +639,11 @@ func (b *Bulk) bulkRequest() error {
 
 	err := eg.Wait()
 
+	b.LockMetrics()
 	b.metric.BulkRequestProcessLatencyMs = time.Since(startedTime).Milliseconds()
+	b.metric.BulkRequestSize = int64(b.batchSize)
+	b.metric.BulkRequestByteSize = int64(b.batchByteSize)
+	b.UnlockMetrics()
 
 	return err
 }

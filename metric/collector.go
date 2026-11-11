@@ -11,6 +11,8 @@ type Collector struct {
 
 	processLatency            *prometheus.Desc
 	bulkRequestProcessLatency *prometheus.Desc
+	bulkRequestSize           *prometheus.Desc
+	bulkRequestByteSize       *prometheus.Desc
 	actionCounter             *prometheus.Desc
 }
 
@@ -35,6 +37,20 @@ func (s *Collector) Collect(ch chan<- prometheus.Metric) {
 		s.bulkRequestProcessLatency,
 		prometheus.GaugeValue,
 		float64(bulkMetric.BulkRequestProcessLatencyMs),
+		[]string{}...,
+	)
+
+	ch <- prometheus.MustNewConstMetric(
+		s.bulkRequestSize,
+		prometheus.GaugeValue,
+		float64(bulkMetric.BulkRequestSize),
+		[]string{}...,
+	)
+
+	ch <- prometheus.MustNewConstMetric(
+		s.bulkRequestByteSize,
+		prometheus.GaugeValue,
+		float64(bulkMetric.BulkRequestByteSize),
 		[]string{}...,
 	)
 
@@ -89,6 +105,20 @@ func NewMetricCollector(bulk *bulk.Bulk) *Collector {
 		bulkRequestProcessLatency: prometheus.NewDesc(
 			prometheus.BuildFQName(helpers.Name, "elasticsearch_connector_bulk_request_process_latency_ms", "current"),
 			"Elasticsearch connector bulk request process latency ms",
+			[]string{},
+			nil,
+		),
+
+		bulkRequestSize: prometheus.NewDesc(
+			prometheus.BuildFQName(helpers.Name, "elasticsearch_connector_bulk_request_size", "current"),
+			"Elasticsearch connector bulk request size",
+			[]string{},
+			nil,
+		),
+
+		bulkRequestByteSize: prometheus.NewDesc(
+			prometheus.BuildFQName(helpers.Name, "elasticsearch_connector_bulk_request_byte_size", "current"),
+			"Elasticsearch connector bulk request byte size",
 			[]string{},
 			nil,
 		),
